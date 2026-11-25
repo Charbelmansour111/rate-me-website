@@ -35,6 +35,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   }
   const last = journey.count - 1;
   const images = new Map<number, HTMLImageElement>();
+  const gapEls = [...document.querySelectorAll<HTMLElement>('[data-walk-gap]')];
   let range = 1;
   let target = 0;
   let position = 0;
@@ -88,6 +89,15 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
       canvas.height = height;
       draw();
     }
+    // Each scene is named once, in the first gap that shows it.
+    const named = new Set<string>();
+    for (const gap of gapEls) {
+      const { top, height } = gap.getBoundingClientRect();
+      const middle = top + scrollY + height / 2 - innerHeight / 2;
+      const scene = sceneAt(Math.min(1, Math.max(0, middle / range)));
+      gap.dataset.name = named.has(scene) ? '' : scene;
+      named.add(scene);
+    }
     onScroll();
   }
 
@@ -139,7 +149,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     },
     { rootMargin: '-20% 0px' },
   );
-  for (const gap of document.querySelectorAll('[data-walk-gap]')) gaps.observe(gap);
+  for (const gap of gapEls) gaps.observe(gap);
   root.dataset.journey = 'on';
 
   signal.addEventListener('abort', () => {

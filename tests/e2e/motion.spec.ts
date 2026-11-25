@@ -198,18 +198,17 @@ test('the walk: open gaps carry the label of the scene', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   const gaps = page.locator('[data-walk-gap]');
   await expect(gaps).toHaveCount(8);
-  for (const [i, label] of [
-    [0, 'The locker room'],
-    [3, 'The tunnel'],
-    [7, 'The pitch'],
-  ] as const) {
-    const gap = gaps.nth(i);
+  const named: string[] = [];
+  for (const gap of await gaps.all()) {
     await gap.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
-    await expect(gap.locator('p:visible')).toHaveText(label);
-    const share = await gap.evaluate((el) => el.clientHeight / innerHeight);
+    await expect(gap).toHaveAttribute('data-in');
+    named.push(...(await gap.locator('p:visible').allTextContents()));
+    const share = await gap.evaluate((el) => (el as HTMLElement).offsetHeight / innerHeight);
     expect(share).toBeGreaterThanOrEqual(0.59);
     expect(share).toBeLessThanOrEqual(0.81);
   }
+  // Each once, in order
+  expect(named).toEqual(['The locker room', 'The tunnel', 'The pitch']);
 });
 
 test('the walk: saving data loads every second frame', async ({ page }) => {

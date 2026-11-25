@@ -25,13 +25,16 @@ export function WalkGroup({ scene, children }: { scene: SceneId; children: React
   );
 }
 
-/** An open view between two sections. The script shows the label of the scene in view. */
-export function WalkGap({ scene, locale }: { scene: SceneId; locale: Locale }) {
+/**
+ * An open view between two sections. The script shows the label of the scene in view, in the
+ * first gap of each scene; without it, `label` says which gap has one.
+ */
+export function WalkGap({ label, locale }: { label?: SceneId; locale: Locale }) {
   const t = getDictionary(locale).journey;
   return (
     <div className="walk-gap" data-walk-gap aria-hidden="true">
       {(Object.keys(scenes) as SceneId[]).map((id) => (
-        <p key={id} className="walk-label" data-label={id} data-default={id === scene || undefined}>
+        <p key={id} className="walk-label" data-label={id} data-default={id === label || undefined}>
           {t[id]}
         </p>
       ))}

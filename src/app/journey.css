@@ -33,8 +33,9 @@
 }
 .walk-gap {
   display: flex;
+  padding-bottom: 12vh; /* below the vanishing point, which is what people look at */
   height: 70vh;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
 }
 .walk-label {
@@ -64,9 +65,9 @@
   [data-journey='on'] .walk-label {
     display: none;
   }
-  [data-scene='locker'] [data-in] [data-label='locker'],
-  [data-scene='tunnel'] [data-in] [data-label='tunnel'],
-  [data-scene='pitch'] [data-in] [data-label='pitch'] {
+  [data-journey='on'] [data-in][data-name='locker'] [data-label='locker'],
+  [data-journey='on'] [data-in][data-name='tunnel'] [data-label='tunnel'],
+  [data-journey='on'] [data-in][data-name='pitch'] [data-label='pitch'] {
     display: block;
     animation-name: walk-label;
     animation-duration: 600ms;

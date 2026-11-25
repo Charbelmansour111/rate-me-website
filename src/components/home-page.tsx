@@ -76,7 +76,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap scene="locker" locale={locale} />
+          <WalkGap label="locker" locale={locale} />
           <section className="section" aria-labelledby="why-title">
             <div className="wrap">
               <div className="panel relative overflow-clip">
@@ -109,7 +109,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap scene="locker" locale={locale} />
+          <WalkGap locale={locale} />
         </WalkGroup>
         <WalkGroup scene="tunnel">
           <section id="features" className="section" aria-labelledby="features-title">
@@ -152,13 +152,13 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap scene="tunnel" locale={locale} />
+          <WalkGap label="tunnel" locale={locale} />
           <Showcase locale={locale} />
 
-          <WalkGap scene="tunnel" locale={locale} />
+          <WalkGap locale={locale} />
           <TacticsSection locale={locale} />
 
-          <WalkGap scene="tunnel" locale={locale} />
+          <WalkGap locale={locale} />
         </WalkGroup>
         <WalkGroup scene="pitch">
           <section id="community" className="section" aria-labelledby="community-title">
@@ -223,7 +223,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               </div>
             </div>
           </section>
-          <WalkGap scene="pitch" locale={locale} />
+          <WalkGap label="pitch" locale={locale} />
           <section id="faq" className="section" aria-labelledby="faq-title">
             <div className="wrap">
               <div className="panel grid gap-12 lg:grid-cols-[1fr_1.6fr]">
@@ -273,7 +273,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap scene="pitch" locale={locale} />
+          <WalkGap locale={locale} />
           <section id="pre-register" className="section" aria-labelledby="form-title">
             <div className="wrap">
               <div data-reveal className="form-card panel mx-auto max-w-3xl">
@@ -296,7 +296,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               </div>
             </div>
           </section>
-          <WalkGap scene="pitch" locale={locale} />
+          <WalkGap locale={locale} />
         </WalkGroup>
       </main>
       <SiteFooter locale={locale} path="/" />
