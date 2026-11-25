@@ -373,6 +373,20 @@ test('inside the app: views, arrows, dots and keys', async ({ page, isMobile }) 
   await expect(player).not.toContainText(/channel/i);
 });
 
+for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
+  test(`${path}: the formation and card screens are real, and load`, async ({ page }) => {
+    await page.goto(path);
+    for (const name of ['coach-formation', 'coach-card', 'coach-whiteboard', 'player-card']) {
+      const image = page.locator(`.phone img[src*="${name}.png"]`);
+      await expect(image).toHaveCount(1);
+      const url = (await image.getAttribute('src'))!;
+      const response = await page.request.get(url);
+      expect(response.status(), name).toBe(200);
+      expect(response.headers()['content-type'], name).toMatch(/^image/);
+    }
+  });
+}
+
 test('inside the app: undistorted phones, the one in front larger, tilting to the mouse', async ({
   page,
   isMobile,
