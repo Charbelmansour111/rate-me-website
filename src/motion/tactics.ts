@@ -92,6 +92,34 @@ function playLoop(root: HTMLElement, rtl: boolean): Animation[] {
     stop(TOTAL, home);
     animations.push(el.animate(frames, timing));
   });
+
+  // Attackers with a run make it once they have passed.
+  all('[data-attacker]').forEach((el, i) => {
+    const { at: home, run } = ATTACKERS[i];
+    if (!run) return;
+    const leaves = START + run.after * EVERY + 0.6;
+    const frame = (seconds: number, point: readonly [number, number], opacity = 1) => ({
+      offset: at(seconds),
+      transform: translate(mirror(point, rtl)),
+      opacity,
+      easing: 'ease-in-out',
+    });
+    animations.push(
+      el.animate(
+        [
+          frame(0, home),
+          frame(leaves, home),
+          frame(leaves + 1.5, run.to),
+          frame(END, run.to),
+          frame(END + 0.4, run.to, 0),
+          frame(END + 0.41, home, 0),
+          frame(TOTAL - 0.2, home),
+          frame(TOTAL, home),
+        ],
+        timing,
+      ),
+    );
+  });
   return animations;
 }
 

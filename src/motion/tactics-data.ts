@@ -1,20 +1,44 @@
 /** The tactics illustration: an original little play, on a 480 x 420 board with the goal on top. */
+import type { RoleId } from '@/config/roles.config';
+
 export type Point = readonly [x: number, y: number];
 export const WIDTH = 480;
 
-/** Attackers, with where they drift in from. The ball goes 0 > 1 > 2 > 3. */
-export const ATTACKERS: { at: Point; from: Point; label: string }[] = [
-  { at: [70, 300], from: [-30, 60], label: '6' },
+/**
+ * Attackers, with where they drift in from. The ball goes 0 > 1 > 2 > 3.
+ * A run starts just after pass number `after`.
+ */
+export const ATTACKERS: {
+  at: Point;
+  from: Point;
+  label: string;
+  role?: RoleId;
+  run?: { after: number; to: Point };
+}[] = [
+  {
+    at: [70, 300],
+    from: [-30, 60],
+    label: '6',
+    role: 'overlap',
+    run: { after: 0, to: [56, 190] },
+  },
   { at: [190, 350], from: [10, 50], label: '8' },
-  { at: [320, 340], from: [-10, 55], label: '10' },
+  {
+    at: [320, 340],
+    from: [-10, 55],
+    label: '10',
+    role: 'run_behind',
+    run: { after: 2, to: [270, 116] },
+  },
   { at: [410, 250], from: [40, 40], label: '7' },
 ];
 
-/** Press, cover, second cover: where they stand, and where they go for each ball carrier. */
-export const DEFENDERS: { at: Point; from: Point; moves: Point[] }[] = [
+/** Where the defenders stand, and where they go for each ball carrier. The last one marks the 7. */
+export const DEFENDERS: { at: Point; from: Point; role: RoleId; moves: Point[] }[] = [
   {
     at: [150, 222],
     from: [-40, -40],
+    role: 'press',
     moves: [
       [112, 264],
       [186, 302],
@@ -25,21 +49,23 @@ export const DEFENDERS: { at: Point; from: Point; moves: Point[] }[] = [
   {
     at: [244, 168],
     from: [0, -50],
+    role: 'cover',
     moves: [
-      [190, 224],
-      [232, 240],
+      [150, 196],
+      [212, 232],
       [296, 222],
-      [300, 184],
+      [345, 166],
     ],
   },
   {
-    at: [350, 205],
+    at: [384, 202],
     from: [40, -40],
+    role: 'mark',
     moves: [
-      [290, 196],
-      [340, 204],
-      [400, 214],
-      [408, 146],
+      [386, 200],
+      [390, 202],
+      [396, 206],
+      [420, 196],
     ],
   },
 ];

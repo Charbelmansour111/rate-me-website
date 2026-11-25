@@ -1,7 +1,7 @@
 import { PLAYER_IDS, type Play, type PlayerId } from './plays';
 import { mirror, translate, type Point } from './tactics-data';
 
-/** Seconds. A phase is slow enough to see who presses, who covers and who comes behind. */
+/** Seconds. A phase is slow enough to see who presses and who covers. */
 const LEAD = 0.9;
 const PHASE = 1.7;
 const TAIL = 1.4;

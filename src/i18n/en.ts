@@ -119,16 +119,24 @@ export const en = {
     illustration: 'Illustration',
     pause: 'Pause',
     description:
-      'Illustration: on a half pitch, four attackers pass the ball along curved lines from one side to the other. Of three defenders, one presses the player on the ball, one covers the passing lane and one closes the space behind them.',
-    roles: ['Press', 'Cover', 'Second cover'],
+      'Illustration: on a half pitch, four attackers pass the ball along curved lines from one side to the other. Each player with a role carries its first letter. Of the three defenders, one presses the player on the ball (P), one covers behind (C) and one marks an attacker (M). One attacker overlaps on the outside (O) and one runs behind the defence (R).',
+    rolesLabel: 'Some of the roles',
+    roles: {
+      press: 'Press',
+      cover: 'Cover',
+      mark: 'Mark a player',
+      overlap: 'Overlap',
+      run_behind: 'Run behind',
+      intercept: 'Intercept lanes',
+    },
     steps: [
       {
         title: 'Set the starting positions',
         text: 'Put your players and the opponents where the drill begins.',
       },
       {
-        title: 'Give defenders roles',
-        text: 'One presses, one covers, one stays behind as second cover.',
+        title: 'Give each player a role',
+        text: 'One for when we have the ball and one for when they have it: hold, press, cover, mark, overlap, run behind... Or leave it automatic.',
       },
       {
         title: 'Hit record and watch it play',
@@ -162,6 +170,10 @@ export const en = {
       {
         q: 'When does it launch?',
         a: 'There is no public date yet. Lebanon comes first. Pre-register and we will email you when early access opens.',
+      },
+      {
+        q: 'Can I give players roles in a drill?',
+        a: 'Yes. The coach gives each player a role for when we have the ball and one for when they have it (hold, press, cover, mark, overlap, run behind...), or leaves it automatic.',
       },
       {
         q: 'Which devices does it run on?',

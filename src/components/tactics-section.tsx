@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 
 import { features } from '@/config/features.config';
+import { roleLetters, type RoleId } from '@/config/roles.config';
 import { getDictionary, type Locale } from '@/i18n';
 import { ATTACKERS, DEFENDERS, mirror, PASSES, translate, type Point } from '@/motion/tactics-data';
 
@@ -47,11 +48,21 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   </span>
                 </p>
               )}
-              <ol className="mt-8 grid gap-4">
-                {t.tactics.steps.map((step) => (
+              <ol className="mt-6 grid gap-4">
+                {t.tactics.steps.map((step, i) => (
                   <li key={step.title} data-caption className="tactics-caption">
                     <h3 className="font-semibold">{step.title}</h3>
                     <p className="text-muted">{step.text}</p>
+                    {i === 1 && (
+                      <ul aria-label={t.tactics.rolesLabel} className="mt-2 flex flex-wrap gap-1.5">
+                        {(Object.keys(roleLetters) as RoleId[]).map((role) => (
+                          <li key={role} className="tactics-role">
+                            <b aria-hidden="true">{roleLetters[role]}</b>
+                            {t.tactics.roles[role]}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -79,9 +90,7 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   strokeWidth="2"
                   strokeDasharray="5 6"
                 >
-                  <path
-                    d={`M${xy(DEFENDERS[0].at)}L${xy(DEFENDERS[1].at)}L${xy(DEFENDERS[2].at)}`}
-                  />
+                  <path d={`M${xy(DEFENDERS[0].at)}L${xy(DEFENDERS[1].at)}`} />
                 </g>
 
                 {PASSES.map((pass) => (
@@ -96,47 +105,25 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   />
                 ))}
 
-                {DEFENDERS.map((player, i) => {
-                  const role = t.tactics.roles[i];
-                  const width = role.length * 8 + 22;
-                  return (
-                    <g key={role} data-defender style={{ transform: place(player.at) }}>
-                      <g className="tactics-drift" style={drift(player.from, i)}>
-                        <circle
-                          className="tactics-ring"
-                          r="17"
-                          stroke="var(--accent)"
-                          strokeWidth="3"
-                          style={{ '--order': i } as CSSProperties}
-                        />
-                        <circle r="16" fill="var(--page)" stroke="var(--text)" strokeWidth="3" />
-                        <path d="M-5 -5L5 5M5 -5L-5 5" stroke="var(--text)" strokeWidth="3" />
-                        <g className="tactics-badge" style={{ '--order': i } as CSSProperties}>
-                          <rect
-                            x={-width / 2}
-                            y="-45"
-                            width={width}
-                            height="23"
-                            rx="11.5"
-                            fill="var(--text)"
-                          />
-                          <text
-                            y="-28.5"
-                            textAnchor="middle"
-                            fill="var(--page)"
-                            fontSize="14"
-                            fontWeight="600"
-                          >
-                            {role}
-                          </text>
-                        </g>
-                      </g>
+                {DEFENDERS.map((player, i) => (
+                  <g key={player.role} data-defender style={{ transform: place(player.at) }}>
+                    <g className="tactics-drift" style={drift(player.from, i)}>
+                      <circle
+                        className="tactics-ring"
+                        r="17"
+                        stroke="var(--accent)"
+                        strokeWidth="3"
+                        style={{ '--order': i } as CSSProperties}
+                      />
+                      <circle r="16" fill="var(--page)" stroke="var(--text)" strokeWidth="3" />
+                      <path d="M-5 -5L5 5M5 -5L-5 5" stroke="var(--text)" strokeWidth="3" />
+                      <RoleBadge role={player.role} order={i} rtl={rtl} />
                     </g>
-                  );
-                })}
+                  </g>
+                ))}
 
                 {ATTACKERS.map((player, i) => (
-                  <g key={player.label} style={{ transform: place(player.at) }}>
+                  <g key={player.label} data-attacker style={{ transform: place(player.at) }}>
                     <g className="tactics-drift" style={drift(player.from, i + 3)}>
                       <circle r="17" fill="var(--text)" />
                       <text
@@ -148,6 +135,7 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                       >
                         {player.label}
                       </text>
+                      {player.role && <RoleBadge role={player.role} order={i + 3} rtl={rtl} />}
                     </g>
                   </g>
                 ))}
@@ -189,5 +177,19 @@ export function TacticsSection({ locale }: { locale: Locale }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** The role's first letter at the corner of its player, as on the app's board. */
+function RoleBadge({ role, order, rtl }: { role: RoleId; order: number; rtl: boolean }) {
+  return (
+    <g className="tactics-badge" style={{ '--order': order } as CSSProperties}>
+      <g transform={`translate(${rtl ? -17 : 17} -16)`}>
+        <circle r="13.5" fill="var(--page)" stroke="var(--text)" strokeWidth="2" />
+        <text y="6" textAnchor="middle" fill="var(--text)" fontSize="17" fontWeight="700">
+          {roleLetters[role]}
+        </text>
+      </g>
+    </g>
   );
 }
