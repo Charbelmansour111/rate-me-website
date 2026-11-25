@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { ARABIC_ENABLED } from '../../src/config/site';
+
 let ip = 0;
 /** Each test gets its own address, so the rate limiter does not mix them up. */
 test.beforeEach(async ({ context }, info) => {
@@ -30,6 +32,7 @@ test('signs up, then shows the success state with focus on it', async ({ page })
 });
 
 test('signs up in Arabic', async ({ page }) => {
+  test.skip(!ARABIC_ENABLED);
   await page.goto('/ar');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await fill(page);

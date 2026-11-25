@@ -5,6 +5,16 @@ https://getrateme.space/terms.
 
 API keys go into Vercel and `.env.local` only. Never commit them or paste them in a chat.
 
+## Before launch: Arabic
+
+The Arabic copy (`src/i18n/ar.ts` and `src/i18n/legal/ar.ts`) **needs a native-speaker review before
+launch**. Until that is done, the quick way to launch in English only is `ARABIC_ENABLED = false` in
+`src/config/site.ts`, then commit and redeploy: the language switch, hreflang and Arabic sitemap
+entries disappear and `/ar` answers 404. Set it back to `true` to bring Arabic back.
+
+English is the default at `/` for everyone. The site never redirects by browser language or location
+and sets no cookie: the language is the URL.
+
 ## 1. Email list: Brevo (free)
 
 1. Create an account at https://www.brevo.com and finish its account checks.

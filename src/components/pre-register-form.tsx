@@ -134,6 +134,7 @@ export function PreRegisterForm({
       <label htmlFor={`f-${field}`} className="mb-1.5 block font-semibold">
         {t[field as 'name']}
         {optional && <span className="font-normal text-muted"> ({t.optional})</span>}
+        {values[field] && !validateField(field, values) && <Check />}
       </label>
       {control}
       {hint && (
@@ -186,7 +187,7 @@ export function PreRegisterForm({
         {row(
           'role',
           false,
-          <select {...input('role')} required>
+          <select {...input('role')} className={`field ${values.role && 'chosen'}`} required>
             <option value="" disabled>
               {t.rolePlaceholder}
             </option>
@@ -241,7 +242,7 @@ export function PreRegisterForm({
             id="f-consent"
             name="consent"
             type="checkbox"
-            className="mt-0.5 size-6 shrink-0 accent-text"
+            className="mt-0.5 size-6 shrink-0 accent-accent"
             checked={values.consent}
             onChange={(event) => set('consent', event.target.checked)}
             aria-invalid={Boolean(errors.consent)}
@@ -276,6 +277,24 @@ export function PreRegisterForm({
         {status === 'sending' ? t.submitting : t.submit}
       </button>
     </form>
+  );
+}
+
+/** A small orange tick next to a label once its field is right. Decoration: errors are announced. */
+function Check() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="ms-2 inline size-4 text-accent"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2.5 8.500l4 4 7-9" />
+    </svg>
   );
 }
 

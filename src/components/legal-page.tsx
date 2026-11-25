@@ -77,7 +77,7 @@ export function LegalPage({ locale, kind }: { locale: Locale; kind: LegalKind })
           </section>
         ))}
       </main>
-      <SiteFooter locale={locale} />
+      <SiteFooter locale={locale} path={`/${kind}`} />
     </>
   );
 }

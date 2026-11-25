@@ -2,11 +2,19 @@ import type { Metadata, Viewport } from 'next';
 
 import { site } from '@/config/site';
 import { THEME_COLORS } from '@/config/theme';
-import { getDictionary, localePath, type Locale, type PagePath } from '@/i18n';
+import { getDictionary, LOCALES, localePath, type Locale, type PagePath } from '@/i18n';
 import { getLegal } from '@/i18n/legal';
+
+const OG_LOCALES: Record<Locale, string> = { en: 'en_US', ar: 'ar_LB' };
 
 export const absolute = (locale: Locale, path: PagePath = '/') =>
   `${site.url}${localePath(locale, path)}`;
+
+/** hreflang links, only worth having with more than one language. */
+export const languageAlternates = (path: PagePath) =>
+  LOCALES.length > 1
+    ? Object.fromEntries(LOCALES.map((locale) => [locale, absolute(locale, path)]))
+    : undefined;
 
 export const viewport: Viewport = {
   themeColor: [
@@ -21,6 +29,7 @@ export function pageMetadata(locale: Locale, path: PagePath): Metadata {
   const legal = path === '/' ? null : getLegal(locale)[path === '/privacy' ? 'privacy' : 'terms'];
   const title = legal ? `${legal.title} | ${site.name}` : t.meta.title;
   const description = legal?.description ?? t.meta.description;
+  const languages = languageAlternates(path);
   const image = { url: `/og/og-${locale}.png`, width: 1200, height: 630, alt: t.meta.ogAlt };
   return {
     metadataBase: new URL(site.url),
@@ -29,11 +38,7 @@ export function pageMetadata(locale: Locale, path: PagePath): Metadata {
     applicationName: site.name,
     alternates: {
       canonical: absolute(locale, path),
-      languages: {
-        en: absolute('en', path),
-        ar: absolute('ar', path),
-        'x-default': absolute('en', path),
-      },
+      languages: languages && { ...languages, 'x-default': absolute('en', path) },
     },
     openGraph: {
       type: 'website',
@@ -41,8 +46,10 @@ export function pageMetadata(locale: Locale, path: PagePath): Metadata {
       title,
       description,
       url: absolute(locale, path),
-      locale: locale === 'ar' ? 'ar_LB' : 'en_US',
-      alternateLocale: locale === 'ar' ? 'en_US' : 'ar_LB',
+      locale: OG_LOCALES[locale],
+      alternateLocale: LOCALES.filter((other) => other !== locale).map(
+        (other) => OG_LOCALES[other],
+      ),
       images: [image],
     },
     twitter: { card: 'summary_large_image', title, description, images: [image] },
@@ -70,7 +77,7 @@ export function structuredData(locale: Locale) {
         name: site.name,
         url: site.url,
         description: getDictionary(locale).meta.description,
-        inLanguage: ['en', 'ar'],
+        inLanguage: LOCALES,
         publisher: { '@id': organization },
       },
     ],

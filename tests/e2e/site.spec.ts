@@ -1,7 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-const PAGES = ['/', '/privacy', '/terms', '/ar', '/ar/privacy', '/ar/terms'];
+import { ARABIC_ENABLED } from '../../src/config/site';
+
+const ENGLISH = ['/', '/privacy', '/terms'];
+const ARABIC = ['/ar', '/ar/privacy', '/ar/terms'];
+/** The suite passes in both states of the flag and checks the state it finds. */
+const PAGES = ARABIC_ENABLED ? [...ENGLISH, ...ARABIC] : ENGLISH;
 
 for (const path of PAGES) {
   for (const theme of ['dark', 'light']) {
@@ -27,11 +32,14 @@ for (const path of PAGES) {
     const url = `https://getrateme.space${path === '/' ? '' : path}`;
     const english = path.replace(/^\/ar/, '');
     await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', url);
-    for (const [lang, suffix] of [
-      ['en', english === '/' ? '' : english],
-      ['ar', `/ar${english === '/' ? '' : english}`],
-      ['x-default', english === '/' ? '' : english],
-    ]) {
+    if (!ARABIC_ENABLED) await expect(page.locator('link[hreflang]')).toHaveCount(0);
+    for (const [lang, suffix] of !ARABIC_ENABLED
+      ? []
+      : [
+          ['en', english === '/' ? '' : english],
+          ['ar', `/ar${english === '/' ? '' : english}`],
+          ['x-default', english === '/' ? '' : english],
+        ]) {
       await expect(page.locator(`link[hreflang="${lang}"]`)).toHaveAttribute(
         'href',
         `https://getrateme.space${suffix}`,
@@ -50,10 +58,40 @@ for (const path of PAGES) {
 }
 
 test('the language switch keeps the page', async ({ page }) => {
+  test.skip(!ARABIC_ENABLED);
   await page.goto('/privacy');
-  await page.getByRole('link', { name: 'عربي' }).click();
+  await expect(page.locator('footer').getByRole('link', { name: 'عربي' })).toBeVisible();
+  await page.locator('header').getByRole('link', { name: 'عربي' }).click();
   await expect(page).toHaveURL(/\/ar\/privacy$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+});
+
+test('with Arabic off there is no switch and /ar is a 404', async ({ page }) => {
+  test.skip(ARABIC_ENABLED);
+  await page.goto('/');
+  await expect(page.locator('[hreflang=ar]')).toHaveCount(0);
+  for (const path of ARABIC) {
+    expect((await page.goto(path))?.status(), path).toBe(404);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  }
+});
+
+test('an Arabic browser still gets English at "/", without cookies', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'ar-LB' });
+  const page = await context.newPage();
+  await page.goto('/');
+  expect(new URL(page.url()).pathname).toBe('/');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  if (ARABIC_ENABLED) await page.goto('/ar');
+  expect(await context.cookies()).toEqual([]);
+  await context.close();
+});
+
+test('the nav underlines the section being read', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the section links are hidden on phones');
+  await page.goto('/#faq');
+  const nav = page.getByRole('navigation', { name: 'Main' });
+  await expect(nav.locator('[aria-current]')).toHaveText('FAQ');
 });
 
 test('light is the default, and the theme choice is remembered', async ({ page }) => {
@@ -92,6 +130,7 @@ test('the main button leads to the form', async ({ page }) => {
 test('unknown addresses get a 404 in the right language', async ({ page }) => {
   expect((await page.goto('/nope'))?.status()).toBe(404);
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  if (!ARABIC_ENABLED) return;
   expect((await page.goto('/ar/nope'))?.status()).toBe(404);
   await expect(page.locator('h1')).toHaveText('تسلّل');
 });
@@ -101,9 +140,10 @@ test('robots, sitemap, redirects and share images work', async ({ request }) => 
     'Sitemap: https://getrateme.space/sitemap.xml',
   );
   const sitemap = await (await request.get('/sitemap.xml')).text();
-  for (const path of ['/ar', '/privacy', '/ar/terms']) {
+  for (const path of PAGES) {
     expect(sitemap).toContain(`<loc>https://getrateme.space${path}</loc>`);
   }
+  if (!ARABIC_ENABLED) expect(sitemap).not.toContain('/ar');
   expect((await request.get('/en/privacy')).url()).toMatch(/[0-9]\/privacy$/);
   for (const file of ['/og/og-en.png', '/og/og-ar.png', '/favicon.ico', '/icon-512.png']) {
     expect((await request.get(file)).ok()).toBe(true);

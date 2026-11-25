@@ -1,8 +1,10 @@
+import { ARABIC_ENABLED } from '../config/site';
 import { ar } from './ar';
 import { en, type Dictionary } from './en';
 
-export const LOCALES = ['en', 'ar'] as const;
-export type Locale = (typeof LOCALES)[number];
+export type Locale = 'en' | 'ar';
+/** The languages that are on. */
+export const LOCALES: readonly Locale[] = ARABIC_ENABLED ? ['en', 'ar'] : ['en'];
 export type { Dictionary };
 
 const dictionaries: Record<Locale, Dictionary> = { en, ar };

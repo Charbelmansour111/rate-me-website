@@ -15,7 +15,7 @@ export function NotFoundPage({ locale }: { locale: Locale }) {
           {t.notFound.back}
         </a>
       </main>
-      <SiteFooter locale={locale} />
+      <SiteFooter locale={locale} path="/" />
     </>
   );
 }

@@ -15,16 +15,28 @@ const CHALK = color('chalk');
 const ORANGE = color('brand-orange');
 
 const COPY = {
-  en: { dir: 'ltr', lines: ['A home for', 'football', 'coaches'], size: 156, height: 0.9 },
-  ar: { dir: 'rtl', lines: ['بيت مدرّبي', 'كرة', 'القدم'], size: 118, height: 1.3 },
+  en: {
+    dir: 'ltr',
+    lines: ['A home for', 'football', 'coaches'],
+    size: 156,
+    height: 0.9,
+    cta: 'Pre-register',
+  },
+  ar: {
+    dir: 'rtl',
+    lines: ['بيت مدرّبي', 'كرة', 'القدم'],
+    size: 118,
+    height: 1.3,
+    cta: 'سجّل مسبقًا',
+  },
 };
 const FONTS =
-  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Readex+Pro:wght@700&display=block';
+  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@600&family=Readex+Pro:wght@600;700&display=block';
 
 const browser = await chromium.launch();
 await mkdir('public/og', { recursive: true });
 
-for (const [locale, { dir, lines, size, height }] of Object.entries(COPY)) {
+for (const [locale, { dir, lines, size, height, cta }] of Object.entries(COPY)) {
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
   await page.setContent(
     `<html dir="${dir}"><head><link rel="stylesheet" href="${FONTS}"></head>
@@ -34,8 +46,11 @@ for (const [locale, { dir, lines, size, height }] of Object.entries(COPY)) {
         <path d="M24 24H1176V606H24Z"/>
       </svg>
       <div style="position:absolute;inset:72px 84px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start">
-        <div style="width:320px">${wordmark}</div>
-        <div style="font:${locale === 'ar' ? 700 : 400} ${size}px/${height} 'Bebas Neue','Readex Pro'">${lines[0]}<br>${lines[1]} <span style="display:inline-block;border-bottom:10px solid ${ORANGE};padding-bottom:${dir === 'rtl' ? 22 : 6}px">${lines[2]}</span></div>
+        <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
+          <div style="width:320px">${wordmark}</div>
+          <div style="background:${ORANGE};color:${TEXT};border-radius:999px;padding:14px 40px;font:600 34px/1.4 Barlow,'Readex Pro'">${cta}</div>
+        </div>
+        <div style="font:${locale === 'ar' ? 700 : 400} ${size}px/${height} 'Bebas Neue','Readex Pro'">${lines[0]}<br>${lines[1]} <span style="color:${ORANGE};display:inline-block;border-bottom:10px solid ${ORANGE};padding-bottom:${dir === 'rtl' ? 22 : 6}px">${lines[2]}</span></div>
       </div>
     </body></html>`,
     { waitUntil: 'networkidle' },

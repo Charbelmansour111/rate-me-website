@@ -15,17 +15,19 @@ const paths: Record<FeatureId, string> = {
 
 export function FeatureIcon({ id }: { id: FeatureId }) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      className="size-14 text-accent"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={paths[id]} />
-    </svg>
+    <span className="grid size-14 place-items-center rounded-full bg-tint">
+      <svg
+        viewBox="0 0 48 48"
+        className="size-8 text-accent"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d={paths[id]} />
+      </svg>
+    </span>
   );
 }

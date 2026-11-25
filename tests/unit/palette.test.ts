@@ -38,6 +38,16 @@ function contrast(a: string, b: string) {
   return (high + 0.05) / (low + 0.05);
 }
 
+/** The tint's opacity, and one color laid over another with it. */
+const TINT = Number(css.match(/--tint: rgb\(255 90 0 \/ ([\d.]+)\)/)![1]);
+function over(top: string, alpha: number, bottom: string) {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
+  const mixed = [1, 3, 5].map((i) =>
+    Math.round(channel(top, i) * alpha + channel(bottom, i) * (1 - alpha)),
+  );
+  return `#${mixed.map((value) => value.toString(16).padStart(2, '0')).join('')}`;
+}
+
 describe.each(Object.entries(themes))('palette: %s', (name, palette) => {
   const surfaces = name.startsWith('black') ? ['page'] : ['page', 'soft', 'softer'];
 
@@ -48,11 +58,20 @@ describe.each(Object.entries(themes))('palette: %s', (name, palette) => {
       expect(contrast(palette[color], palette[surface]), color).toBeGreaterThanOrEqual(4.5);
     }
   });
+  it('small orange text is AA on the tint', () => {
+    for (const surface of surfaces.slice(0, 1)) {
+      const tinted = over(palette['brand-orange'] ?? light['brand-orange'], TINT, palette[surface]);
+      expect(contrast(palette['accent-text'], tinted)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(palette.text, tinted)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it('large orange text and icons are 3:1 on the page', () => {
+    expect(contrast(light['brand-orange'], palette.page)).toBeGreaterThanOrEqual(3);
+  });
   it('buttons are AA, at rest and on hover', () => {
-    expect(contrast(palette['on-button'], palette.button)).toBeGreaterThanOrEqual(4.5);
-    expect(
-      contrast(palette['brand-black'] ?? light['brand-black'], light['brand-orange']),
-    ).toBeGreaterThanOrEqual(4.5);
+    for (const fill of ['button', 'button-hover']) {
+      expect(contrast(palette['on-button'], palette[fill]), fill).toBeGreaterThanOrEqual(4.5);
+    }
   });
   it('outlines and focus rings are 3:1', () => {
     for (const surface of surfaces) {

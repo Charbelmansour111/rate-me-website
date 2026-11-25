@@ -11,6 +11,20 @@ const PASSES = [
   // The shot
   'M402 250 Q340 120 268 40',
 ];
+/** An arrowhead with its tip at (x, y), pointing along (dx, dy). */
+function head(x: number, y: number, dx: number, dy: number) {
+  const angle = Math.atan2(dy, dx);
+  const wing = (turn: number) =>
+    `${Math.round(x - 14 * Math.cos(angle + turn))} ${Math.round(y - 14 * Math.sin(angle + turn))}`;
+  return `M${wing(0.5)} L${x} ${y} L${wing(-0.5)}`;
+}
+const HEADS = [
+  head(186, 396, 102, 78),
+  head(312, 372, 126, -24),
+  head(402, 250, 90, -122),
+  // Short of the goal line, so the ball does not cover it
+  head(282, 60, -72, -80),
+];
 const ATTACKERS = [
   [62, 306],
   [172, 420],
@@ -46,14 +60,26 @@ export function HeroDrill({ t }: { t: Dictionary['hero']['drill'] }) {
             key={d}
             d={d}
             pathLength={1}
-            stroke={i === 3 ? 'var(--accent)' : 'var(--muted)'}
+            stroke="var(--accent)"
             strokeWidth={i === 3 ? 5 : 3}
             strokeLinecap="round"
             className={`drill-pass drill-p${i + 1}`}
           />
         ))}
 
-        {/* Defenders: outlined. Attackers: filled. Orange is for the ball and the shot. */}
+        {HEADS.map((d, i) => (
+          <path
+            key={d}
+            d={d}
+            pathLength={1}
+            stroke="var(--accent)"
+            strokeWidth={i === 3 ? 5 : 3}
+            strokeLinejoin="round"
+            className={`drill-pass drill-p${i + 1}`}
+          />
+        ))}
+
+        {/* Defenders: outlined. Attackers: filled. Orange is for the ball, the passes and the shot. */}
         {[1, 2, 3].map((n) => (
           <g key={n} className={`drill-mover drill-d${n}`}>
             <circle r="17" fill="var(--page)" stroke="var(--text)" strokeWidth="3" />

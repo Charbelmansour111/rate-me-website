@@ -23,5 +23,11 @@ export const site = {
   },
 } as const;
 
+/**
+ * English is the default at "/"; Arabic lives at "/ar". Set to false to launch in English only:
+ * the switch, hreflang and sitemap entries go away and /ar answers 404. Rebuild after a change.
+ */
+export const ARABIC_ENABLED: boolean = true;
+
 /** The day the legal drafts last changed. */
 export const LEGAL_UPDATED = '2026-11-25';

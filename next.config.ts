@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+import { ARABIC_ENABLED } from './src/config/site';
+
 const dev = process.env.NODE_ENV === 'development';
 const turnstile = process.env.TURNSTILE_ENABLED === 'true' && 'https://challenges.cloudflare.com';
 const analytics =
@@ -41,6 +43,20 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+  async rewrites() {
+    // With Arabic off, /ar goes to an address that does not exist: the English 404 page.
+    const gone = '/not-available';
+    return {
+      beforeFiles: ARABIC_ENABLED
+        ? []
+        : [
+            { source: '/ar', destination: gone },
+            { source: '/ar/:path*', destination: gone },
+          ],
+      afterFiles: [],
+      fallback: [],
+    };
   },
   async redirects() {
     // English lives at the root; keep "/en" links working.

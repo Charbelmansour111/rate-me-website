@@ -9,6 +9,7 @@ export const en = {
   },
   a11y: {
     skip: 'Skip to content',
+    language: 'Language',
     mainNav: 'Main',
     footerNav: 'Footer',
     home: 'Rate Me, home',
@@ -35,7 +36,8 @@ export const en = {
     },
   },
   why: {
-    title: 'Why Rate Me',
+    kicker: 'Why Rate Me',
+    title: 'Plan, build, organize',
     items: [
       {
         title: 'Plan the week',
@@ -52,6 +54,7 @@ export const en = {
     ],
   },
   features: {
+    kicker: 'Features',
     title: 'What you get',
     note: 'Rate Me has not launched yet. Features tagged “Coming soon” arrive after the first release.',
     soon: 'Coming soon',
@@ -90,6 +93,7 @@ export const en = {
     },
   },
   community: {
+    kicker: 'Community',
     title: 'Built with coaches in Lebanon',
     text: 'We want coaches and academies to shape the app with us. Pre-register to become a founding member: you get early access, and you tell us what to fix, add or drop.',
     stepsTitle: 'How it works',
@@ -100,6 +104,7 @@ export const en = {
     ],
   },
   faq: {
+    kicker: 'FAQ',
     title: 'Questions',
     items: [
       {
@@ -127,6 +132,7 @@ export const en = {
     ] as FaqItem[],
   },
   form: {
+    kicker: 'Early access',
     title: 'Pre-register',
     intro: 'Be one of the first coaches on Rate Me. Fields marked optional can stay empty.',
     optional: 'optional',

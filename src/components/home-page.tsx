@@ -24,7 +24,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                 {t.hero.title[0]}{' '}
                 <span className="block">
                   {t.hero.title[1]}{' '}
-                  <span className="relative inline-block">
+                  <span className="relative inline-block text-accent">
                     {t.hero.title[2]}
                     {/* A chalk stroke under one word */}
                     <svg
@@ -79,15 +79,16 @@ export function HomePage({ locale }: { locale: Locale }) {
           >
             <circle cx="320" cy="0" r="290" />
             <path className="hint" d="M320 0L115 205" />
-            <circle cx="320" cy="0" r="60" />
+            <circle className="hint" cx="320" cy="0" r="60" />
           </svg>
           <div className="wrap relative">
+            <p className="kicker">{t.why.kicker}</p>
             <h2 id="why-title" className="display h2">
               {t.why.title}
             </h2>
             <ul className="mt-14 grid gap-x-12 gap-y-10 md:grid-cols-3">
               {t.why.items.map((item) => (
-                <li key={item.title} className="reveal border-t-2 border-text pt-5">
+                <li key={item.title} className="reveal border-t-3 border-accent pt-5">
                   <h3 className="display h3">{item.title}</h3>
                   <p className="mt-3 text-lg text-muted">{item.text}</p>
                 </li>
@@ -99,9 +100,12 @@ export function HomePage({ locale }: { locale: Locale }) {
         <section id="features" className="section" aria-labelledby="features-title">
           <div className="wrap">
             <div className="grid items-end gap-6 lg:grid-cols-2">
-              <h2 id="features-title" className="display h2">
-                {t.features.title}
-              </h2>
+              <div>
+                <p className="kicker">{t.features.kicker}</p>
+                <h2 id="features-title" className="display h2">
+                  {t.features.title}
+                </h2>
+              </div>
               <p className="max-w-lg text-muted lg:justify-self-end">{t.features.note}</p>
             </div>
             <ul className="mt-14 grid border-s border-t border-line sm:grid-cols-2 lg:grid-cols-3">
@@ -110,7 +114,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   <div className="flex items-start justify-between gap-4">
                     <FeatureIcon id={id} />
                     {!released && (
-                      <span className="rounded-full border-[1.5px] border-accent px-3 py-0.5 text-sm font-semibold">
+                      <span className="rounded-full border-[1.5px] border-accent bg-tint px-3 py-0.5 text-sm font-semibold text-accent-text">
                         {t.features.soon}
                       </span>
                     )}
@@ -146,6 +150,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           </svg>
           <div className="wrap relative grid gap-16 lg:grid-cols-2">
             <div>
+              <p className="kicker">{t.community.kicker}</p>
               <h2 id="community-title" className="display h2">
                 {t.community.title}
               </h2>
@@ -160,11 +165,11 @@ export function HomePage({ locale }: { locale: Locale }) {
                 {t.community.steps.map((step, i) => (
                   <li
                     key={step.title}
-                    className="relative flex gap-6 pb-10 not-last:before:absolute not-last:before:inset-s-[1.7rem] not-last:before:top-14 not-last:before:bottom-0 not-last:before:border-s-2 not-last:before:border-dashed not-last:before:border-edge last:pb-0"
+                    className="relative flex gap-6 pb-10 not-last:before:absolute not-last:before:inset-s-[1.7rem] not-last:before:top-14 not-last:before:bottom-0 not-last:before:border-s-2 not-last:before:border-dashed not-last:before:border-accent last:pb-0"
                   >
                     <span
                       aria-hidden="true"
-                      className="display grid size-14 shrink-0 place-items-center rounded-full border-2 border-edge text-3xl"
+                      className="display grid size-14 shrink-0 place-items-center rounded-full bg-accent text-3xl text-brand-black"
                     >
                       {i + 1}
                     </span>
@@ -181,13 +186,16 @@ export function HomePage({ locale }: { locale: Locale }) {
 
         <section id="faq" className="section" aria-labelledby="faq-title">
           <div className="wrap grid gap-12 lg:grid-cols-[1fr_1.6fr]">
-            <h2 id="faq-title" className="display h2">
-              {t.faq.title}
-            </h2>
+            <div>
+              <p className="kicker">{t.faq.kicker}</p>
+              <h2 id="faq-title" className="display h2">
+                {t.faq.title}
+              </h2>
+            </div>
             <div className="border-t border-line">
               {t.faq.items.map((item) => (
                 <details key={item.q} className="group border-b border-line">
-                  <summary className="flex list-none items-center justify-between gap-6 py-5 text-lg font-semibold hover:text-accent-text [&::-webkit-details-marker]:hidden">
+                  <summary className="flex list-none items-center justify-between gap-6 border-s-3 border-transparent py-5 text-lg font-semibold group-open:border-accent group-open:ps-4 hover:text-accent-text [&::-webkit-details-marker]:hidden">
                     {item.q}
                     <svg
                       viewBox="0 0 24 24"
@@ -201,7 +209,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                       <path d="M12 4v16M4 12h16" />
                     </svg>
                   </summary>
-                  <p className="max-w-2xl pb-6 text-muted">
+                  <p className="max-w-2xl pb-6 text-muted group-open:ps-4.75">
                     {item.a}
                     {item.privacyLink && (
                       <>
@@ -229,12 +237,16 @@ export function HomePage({ locale }: { locale: Locale }) {
             viewBox="0 0 860 420"
             aria-hidden="true"
           >
-            <path d="M20 420V60H840V420 M200 420V250H660V420" />
+            <path d="M20 420V60H840V420" />
+            <path className="hint" d="M200 420V250H660V420" />
           </svg>
           <div className="wrap relative">
-            <h2 id="form-title" className="display h2 text-center">
-              {t.form.title}
-            </h2>
+            <div>
+              <p className="kicker justify-center">{t.form.kicker}</p>
+              <h2 id="form-title" className="display h2 text-center">
+                {t.form.title}
+              </h2>
+            </div>
             <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-line bg-page p-6 sm:p-10">
               <PreRegisterForm
                 t={t.form}
@@ -248,7 +260,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           </div>
         </section>
       </main>
-      <SiteFooter locale={locale} />
+      <SiteFooter locale={locale} path="/" />
     </>
   );
 }

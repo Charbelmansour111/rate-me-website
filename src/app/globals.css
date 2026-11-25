@@ -12,6 +12,8 @@
   --color-accent: var(--accent);
   --color-accent-text: var(--accent-text);
   --color-danger: var(--danger);
+  --color-tint: var(--tint);
+  --color-brand-black: var(--brand-black);
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-display: var(--font-title), var(--font-body), sans-serif;
 }
@@ -112,17 +114,44 @@
     background: var(--button);
     color: var(--on-button);
   }
-  /* The one orange fill on the site. Black on it: white would be 3.1:1. */
-  .btn-primary:hover {
-    background: var(--brand-orange);
-    color: var(--brand-black);
+  /* Black on the orange (6.3:1): white would be 3.1:1. */
+  .btn-primary:hover,
+  .btn-primary:active {
+    background: var(--button-hover);
+  }
+  /* Black ring around the orange; white where the page itself is black. */
+  .btn-primary:focus-visible {
+    outline-color: var(--text);
   }
   .btn-ghost {
-    border-color: var(--edge);
+    border: 1.5px solid var(--text);
     color: var(--text);
   }
   .btn-ghost:hover {
-    border-color: var(--text);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+  /* The small label above a section heading. */
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    color: var(--accent-text);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  :lang(ar).kicker,
+  :lang(ar) .kicker {
+    letter-spacing: 0;
+  }
+  .kicker::before {
+    content: '';
+    width: 24px;
+    height: 3px;
+    background: var(--accent);
   }
   .link {
     color: var(--text);
@@ -144,6 +173,18 @@
     color: var(--text);
     font-size: 1rem;
   }
+  .field:focus-visible {
+    border-color: var(--accent);
+    border-radius: 0.5rem;
+    outline-offset: 0;
+  }
+  select.field.chosen {
+    border-color: var(--accent);
+    background-color: var(--tint);
+  }
+  .field option {
+    background: var(--page);
+  }
   .field[aria-invalid='true'] {
     border-color: var(--danger);
   }
@@ -153,7 +194,10 @@
     pointer-events: none;
     fill: none;
     stroke: var(--chalk);
-    stroke-width: 2;
+    stroke-width: 2px;
+  }
+  .chalk * {
+    vector-effect: non-scaling-stroke;
   }
   .chalk .hint {
     stroke: var(--accent);

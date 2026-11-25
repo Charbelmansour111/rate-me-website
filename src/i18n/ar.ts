@@ -9,6 +9,7 @@ export const ar: Dictionary = {
   },
   a11y: {
     skip: 'انتقل إلى المحتوى',
+    language: 'اللغة',
     mainNav: 'القائمة الرئيسية',
     footerNav: 'روابط أسفل الصفحة',
     home: 'Rate Me، الصفحة الرئيسية',
@@ -35,7 +36,8 @@ export const ar: Dictionary = {
     },
   },
   why: {
-    title: 'لماذا Rate Me',
+    kicker: 'لماذا Rate Me',
+    title: 'خطّط، ابنِ، نظّم',
     items: [
       {
         title: 'خطّط لأسبوعك',
@@ -52,6 +54,7 @@ export const ar: Dictionary = {
     ],
   },
   features: {
+    kicker: 'المزايا',
     title: 'ماذا ستجد في التطبيق',
     note: 'لم يُطلق Rate Me بعد. المزايا التي تحمل علامة «قريبًا» تصل بعد الإصدار الأول.',
     soon: 'قريبًا',
@@ -90,6 +93,7 @@ export const ar: Dictionary = {
     },
   },
   community: {
+    kicker: 'المجتمع',
     title: 'نبنيه مع المدرّبين في لبنان',
     text: 'نريد أن يشكّل المدرّبون والأكاديميات التطبيق معنا. سجّل مسبقًا لتكون من الأعضاء المؤسسين: تحصل على وصول مبكر، وتخبرنا ماذا نصلح وماذا نضيف وماذا نحذف.',
     stepsTitle: 'كيف يعمل',
@@ -100,6 +104,7 @@ export const ar: Dictionary = {
     ],
   },
   faq: {
+    kicker: 'الأسئلة',
     title: 'أسئلة شائعة',
     items: [
       {
@@ -124,6 +129,7 @@ export const ar: Dictionary = {
     ],
   },
   form: {
+    kicker: 'الوصول المبكر',
     title: 'سجّل مسبقًا',
     intro: 'كن من أوائل المدرّبين على Rate Me. الحقول الاختيارية يمكن تركها فارغة.',
     optional: 'اختياري',

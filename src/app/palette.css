@@ -3,14 +3,19 @@
  * images, favicons) read this file. The only copies are the two browser-bar colors in
  * src/config/theme.ts, and tests/unit/palette.test.ts checks those plus every AA pair.
  *
- * Grey and white base, a bit of black, hints of orange. Orange never fills a section.
+ * Grey and white base, a bit of black, orange accents. Orange never fills a section.
+ * #ff5a00 text only at 24px+ (or bold 19px+); smaller orange text uses --accent-text.
  */
 :root {
   --brand-orange: #ff5a00;
   --brand-black: #0b0b0c;
   --brand-white: #ffffff;
 
-  --accent: var(--brand-orange); /* strokes, focus rings, decoration */
+  --accent: var(--brand-orange); /* strokes, focus rings, large text */
+  --tint: rgb(255 90 0 / 0.1); /* behind icons, tags, the chosen role */
+  --button: #ff5a00;
+  --button-hover: #e64f00;
+  --on-button: #0b0b0c;
   --page: #ffffff;
   --soft: #f6f6f7; /* alternate sections */
   --softer: #ededef; /* stronger grey: the form section, placeholders */
@@ -21,8 +26,6 @@
   --chalk: #d9d9de; /* pitch line art */
   --accent-text: #bf3f00; /* small orange text; #d94800 is only 4.3:1 on white */
   --danger: #b3261e;
-  --button: #0b0b0c;
-  --on-button: #ffffff;
   color-scheme: light;
 }
 
@@ -37,8 +40,6 @@
   --chalk: #34343a;
   --accent-text: #ff8a3d;
   --danger: #ffb4ab;
-  --button: #ffffff;
-  --on-button: #0b0b0c;
   color-scheme: dark;
 }
 
@@ -53,8 +54,6 @@
   --edge: #7c7c84;
   --chalk: #34343a;
   --accent-text: #ff8a3d;
-  --button: #ffffff;
-  --on-button: #0b0b0c;
   background: var(--page);
   color: var(--text);
   color-scheme: dark;
