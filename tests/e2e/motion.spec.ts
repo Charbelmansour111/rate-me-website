@@ -238,32 +238,106 @@ test('the walk: without a canvas or its frames, still pictures', async ({ page }
   }
 });
 
-test('inside the app: views, arrows, dots and keys', async ({ page }) => {
+test('inside the app: views, arrows, dots and keys', async ({ page, isMobile }) => {
   await page.goto('/');
   const coach = page.getByRole('tabpanel', { name: 'Coach view' });
   const player = page.getByRole('tabpanel', { name: 'Player view' });
-  await expect(coach.getByRole('listitem')).toHaveCount(5);
+  await expect(coach.getByRole('listitem')).toHaveCount(8);
   await expect(player).toBeHidden();
 
-  const dot = (name: string) => coach.getByRole('button', { name, exact: true });
+  const current = coach.locator('[data-current]');
   await coach.getByRole('button', { name: 'Next screen' }).click();
-  await expect(dot('Calendar')).toHaveAttribute('aria-current', 'true');
-  await dot('Coaches Channel').click();
-  await expect(dot('Coaches Channel')).toHaveAttribute('aria-current', 'true');
+  await expect(current).toContainText('Calendar');
+  const list = coach.getByRole('list');
+  if (isMobile) {
+    for (let i = 2; i < 8; i++) {
+      await list.focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(current).toHaveCount(1);
+      await expect(coach.getByRole('listitem').nth(i)).toHaveAttribute('data-current');
+    }
+  } else {
+    await coach.getByRole('button', { name: 'Coaches Channel', exact: true }).click();
+  }
+  await expect(current).toContainText('Coaches Channel');
   await expect(coach.getByRole('button', { name: 'Next screen' })).toBeDisabled();
-  await coach.getByRole('list').focus();
+  await list.focus();
   await page.keyboard.press('ArrowLeft');
-  await expect(dot('Squad')).toHaveAttribute('aria-current', 'true');
+  await expect(current).toContainText('Player card');
 
   await page.getByRole('tab', { name: 'Coach view' }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Player view' })).toBeFocused();
   await expect(coach).toBeHidden();
-  // Not in the app yet, so it says so
-  await expect(player.getByRole('listitem').filter({ hasText: 'Your team channel' })).toContainText(
-    'Coming soon',
-  );
+  // Players have no channel in the app
+  await expect(player.getByRole('listitem')).toHaveCount(3);
+  await expect(player).not.toContainText(/channel/i);
 });
+
+test('inside the app: undistorted phones, the one in front larger, tilting to the mouse', async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto('/');
+  const slides = page.locator('#view-coach .showcase-slide');
+  await slides.first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(500);
+  const screen = await slides
+    .first()
+    .locator('.phone-screen')
+    .evaluate((el) => (el as HTMLElement).offsetHeight / (el as HTMLElement).offsetWidth);
+  expect(screen).toBeCloseTo(19.5 / 9, 1);
+  const width = (i: number) =>
+    slides
+      .nth(i)
+      .locator('.phone')
+      .evaluate((el) => el.getBoundingClientRect().width);
+  expect(await width(0)).toBeGreaterThan(await width(1));
+  // Part of the next screen shows
+  const next = (await slides.nth(1).locator('.phone').boundingBox())!;
+  expect(page.viewportSize()!.width - 20 - next.x).toBeGreaterThan(16);
+
+  const transform = () =>
+    slides
+      .first()
+      .locator('.phone')
+      .evaluate((el) => getComputedStyle(el).transform);
+  if (isMobile) return;
+  const box = (await slides.first().locator('.phone').boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.5);
+  await expect.poll(transform).toContain('matrix3d');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(transform).toBe('none');
+});
+
+for (const width of [360, 390, 430]) {
+  test(`phones at ${width}px: nothing sideways, 44px targets, readable text`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    for (const path of [...(ARABIC_ENABLED ? ['/', '/ar'] : ['/']), '/privacy']) {
+      await page.goto(path);
+      const found = await page.evaluate(() => {
+        const size = (el: Element) => el.getBoundingClientRect();
+        const targets = 'a, button, select, summary, label.role-chip, input[type=text]';
+        return {
+          sideways: document.documentElement.scrollWidth - innerWidth,
+          small: [...document.querySelectorAll(targets)]
+            .filter((el) => size(el).width > 1 && !el.closest('[inert], [aria-hidden=true]'))
+            .filter((el) => size(el).width < 43.5 || size(el).height < 43.5)
+            .map((el) => el.outerHTML.slice(0, 120)),
+          tiny: [...document.querySelectorAll('body *')]
+            .filter((el) => !el.closest('svg, script') && size(el).width > 1)
+            .filter((el) =>
+              [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim()),
+            )
+            .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 14)
+            .map((el) => el.outerHTML.slice(0, 80)),
+        };
+      });
+      expect(found, path).toEqual({ sideways: 0, small: [], tiny: [] });
+    }
+  });
+}
 
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });

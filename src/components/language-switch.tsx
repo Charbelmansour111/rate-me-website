@@ -16,7 +16,7 @@ export function LanguageSwitch({ locale, path }: { locale: Locale; path: PagePat
             href={localePath(item, path)}
             hrefLang={item}
             aria-current={item === locale || undefined}
-            className="group grid min-h-11 place-items-center rounded-lg px-2 font-medium hover:bg-soft"
+            className="group grid min-h-11 min-w-11 place-items-center rounded-lg px-2 font-medium hover:bg-soft"
           >
             <span
               lang={item}

@@ -50,7 +50,10 @@ export function LegalPage({ locale, kind }: { locale: Locale; kind: LegalKind })
           <ul className="mt-3 gap-x-10 sm:columns-2">
             {doc.sections.map((section) => (
               <li key={section.id}>
-                <a className="link inline-block py-1.5" href={`#${section.id}`}>
+                <a
+                  className="link inline-flex min-h-11 min-w-11 items-center"
+                  href={`#${section.id}`}
+                >
                   {section.title}
                 </a>
               </li>

@@ -262,7 +262,10 @@ export function HomePage({ locale }: { locale: Locale }) {
                         {item.privacyLink && (
                           <>
                             {' '}
-                            <a className="link" href={localePath(locale, '/privacy')}>
+                            <a
+                              className="link inline-flex min-h-11 items-center"
+                              href={localePath(locale, '/privacy')}
+                            >
                               {item.privacyLink}
                             </a>
                           </>

@@ -33,6 +33,10 @@ const SKETCHES: Record<ScreenId, string> = {
     'M20 70H200 M20 115H200 M20 160H200 M20 205H200 M20 250H200 M20 70V250 M56 70V250 M92 70V250 M128 70V250 M164 70V250 M200 70V250 M20 290H200V330H20Z M20 345H200V385H20Z',
   whiteboard:
     'M20 60H200V400H20Z M20 230H200 M80 230a30 30 0 1 0 60 0a30 30 0 1 0-60 0 M65 60V105H155V60 M65 400V355H155V400 M50 320Q70 260 150 275 M140 268L150 275L142 284 M160 160l14 14 M174 160l-14 14 M92 150l14 14 M106 150l-14 14',
+  'whiteboard-roles':
+    'M20 60H200V250H20Z M65 60V105H155V60 M70 160a12 12 0 1 1 0 24a12 12 0 0 1 0-24 M150 140a12 12 0 1 1 0 24a12 12 0 0 1 0-24 M110 200a12 12 0 1 1 0 24a12 12 0 0 1 0-24 M20 280H200 M38 310a16 16 0 1 1 0 32a16 16 0 0 1 0-32 M86 310a16 16 0 1 1 0 32a16 16 0 0 1 0-32 M134 310a16 16 0 1 1 0 32a16 16 0 0 1 0-32 M182 310a16 16 0 1 1 0 32a16 16 0 0 1 0-32 M20 380H200V420H20Z',
+  formation:
+    'M20 60H200V400H20Z M20 230H200 M80 230a30 30 0 1 0 60 0a30 30 0 1 0-60 0 M65 400V355H155V400 M110 372a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M45 300a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M88 310a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M132 310a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M175 300a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M60 200a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M110 221a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M160 200a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M50 110a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M110 90a9 9 0 1 1 0 18a9 9 0 0 1 0-18 M170 110a9 9 0 1 1 0 18a9 9 0 0 1 0-18',
   squad: cards,
   event:
     'M20 60H200V150H20Z M36 84H130 M36 106H170 M36 128H100 M20 172H104V206H20Z M116 172H200V206H116Z M20 232H110 M20 258H200 M20 284H200 M20 310H160 M20 340H200V400H20Z',
@@ -43,8 +47,8 @@ const SKETCHES: Record<ScreenId, string> = {
 
 export function Showcase({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
-  const isReleased = ({ feature, released = true }: Screen) =>
-    released && (!feature || features.find(({ id }) => id === feature)!.released);
+  const isReleased = ({ feature }: Screen) =>
+    !feature || features.find(({ id }) => id === feature)!.released;
 
   const views = (Object.keys(screens) as ViewId[]).map((view) => ({
     id: view,

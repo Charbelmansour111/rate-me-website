@@ -52,7 +52,7 @@
   border-radius: 50%;
   background: var(--text);
   color: var(--page);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 .tactics-dots {
   display: none;

@@ -18,7 +18,7 @@ export function SiteHeader({ locale, path }: { locale: Locale; path: PagePath })
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-page">
       <div className="wrap flex h-18 items-center justify-between gap-3">
-        <Link href={home} aria-label={t.a11y.home} className="shrink-0">
+        <Link href={home} aria-label={t.a11y.home} className="flex min-h-11 shrink-0 items-center">
           <Wordmark className="h-7 w-auto sm:h-8" />
         </Link>
         <nav aria-label={t.a11y.mainNav} className="hidden md:block">

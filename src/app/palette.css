@@ -26,6 +26,9 @@
   --chalk: #d9d9de; /* pitch line art */
   --accent-text: #bf3f00; /* small orange text; #d94800 is only 4.3:1 on white */
   --danger: #b3261e;
+  --bezel: #17171a; /* the phone around a screenshot */
+  --bezel-rim: #3d3d44;
+  --bezel-shadow: rgb(11 11 12 / 0.28);
   color-scheme: light;
 }
 
@@ -40,6 +43,9 @@
   --chalk: #34343a;
   --accent-text: #ff8a3d;
   --danger: #ffb4ab;
+  --bezel: #232327;
+  --bezel-rim: #5c5c66;
+  --bezel-shadow: rgb(0 0 0 / 0.7);
   color-scheme: dark;
 }
 
