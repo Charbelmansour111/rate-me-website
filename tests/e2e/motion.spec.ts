@@ -247,7 +247,12 @@ test('inside the app: views, arrows, dots and keys', async ({ page, isMobile }) 
   await expect(player).toBeHidden();
 
   const current = coach.locator('[data-current]');
-  await coach.getByRole('button', { name: 'Next screen' }).click();
+  await coach.scrollIntoViewIfNeeded();
+  if (isMobile) {
+    await expect(current).toContainText('Home');
+    await coach.getByRole('button', { name: 'Next screen' }).click();
+  }
+  // Three fit on desktop, so it starts on the second
   await expect(current).toContainText('Calendar');
   const list = coach.getByRole('list');
   if (isMobile) {
@@ -283,6 +288,8 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
   const slides = page.locator('#view-coach .showcase-slide');
   await slides.first().scrollIntoViewIfNeeded();
   await page.waitForTimeout(500);
+  const at = isMobile ? 0 : 1;
+  await expect(slides.nth(at)).toHaveAttribute('data-current');
   const screen = await slides
     .first()
     .locator('.phone-screen')
@@ -293,18 +300,21 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
       .nth(i)
       .locator('.phone')
       .evaluate((el) => el.getBoundingClientRect().width);
-  expect(await width(0)).toBeGreaterThan(await width(1));
+  expect(await width(at)).toBeGreaterThan(await width(at + 1));
   // Part of the next screen shows
-  const next = (await slides.nth(1).locator('.phone').boundingBox())!;
+  const next = (await slides
+    .nth(at + 1)
+    .locator('.phone')
+    .boundingBox())!;
   expect(page.viewportSize()!.width - 20 - next.x).toBeGreaterThan(16);
 
   const transform = () =>
     slides
-      .first()
+      .nth(at)
       .locator('.phone')
       .evaluate((el) => getComputedStyle(el).transform);
   if (isMobile) return;
-  const box = (await slides.first().locator('.phone').boundingBox())!;
+  const box = (await slides.nth(at).locator('.phone').boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.5);
   await expect.poll(transform).toContain('matrix3d');
   await page.emulateMedia({ reducedMotion: 'reduce' });

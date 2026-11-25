@@ -64,14 +64,14 @@ export function ShowcaseTabs({ views, t }: { views: View[]; t: Controls }) {
           data-active={i === active}
           className="showcase-view"
         >
-          <Carousel view={view} t={t} />
+          <Carousel view={view} t={t} active={i === active} />
         </div>
       ))}
     </>
   );
 }
 
-function Carousel({ view, t }: { view: View; t: Controls }) {
+function Carousel({ view, t, active }: { view: View; t: Controls; active: boolean }) {
   const track = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
   const last = view.slides.length - 1;
@@ -89,6 +89,15 @@ function Carousel({ view, t }: { view: View; t: Controls }) {
     for (const slide of list.children) observer.observe(slide);
     return () => observer.disconnect();
   }, []);
+
+  // Where three fit side by side, start on the second one: no empty half on the first view.
+  useEffect(() => {
+    const list = track.current!;
+    const [first, second] = list.children;
+    if (!active || !second || list.scrollLeft !== 0) return;
+    const step = second.getBoundingClientRect().left - first.getBoundingClientRect().left;
+    if (list.clientWidth > 3 * Math.abs(step)) list.scrollLeft = step;
+  }, [active]);
 
   function show(index: number) {
     const list = track.current!;
