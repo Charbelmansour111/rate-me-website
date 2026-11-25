@@ -1,0 +1,108 @@
+import { expect, test, type Page } from '@playwright/test';
+
+let ip = 0;
+/** Each test gets its own address, so the rate limiter does not mix them up. */
+test.beforeEach(async ({ context }, info) => {
+  await context.setExtraHTTPHeaders({
+    'x-forwarded-for': `10.${info.workerIndex}.${info.retry}.${++ip}`,
+  });
+});
+
+async function fill(page: Page) {
+  await page.locator('#f-name').fill('Rami Haddad');
+  await page.locator('#f-email').fill('rami@club-beirut.com');
+  await page.locator('#f-phone').fill('03 123 456');
+  await page.locator('#f-role').selectOption('coach');
+  await page.locator('#f-city').fill('Beirut');
+  await page.locator('#f-consent').check();
+}
+const submit = (page: Page) => page.locator('#pre-register button[type=submit]').click();
+
+test('signs up, then shows the success state with focus on it', async ({ page }) => {
+  await page.goto('/');
+  await fill(page);
+  const request = page.waitForRequest('**/api/pre-register');
+  await submit(page);
+  expect((await request).postDataJSON()).toMatchObject({ locale: 'en', website: '' });
+  const heading = page.getByRole('heading', { name: "You're on the list" });
+  await expect(heading).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Share Rate Me' })).toBeVisible();
+});
+
+test('signs up in Arabic', async ({ page }) => {
+  await page.goto('/ar');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await fill(page);
+  await submit(page);
+  await expect(page.getByRole('heading', { name: 'أنت على القائمة' })).toBeVisible();
+});
+
+test('shows inline errors, focuses the first one and clears them when fixed', async ({ page }) => {
+  let sent = false;
+  page.on('request', (request) => (sent ||= request.url().includes('/api/')));
+  await page.goto('/');
+  await submit(page);
+
+  await expect(page.locator('#f-name')).toBeFocused();
+  await expect(page.locator('#f-name')).toHaveAccessibleDescription(/Enter your name/);
+  for (const field of ['name', 'email', 'role', 'city', 'consent']) {
+    await expect(page.locator(`#e-${field}`)).toBeVisible();
+    await expect(page.locator(`#f-${field}`)).toHaveAttribute('aria-invalid', 'true');
+  }
+  await expect(page.locator('#e-club')).toHaveCount(0);
+
+  await page.locator('#f-name').fill('Rami');
+  await expect(page.locator('#e-name')).toHaveCount(0);
+  await page.locator('#f-email').fill('not an email');
+  await page.locator('#f-city').focus();
+  await expect(page.locator('#e-email')).toContainText('valid email');
+  expect(sent).toBe(false);
+});
+
+test('shows the server’s own errors', async ({ page }) => {
+  await page.goto('/');
+  await fill(page);
+  await page.locator('#f-email').fill('rami@mailinator.com');
+  await submit(page);
+  await expect(page.locator('#e-email')).toContainText('Temporary addresses');
+  await expect(page.locator('#f-email')).toBeFocused();
+});
+
+test('keeps what was typed when the service is down', async ({ page }) => {
+  await page.route('**/api/pre-register', (route) =>
+    route.fulfill({ status: 503, json: { ok: false, error: 'unavailable' } }),
+  );
+  await page.goto('/');
+  await fill(page);
+  await submit(page);
+  await expect(page.getByRole('alert').filter({ hasText: 'could not save' })).toBeVisible();
+  await expect(page.locator('#f-name')).toHaveValue('Rami Haddad');
+});
+
+test('the honeypot is out of reach for people, and a bot gets a plain success', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const trap = page.locator('#f-website');
+  await expect(trap).not.toBeInViewport();
+  await expect(trap).toHaveAttribute('tabindex', '-1');
+  await fill(page);
+  await trap.evaluate((input: HTMLInputElement) => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, 'x');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  const request = page.waitForRequest('**/api/pre-register');
+  await submit(page);
+  expect((await request).postDataJSON().website).toBe('x');
+  await expect(page.getByRole('heading', { name: "You're on the list" })).toBeVisible();
+});
+
+test('slows down after ten tries', async ({ request }) => {
+  // This fixture has its own headers: a fresh address for every run.
+  const headers = { 'x-forwarded-for': `limit-${Date.now()}-${Math.random()}` };
+  const post = () => request.post('/api/pre-register', { data: {}, headers });
+  for (let i = 0; i < 10; i++) expect((await post()).status()).toBe(422);
+  const blocked = await post();
+  expect(blocked.status()).toBe(429);
+  expect(Number(blocked.headers()['retry-after'])).toBeGreaterThan(0);
+});
