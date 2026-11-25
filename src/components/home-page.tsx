@@ -20,7 +20,7 @@ export function HomePage({ locale }: { locale: Locale }) {
       <SiteHeader locale={locale} path="/" />
       <main id="main" className="overflow-x-clip">
         <section className="relative">
-          <div className="wrap grid items-center gap-x-12 gap-y-14 pt-14 pb-20 lg:grid-cols-[1.2fr_1fr] lg:pt-20 lg:pb-28">
+          <div className="wrap grid items-center gap-x-12 gap-y-14 pt-14 pb-20 lg:grid-cols-[1.5fr_1fr] lg:pt-20 lg:pb-28">
             <div>
               <h1 className="display h1">
                 {t.hero.title[0]}{' '}
@@ -66,8 +66,8 @@ export function HomePage({ locale }: { locale: Locale }) {
                 )}
               </div>
             </div>
-            <div className="hero-parallax mx-auto w-full max-w-md lg:max-w-none">
-              <HeroDrill t={t.hero.drill} />
+            <div className="hero-parallax mx-auto w-full max-w-[23.75rem]">
+              <HeroDrill locale={locale} />
             </div>
           </div>
         </section>

@@ -76,16 +76,16 @@
     letter-spacing: 0;
   }
   .h1 {
-    font-size: clamp(4rem, 1.2rem + 10.5vw, 9.25rem);
+    font-size: clamp(3.25rem, 2.5rem + 3.2vw, 5.5rem);
   }
   :lang(ar) .h1 {
-    font-size: clamp(2.75rem, 1.4rem + 5.6vw, 5.75rem);
+    font-size: clamp(2.25rem, 1.8rem + 2vw, 3.5rem);
   }
   .h2 {
-    font-size: clamp(3rem, 1.8rem + 5vw, 5.75rem);
+    font-size: clamp(2.6rem, 2rem + 2.4vw, 4.25rem);
   }
   :lang(ar) .h2 {
-    font-size: clamp(2.1rem, 1.4rem + 2.8vw, 3.75rem);
+    font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.8rem);
   }
   .h3 {
     font-size: clamp(1.9rem, 1.6rem + 1vw, 2.4rem);
@@ -220,159 +220,6 @@
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
-  }
-}
-
-/* Longhands on purpose: the CSS minifier turns a shorthand without a name into none.
-   The hero drill: five seconds, once; "Replay" restarts it. Passes happen at 12, 34 and 56%. */
-.drill-mover {
-  animation-duration: 5s;
-  animation-fill-mode: both;
-  animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1);
-}
-.drill-ball {
-  animation-name: drill-ball;
-}
-.drill-d1 {
-  animation-name: drill-d1;
-}
-.drill-d2 {
-  animation-name: drill-d2;
-}
-.drill-d3 {
-  animation-name: drill-d3;
-}
-.drill-a4 {
-  animation-name: drill-a4;
-}
-.drill-pass {
-  stroke-dasharray: 1;
-  animation-duration: 5s;
-  animation-fill-mode: both;
-  animation-timing-function: linear;
-}
-.drill-p1 {
-  animation-name: drill-p1;
-}
-.drill-p2 {
-  animation-name: drill-p2;
-}
-.drill-p3 {
-  animation-name: drill-p3;
-}
-.drill-p4 {
-  animation-name: drill-p4;
-}
-@keyframes drill-ball {
-  0%,
-  10% {
-    transform: translate(84px, 318px);
-  }
-  24%,
-  34% {
-    transform: translate(186px, 396px);
-  }
-  48%,
-  56% {
-    transform: translate(312px, 372px);
-  }
-  68%,
-  78% {
-    transform: translate(402px, 250px);
-  }
-  90%,
-  100% {
-    transform: translate(268px, 40px);
-  }
-}
-@keyframes drill-d1 {
-  0%,
-  10% {
-    transform: translate(118px, 258px);
-  }
-  24%,
-  34% {
-    transform: translate(164px, 300px);
-  }
-  48%,
-  100% {
-    transform: translate(206px, 276px);
-  }
-}
-@keyframes drill-d2 {
-  0%,
-  10% {
-    transform: translate(206px, 232px);
-  }
-  34% {
-    transform: translate(238px, 252px);
-  }
-  56%,
-  100% {
-    transform: translate(262px, 216px);
-  }
-}
-@keyframes drill-d3 {
-  0%,
-  22% {
-    transform: translate(292px, 226px);
-  }
-  48% {
-    transform: translate(330px, 268px);
-  }
-  68%,
-  100% {
-    transform: translate(322px, 206px);
-  }
-}
-@keyframes drill-a4 {
-  0%,
-  44% {
-    transform: translate(412px, 340px);
-  }
-  66%,
-  100% {
-    transform: translate(418px, 262px);
-  }
-}
-@keyframes drill-p1 {
-  0%,
-  10% {
-    stroke-dashoffset: 1;
-  }
-  24%,
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes drill-p2 {
-  0%,
-  34% {
-    stroke-dashoffset: 1;
-  }
-  48%,
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes drill-p3 {
-  0%,
-  56% {
-    stroke-dashoffset: 1;
-  }
-  68%,
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes drill-p4 {
-  0%,
-  78% {
-    stroke-dashoffset: 1;
-  }
-  90%,
-  100% {
-    stroke-dashoffset: 0;
   }
 }
 

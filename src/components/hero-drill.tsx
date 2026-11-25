@@ -1,112 +1,78 @@
-'use client';
+import { getDictionary, type Locale } from '@/i18n';
+import { buildPlay, passPath } from '@/motion/play-engine';
+import { PLAYER_IDS, PLAYS } from '@/motion/plays';
+import { mirror, translate } from '@/motion/tactics-data';
 
-import { useState } from 'react';
+const LABELS = ['6', '8', '10', '7'];
 
-import type { Dictionary } from '@/i18n';
-
-const PASSES = [
-  'M84 318 L186 396',
-  'M186 396 L312 372',
-  'M312 372 L402 250',
-  // The shot
-  'M402 250 Q340 120 268 40',
-];
-/** An arrowhead with its tip at (x, y), pointing along (dx, dy). */
-function head(x: number, y: number, dx: number, dy: number) {
-  const angle = Math.atan2(dy, dx);
-  const wing = (turn: number) =>
-    `${Math.round(x - 14 * Math.cos(angle + turn))} ${Math.round(y - 14 * Math.sin(angle + turn))}`;
-  return `M${wing(0.5)} L${x} ${y} L${wing(-0.5)}`;
-}
-const HEADS = [
-  head(186, 396, 102, 78),
-  head(312, 372, 126, -24),
-  head(402, 250, 90, -122),
-  // Short of the goal line, so the ball does not cover it
-  head(282, 60, -72, -80),
-];
-const ATTACKERS = [
-  [62, 306],
-  [172, 420],
-  [322, 396],
-];
-
-/** An original drill on a half pitch. Runs once, then rests on the finished diagram. */
-export function HeroDrill({ t }: { t: Dictionary['hero']['drill'] }) {
-  const [run, setRun] = useState(0);
+/** The first play as a finished drawing; src/motion/hero.ts then runs all of them in turn. */
+export function HeroDrill({ locale }: { locale: Locale }) {
+  const t = getDictionary(locale).hero.drill;
+  const rtl = locale === 'ar';
+  const first = buildPlay(PLAYS[0]);
+  const slots = Math.max(...PLAYS.map((play) => buildPlay(play).passes.length));
   return (
-    <figure className="relative" dir="ltr">
+    <figure data-hero-drill data-plays={JSON.stringify(t.plays)}>
       <svg
-        key={run}
-        viewBox="0 0 480 500"
+        viewBox="0 0 480 420"
         role="img"
         aria-label={t.alt}
-        className="h-auto w-full"
+        className="block h-auto w-full"
         fill="none"
       >
-        {/* Half pitch */}
         <g stroke="var(--chalk)" strokeWidth="2">
-          <path d="M16 32 H464 V484 H16 Z" />
-          <path d="M112 32 V142 H368 V32 M178 32 V72 H302 V32" />
-          <path d="M194 142 A52 52 0 0 0 286 142" />
-          <path d="M184 484 A56 56 0 0 1 296 484" />
-          <path d="M16 46 A14 14 0 0 0 30 32 M450 32 A14 14 0 0 0 464 46" />
+          <path d="M14 30H466V406H14Z M120 30V126H360V30 M184 30V66H296V30" />
+          <path d="M194 126A52 52 0 0 0 286 126 M184 406A56 56 0 0 1 296 406" />
+          <path d="M14 44A14 14 0 0 0 28 30 M452 30A14 14 0 0 0 466 44" />
         </g>
-        <path d="M202 32 V12 H278 V32" stroke="var(--text)" strokeWidth="4" />
-        <circle cx="240" cy="110" r="3" fill="var(--chalk)" />
-
-        {PASSES.map((d, i) => (
+        <path d="M204 30V12H276V30" stroke="var(--text)" strokeWidth="4" />
+        {Array.from({ length: slots }, (_, i) => (
           <path
-            key={d}
-            d={d}
+            key={i}
+            data-play-trail
+            d={first.passes[i] ? passPath(first.passes[i], rtl) : ''}
             pathLength={1}
             stroke="var(--accent)"
-            strokeWidth={i === 3 ? 5 : 3}
-            strokeLinecap="round"
-            className={`drill-pass drill-p${i + 1}`}
-          />
-        ))}
-
-        {HEADS.map((d, i) => (
-          <path
-            key={d}
-            d={d}
-            pathLength={1}
-            stroke="var(--accent)"
-            strokeWidth={i === 3 ? 5 : 3}
+            strokeWidth="3"
             strokeLinejoin="round"
-            className={`drill-pass drill-p${i + 1}`}
           />
         ))}
-
-        {/* Defenders: outlined. Attackers: filled. Orange is for the ball, the passes and the shot. */}
-        {[1, 2, 3].map((n) => (
-          <g key={n} className={`drill-mover drill-d${n}`}>
-            <circle r="17" fill="var(--page)" stroke="var(--text)" strokeWidth="3" />
-            <path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="var(--text)" strokeWidth="3" />
+        {PLAYER_IDS.map((id) => (
+          <g
+            key={id}
+            data-player={id}
+            style={{ transform: translate(mirror(PLAYS[0].start[id], rtl)) }}
+          >
+            {id.startsWith('a') ? (
+              <>
+                <circle r="17" fill="var(--text)" />
+                <text y="5.5" textAnchor="middle" fill="var(--page)" fontSize="16" fontWeight="600">
+                  {LABELS[Number(id[1])]}
+                </text>
+              </>
+            ) : (
+              <>
+                <circle r="16" fill="var(--page)" stroke="var(--text)" strokeWidth="3" />
+                <path d="M-5 -5L5 5M5 -5L-5 5" stroke="var(--text)" strokeWidth="3" />
+              </>
+            )}
           </g>
         ))}
-        {ATTACKERS.map(([x, y]) => (
-          <circle key={x} cx={x} cy={y} r="18" fill="var(--text)" />
-        ))}
-        <circle r="18" fill="var(--text)" className="drill-mover drill-a4" />
-
-        <g className="drill-mover drill-ball">
-          <circle r="10" fill="var(--brand-orange)" stroke="var(--brand-black)" strokeWidth="2" />
-          <path d="M0 -4.5 L4.3 -1.4 L2.6 3.6 L-2.6 3.6 L-4.3 -1.4 Z" fill="var(--brand-black)" />
+        <g data-play-ball style={{ transform: translate(mirror(first.ball[0].point, rtl)) }}>
+          <circle r="9" fill="var(--brand-orange)" stroke="var(--brand-black)" strokeWidth="2" />
+          <path d="M0 -4L3.8 -1.2L2.4 3.2H-2.4L-3.8 -1.2Z" fill="var(--brand-black)" />
         </g>
       </svg>
-      <figcaption
-        className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted"
-        dir="auto"
-      >
-        <span>{t.caption}</span>
+      <figcaption className="mt-2 flex min-h-11 items-center justify-between gap-3 text-sm text-muted">
+        <span data-play-name>{t.plays[0]}</span>
         <button
           type="button"
-          onClick={() => setRun((n) => n + 1)}
-          className="link min-h-11 px-1 font-semibold motion-reduce:hidden"
+          hidden
+          data-play-pause
+          aria-pressed="false"
+          className="link min-h-11 px-1 font-semibold"
         >
-          {t.replay}
+          {t.pause}
         </button>
       </figcaption>
     </figure>

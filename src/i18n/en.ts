@@ -30,9 +30,9 @@ export const en = {
     sub: "We're building a community of coaches in Lebanon first, then the Middle East and beyond.",
     join: 'Join the coaches community',
     drill: {
-      replay: 'Replay the drill',
-      alt: 'A drill drawn on a half pitch: four attackers pass the ball from the left to the right side while three defenders shift across with it, and the last attacker shoots.',
-      caption: 'Defenders shift with the ball',
+      plays: ['Rondo', 'Wide overlap', 'Through ball', 'Switch of play', 'Press and win'],
+      pause: 'Pause',
+      alt: 'Illustration of short football plays on a half pitch: a rondo, a wide overlap, a through ball, a switch of play, and a press that wins the ball. One defender presses the ball while the others cover.',
     },
   },
   why: {
