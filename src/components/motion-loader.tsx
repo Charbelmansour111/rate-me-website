@@ -12,14 +12,18 @@ export function MotionLoader() {
       controller = undefined;
       if (reduced.matches) return;
       const current = (controller = new AbortController());
-      import('@/motion').then(
-        ({ startMotion }) => {
-          if (!current.signal.aborted) startMotion(current.signal);
-        },
-        () => {
-          // Offline or blocked: the page is complete without it.
-        },
-      );
+      const load = () =>
+        import('@/motion').then(
+          ({ startMotion }) => {
+            if (!current.signal.aborted) startMotion(current.signal);
+          },
+          () => {
+            // Offline or blocked: the page is complete without it.
+          },
+        );
+      // Once the page has settled (Safari has no idle callback).
+      if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 1500 });
+      else setTimeout(load, 300);
     };
     update();
     reduced.addEventListener('change', update);

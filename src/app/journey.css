@@ -134,11 +134,14 @@
       animation-name: tunnel-light;
     }
   }
+  /* Hidden, not only transparent: a scene whose turn has not come costs no painting. */
   @keyframes scene-in {
     from {
+      visibility: hidden;
       opacity: 0;
     }
     to {
+      visibility: visible;
       opacity: 1;
     }
   }

@@ -145,7 +145,8 @@ function Pitch() {
               stroke="none"
             />
           ))}
-          <path d="M0 360H1440 M720 360L720 900" />
+          <path d="M0 360H1440" />
+          <path className="max-sm:hidden" d="M720 360V900" />
           <path d="M720 470c160 0 290 34 290 76s-130 76-290 76-290-34-290-76 130-76 290-76Z" />
           <path d="M1080 360L1300 480H1440 M1180 360L1290 410H1440" />
           {/* Goal */}
@@ -166,6 +167,21 @@ function Pitch() {
             stroke="var(--brand-black)"
             opacity="0.8"
           />
+          {/* Phones only see the middle of the drawing */}
+          <g className="sm:hidden">
+            <path d="M650 360V262H790V360 M674 262V360 M698 262V360 M722 262V360 M746 262V360 M770 262V360 M650 288H790 M650 314H790 M650 340H790" />
+            <path d="M590 360L540 440H900L850 360" />
+            <Player x={600} y={600} size={1.4} />
+            <Player x={850} y={500} size={1} />
+            <circle
+              cx="668"
+              cy="592"
+              r="13"
+              fill="var(--brand-orange)"
+              stroke="var(--brand-black)"
+              opacity="0.8"
+            />
+          </g>
         </svg>
       </div>
     </>
