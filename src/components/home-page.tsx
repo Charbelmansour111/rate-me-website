@@ -3,7 +3,6 @@ import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale } from '@/i18n';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
-import { EdgeLine } from './edge-line';
 import { FeatureIcon } from './feature-icon';
 import { HeroDrill } from './hero-drill';
 import { PreRegisterForm } from './pre-register-form';
@@ -79,7 +78,6 @@ export function HomePage({ locale }: { locale: Locale }) {
 
           <WalkGap scene="locker" locale={locale} />
           <section className="section" aria-labelledby="why-title">
-            <EdgeLine />
             <div className="wrap">
               <div className="panel relative overflow-clip">
                 {/* Corner markings, kept clear of the text */}
@@ -115,7 +113,6 @@ export function HomePage({ locale }: { locale: Locale }) {
         </WalkGroup>
         <WalkGroup scene="tunnel">
           <section id="features" className="section" aria-labelledby="features-title">
-            <EdgeLine end />
             <div className="wrap">
               <div className="panel">
                 <div className="grid items-end gap-6 lg:grid-cols-2">
@@ -165,7 +162,6 @@ export function HomePage({ locale }: { locale: Locale }) {
         </WalkGroup>
         <WalkGroup scene="pitch">
           <section id="community" className="section" aria-labelledby="community-title">
-            <EdgeLine end />
             <div className="wrap">
               <div className="panel inverse relative grid gap-16 overflow-clip lg:grid-cols-2">
                 {/* Corner arcs */}
@@ -229,7 +225,6 @@ export function HomePage({ locale }: { locale: Locale }) {
           </section>
           <WalkGap scene="pitch" locale={locale} />
           <section id="faq" className="section" aria-labelledby="faq-title">
-            <EdgeLine />
             <div className="wrap">
               <div className="panel grid gap-12 lg:grid-cols-[1fr_1.6fr]">
                 <div>
@@ -280,7 +275,6 @@ export function HomePage({ locale }: { locale: Locale }) {
 
           <WalkGap scene="pitch" locale={locale} />
           <section id="pre-register" className="section" aria-labelledby="form-title">
-            <EdgeLine end last />
             <div className="wrap">
               <div data-reveal className="form-card panel mx-auto max-w-3xl">
                 <div className="mb-6">

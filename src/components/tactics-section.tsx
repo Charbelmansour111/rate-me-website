@@ -5,8 +5,6 @@ import { roleLetters, type RoleId } from '@/config/roles.config';
 import { getDictionary, type Locale } from '@/i18n';
 import { ATTACKERS, DEFENDERS, mirror, PASSES, translate, type Point } from '@/motion/tactics-data';
 
-import { EdgeLine } from './edge-line';
-
 /**
  * "Tactics that move". The server renders the finished frame with every label; src/motion plays it.
  * Decorative: the picture is hidden from assistive tech, a sentence describes it instead.
@@ -22,7 +20,6 @@ export function TacticsSection({ locale }: { locale: Locale }) {
 
   return (
     <section id="tactics" data-tactics className="tactics relative" aria-labelledby="tactics-title">
-      <EdgeLine />
       {[0, 1, 2].map((i) => (
         <span
           key={i}

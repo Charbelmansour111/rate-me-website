@@ -6,17 +6,6 @@
 /* Longhands on purpose: the CSS minifier turns an animation shorthand without a name into none. */
 
 /* --- The pitch line down the page --- */
-.edge-line {
-  position: absolute;
-  inset: 0 10px;
-  width: calc(100% - 20px);
-  height: calc(100% - 1px);
-  overflow: visible;
-  pointer-events: none;
-  stroke: var(--accent);
-  stroke-width: 2px;
-}
-
 /* --- Tactics showcase --- */
 .tactics-pin {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
@@ -211,29 +200,6 @@
 
   /* --- Linked to the scroll --- */
   @supports (animation-timeline: view()) {
-    .edge-line {
-      view-timeline-name: --edge;
-    }
-    .edge-down,
-    .edge-across {
-      stroke-dasharray: 1;
-      animation-name: edge-draw;
-      animation-duration: auto;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --edge;
-      animation-range: cover 20% cover 72%;
-    }
-    .edge-across {
-      animation-range: cover 72% cover 84%;
-    }
-    /* The last section cannot scroll as far. */
-    .edge-last .edge-down {
-      animation-range: cover 10% cover 45%;
-    }
-    .edge-last .edge-across {
-      animation-range: cover 45% cover 55%;
-    }
     .hero-parallax {
       animation-name: hero-parallax;
       animation-duration: auto;
@@ -241,14 +207,6 @@
       animation-fill-mode: both;
       animation-timeline: scroll(root);
       animation-range: 0 700px;
-    }
-  }
-  @keyframes edge-draw {
-    from {
-      stroke-dashoffset: 1;
-    }
-    to {
-      stroke-dashoffset: 0;
     }
   }
   @keyframes hero-parallax {
