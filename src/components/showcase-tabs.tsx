@@ -9,6 +9,8 @@ export type Slide = {
   id: string;
   title: string;
   text: string;
+  /** What the picture shows, where the title does not say it all. */
+  alt?: string;
   src: string | null;
   sketch: string | null;
   soon: string | null;
@@ -175,7 +177,7 @@ function Carousel({ view, t, active }: { view: View; t: Controls; active: boolea
                   {slide.src ? (
                     <Image
                       src={slide.src}
-                      alt={slide.title}
+                      alt={slide.alt ?? slide.title}
                       width={234}
                       height={507}
                       sizes="234px"

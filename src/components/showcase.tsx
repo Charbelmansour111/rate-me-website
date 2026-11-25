@@ -54,7 +54,7 @@ export function Showcase({ locale }: { locale: Locale }) {
     id: view,
     label: t.showcase.views[view],
     slides: screens[view].map((screen): Slide => {
-      const captions: Partial<Record<ScreenId, { title: string; text: string }>> =
+      const captions: Partial<Record<ScreenId, { title: string; text: string; alt?: string }>> =
         t.showcase.captions[view];
       const caption = captions[screen.id]!;
       const src = findScreen(view, screen.id, locale);

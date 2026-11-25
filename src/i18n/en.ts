@@ -105,6 +105,7 @@ export const en = {
         'whiteboard-roles': {
           title: 'Roles',
           text: 'Give each player a role, or leave it automatic.',
+          alt: 'Roles on the whiteboard: a defender is set to Press, next to Smart, Cover, Mark and Intercept. Defenders carry the badges P, C, M and I, attackers O and R.',
         },
         formation: { title: 'Formation', text: 'Your lineup on the pitch.' },
         squad: { title: 'Squad', text: 'Your players and their cards.' },

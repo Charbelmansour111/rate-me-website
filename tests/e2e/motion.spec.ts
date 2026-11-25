@@ -374,9 +374,28 @@ test('inside the app: views, arrows, dots and keys', async ({ page, isMobile }) 
 });
 
 for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
-  test(`${path}: the formation and card screens are real, and load`, async ({ page }) => {
+  test(`${path}: the roles, calendar, formation and card screens are real, and load`, async ({
+    page,
+  }) => {
     await page.goto(path);
-    for (const name of ['coach-formation', 'coach-card', 'coach-whiteboard', 'player-card']) {
+    // No sketch is left: every slide has its picture
+    for (const view of ['coach', 'player']) {
+      const slides = page.locator(`#view-${view} .showcase-slide`);
+      await expect(slides.locator('.phone img')).toHaveCount(await slides.count());
+      await expect(slides.locator('.phone svg')).toHaveCount(0);
+    }
+    const roles = page.locator('.phone img[src*="coach-whiteboard-roles.png"]');
+    for (const role of ['Press', 'Cover', 'Mark', 'Intercept']) {
+      await expect(roles).toHaveAttribute('alt', new RegExp(role));
+    }
+    for (const name of [
+      'coach-whiteboard-roles',
+      'coach-calendar',
+      'coach-formation',
+      'coach-card',
+      'coach-whiteboard',
+      'player-card',
+    ]) {
       const image = page.locator(`.phone img[src*="${name}.png"]`);
       await expect(image).toHaveCount(1);
       const url = (await image.getAttribute('src'))!;
