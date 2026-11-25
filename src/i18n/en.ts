@@ -84,12 +84,33 @@ export const en = {
         text: 'Ask about your week or get a starting point for a drill. You stay in charge of every change.',
       },
     },
-    screens: {
-      title: 'Inside the app',
-      soon: 'Screenshot on the way',
-      calendar: 'The calendar',
-      whiteboard: 'The drill whiteboard',
-      squad: 'The squad',
+  },
+  journey: { locker: 'The locker room', tunnel: 'The tunnel', pitch: 'The pitch' },
+  showcase: {
+    kicker: 'Screens',
+    title: 'Inside the app',
+    views: { coach: 'Coach view', player: 'Player view' },
+    controls: {
+      views: 'Choose a view',
+      carousel: 'carousel',
+      slides: 'Screens, scroll sideways',
+      previous: 'Previous screen',
+      next: 'Next screen',
+    },
+    captions: {
+      coach: {
+        home: { title: 'Home', text: 'What comes next for your team.' },
+        calendar: { title: 'Calendar', text: 'Trainings, matches and team days.' },
+        whiteboard: { title: 'Whiteboard', text: 'Draw a drill and play it back.' },
+        squad: { title: 'Squad', text: 'Your players and their cards.' },
+        channel: { title: 'Coaches Channel', text: 'Meet the coaches of other clubs.' },
+      },
+      player: {
+        home: { title: 'Home', text: 'The next training or match.' },
+        event: { title: 'Event', text: 'When, where and what to know.' },
+        card: { title: 'Player card', text: 'Shown when your coach publishes it.' },
+        channel: { title: 'Your team channel', text: 'One place for your team to talk.' },
+      },
     },
   },
   tactics: {

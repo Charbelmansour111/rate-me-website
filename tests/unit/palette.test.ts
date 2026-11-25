@@ -23,7 +23,7 @@ const themes = {
   'black block in dark': {
     ...dark,
     ...inverse,
-    ...block(":root[data-theme='dark'] section.inverse"),
+    ...block(":root[data-theme='dark'] .panel.inverse"),
   },
 };
 

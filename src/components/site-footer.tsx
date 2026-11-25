@@ -12,7 +12,7 @@ export function SiteFooter({ locale, path }: { locale: Locale; path: PagePath })
   const t = getDictionary(locale);
   const item = 'inline-flex min-h-11 items-center hover:text-accent-text';
   return (
-    <footer className="inverse">
+    <footer className="inverse relative z-1">
       <MotionLoader />
       <div
         data-reveal="fade"

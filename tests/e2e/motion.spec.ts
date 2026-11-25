@@ -17,7 +17,7 @@ async function scrollThrough(page: Page) {
 const hidden = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll('main *, footer *')]
-      .filter((el) => !el.closest('svg') && Number(getComputedStyle(el).opacity) < 1)
+      .filter((el) => !el.closest('svg, .scene') && Number(getComputedStyle(el).opacity) < 1)
       .map((el) => el.outerHTML.slice(0, 100)),
   );
 
@@ -53,6 +53,7 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       0.001,
     );
     // With motion on, as visitors get it
+    // Scroll-linked scenes are drawings, aria-hidden
     const { violations } = await new AxeBuilder({ page }).analyze();
     expect(violations.map((v) => v.id)).toEqual([]);
   });
@@ -113,6 +114,11 @@ test('reduced motion: the finished frame, no pinning, no animation', async ({ pa
   }
   await expect(section.locator('.tactics-pin')).toHaveCSS('position', 'static');
   expect(await hidden(page)).toEqual([]);
+  for (const scene of await page.locator('.scene').all()) {
+    await expect(scene).toHaveCSS('position', 'sticky');
+    await expect(scene).toHaveCSS('opacity', '1');
+  }
+  await expect(page.locator('[data-play-pause]')).toBeHidden();
   expect(
     await page.evaluate(
       () => document.getAnimations().filter((a) => a.playState === 'running').length,
@@ -120,11 +126,88 @@ test('reduced motion: the finished frame, no pinning, no animation', async ({ pa
   ).toBe(0);
 });
 
+test('the hero runs different plays, and pauses', async ({ page }) => {
+  test.slow();
+  await page.goto('/');
+  const hero = page.locator('[data-hero-drill]');
+  await expect(hero).toHaveAttribute('data-play', 'rondo');
+  // Skip to the end of each play instead of waiting for it
+  const seen: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    seen.push((await hero.getAttribute('data-play'))!);
+    await hero.evaluate((el) => {
+      for (const animation of el.getAnimations({ subtree: true })) animation.finish();
+    });
+    await expect(hero).not.toHaveAttribute('data-play', seen[i]);
+  }
+  expect(new Set(seen.slice(0, 5)).size).toBe(5);
+  expect(seen[5]).toBe(seen[0]);
+
+  const running = () =>
+    hero.evaluate(
+      (el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length,
+    );
+  await expect.poll(running).toBeGreaterThan(7);
+  await hero.getByRole('button', { name: 'Pause' }).click();
+  await expect.poll(running).toBe(0);
+  await hero.getByRole('button', { name: 'Pause' }).click();
+  await expect.poll(running).toBeGreaterThan(7);
+  await page.evaluate(() => scrollTo({ top: 3000, behavior: 'instant' }));
+  await expect.poll(running).toBe(0);
+});
+
+test('the journey shows its three scenes in turn, behind the content', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const opacity = (scene: string) =>
+    page
+      .locator(`[data-journey=${scene}] .scene`)
+      .evaluate((el) => Number(getComputedStyle(el).opacity));
+  const scenes = ['locker', 'tunnel', 'pitch'];
+  for (const [i, scene] of scenes.entries()) {
+    await page
+      .locator(`[data-journey=${scene}]`)
+      .evaluate((el) =>
+        scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'instant' }),
+      );
+    await expect.poll(() => opacity(scene)).toBe(1);
+    if (scenes[i + 1]) expect(await opacity(scenes[i + 1])).toBe(0);
+  }
+  await expect(page.locator('#f-name')).toBeVisible();
+});
+
+test('inside the app: views, arrows, dots and keys', async ({ page }) => {
+  await page.goto('/');
+  const coach = page.getByRole('tabpanel', { name: 'Coach view' });
+  const player = page.getByRole('tabpanel', { name: 'Player view' });
+  await expect(coach.getByRole('listitem')).toHaveCount(5);
+  await expect(player).toBeHidden();
+
+  const dot = (name: string) => coach.getByRole('button', { name, exact: true });
+  await coach.getByRole('button', { name: 'Next screen' }).click();
+  await expect(dot('Calendar')).toHaveAttribute('aria-current', 'true');
+  await dot('Coaches Channel').click();
+  await expect(dot('Coaches Channel')).toHaveAttribute('aria-current', 'true');
+  await expect(coach.getByRole('button', { name: 'Next screen' })).toBeDisabled();
+  await coach.getByRole('list').focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(dot('Squad')).toHaveAttribute('aria-current', 'true');
+
+  await page.getByRole('tab', { name: 'Coach view' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: 'Player view' })).toBeFocused();
+  await expect(coach).toBeHidden();
+  // Not in the app yet, so it says so
+  await expect(player.getByRole('listitem').filter({ hasText: 'Your team channel' })).toContainText(
+    'Coming soon',
+  );
+});
+
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
   test('everything is there', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#tactics .tactics-pin')).toHaveCSS('position', 'static');
+    for (const view of await page.locator('.showcase-view').all()) await expect(view).toBeVisible();
     for (const el of await page.locator('[data-reveal]').all()) {
       await expect(el).toHaveCSS('opacity', '1');
     }

@@ -15,19 +15,6 @@ function build(el: HTMLElement | SVGElement, delay: number): Animation[] {
   const within = (selector: string) => [...el.querySelectorAll(selector)];
 
   switch (el.dataset.reveal) {
-    case 'draw':
-      return within('path').map((path, i) =>
-        make(
-          path,
-          [
-            { strokeDasharray: '1', strokeDashoffset: 1 },
-            { strokeDasharray: '1', strokeDashoffset: 0 },
-          ],
-          1400,
-          i * 200,
-          'ease-in-out',
-        ),
-      );
     case 'step':
       return [
         make(el.lastElementChild!, RISE, 500),

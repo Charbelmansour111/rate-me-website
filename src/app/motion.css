@@ -19,7 +19,7 @@
 
 /* --- Tactics showcase --- */
 .tactics-pin {
-  padding-block: clamp(5rem, 11vw, 9rem);
+  padding-block: clamp(1.5rem, 4vw, 3.5rem);
 }
 .tactics-marker {
   position: absolute;

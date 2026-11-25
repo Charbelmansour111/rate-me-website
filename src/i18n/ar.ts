@@ -84,12 +84,33 @@ export const ar: Dictionary = {
         text: 'اسأل عن أسبوعك أو ابدأ بفكرة تمرين. القرار في كل تغيير يبقى لك.',
       },
     },
-    screens: {
-      title: 'من داخل التطبيق',
-      soon: 'الصورة قريبًا',
-      calendar: 'التقويم',
-      whiteboard: 'لوحة التمارين',
-      squad: 'الفريق',
+  },
+  journey: { locker: 'غرفة الملابس', tunnel: 'النفق', pitch: 'الملعب' },
+  showcase: {
+    kicker: 'الشاشات',
+    title: 'من داخل التطبيق',
+    views: { coach: 'عرض المدرّب', player: 'عرض اللاعب' },
+    controls: {
+      views: 'اختر العرض',
+      carousel: 'شريط صور',
+      slides: 'الشاشات، مرّر جانبيًا',
+      previous: 'الشاشة السابقة',
+      next: 'الشاشة التالية',
+    },
+    captions: {
+      coach: {
+        home: { title: 'الرئيسية', text: 'ما القادم لفريقك.' },
+        calendar: { title: 'التقويم', text: 'حصص تدريبية ومباريات وأيام للفريق.' },
+        whiteboard: { title: 'لوحة التمارين', text: 'ارسم تمرينًا وشغّله.' },
+        squad: { title: 'الفريق', text: 'لاعبوك وبطاقاتهم.' },
+        channel: { title: 'قناة المدرّبين', text: 'تعرّف إلى مدرّبي الأندية الأخرى.' },
+      },
+      player: {
+        home: { title: 'الرئيسية', text: 'الحصة أو المباراة القادمة.' },
+        event: { title: 'الموعد', text: 'متى وأين وما يجب معرفته.' },
+        card: { title: 'بطاقة اللاعب', text: 'تظهر حين ينشرها مدرّبك.' },
+        channel: { title: 'قناة فريقك', text: 'مكان واحد ليتحدّث فريقك.' },
+      },
     },
   },
   tactics: {

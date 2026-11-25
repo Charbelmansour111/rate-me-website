@@ -24,6 +24,8 @@
   --line: #e3e3e6;
   --edge: #85858c; /* input outlines: 3:1 on every background */
   --chalk: #d9d9de; /* pitch line art */
+  --scene: #d9d9de; /* the journey behind the sections */
+  --light: #ffffff; /* the end of the tunnel */
   --accent-text: #bf3f00; /* small orange text; #d94800 is only 4.3:1 on white */
   --danger: #b3261e;
   color-scheme: light;
@@ -38,6 +40,8 @@
   --line: #2c2c30;
   --edge: #7c7c84;
   --chalk: #34343a;
+  --scene: #2f2f35;
+  --light: #4a4a52;
   --accent-text: #ff8a3d;
   --danger: #ffb4ab;
   color-scheme: dark;
@@ -58,7 +62,7 @@
   color: var(--text);
   color-scheme: dark;
 }
-:root[data-theme='dark'] section.inverse {
+:root[data-theme='dark'] .panel.inverse {
   --page: #1c1c1f;
   --line: #3a3a40;
   --chalk: #45454c;
