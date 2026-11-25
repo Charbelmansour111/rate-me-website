@@ -5,7 +5,6 @@
 
 /* Longhands on purpose: the CSS minifier turns an animation shorthand without a name into none. */
 
-/* --- The pitch line down the page --- */
 /* --- Tactics showcase --- */
 .tactics-pin {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
