@@ -40,7 +40,7 @@ export const DEFENDERS: { at: Point; from: Point; role: RoleId; moves: Point[] }
     from: [-40, -40],
     role: 'press',
     moves: [
-      [112, 264],
+      [126, 252],
       [186, 302],
       [306, 294],
       [372, 224],
