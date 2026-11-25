@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { BrevoProvider } from './brevo';
 import { MailerLiteProvider } from './mailerlite';
 import { MockProvider } from './mock';

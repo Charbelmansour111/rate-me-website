@@ -1,0 +1,399 @@
+@import 'tailwindcss';
+
+@custom-variant light (&:where([data-theme='light'], [data-theme='light'] *));
+
+/* Brand: the Rate Me app's tokens. Dark is the default, light is optional. */
+:root,
+.form-card {
+  --page: #0b0b0d;
+  --raised: #16161a;
+  --line: #2c2c33;
+  /* Outline of inputs: 3:1 against --page and --raised. */
+  --edge: #74747f;
+  --text: #ffffff;
+  --muted: #b9b9c2;
+  --accent: #ff5a00;
+  --accent-text: #ff8a3d;
+  --danger: #ffb4ab;
+  --chalk: rgb(255 255 255 / 0.14);
+  color-scheme: dark;
+}
+:root[data-theme='light'],
+[data-theme='light'] .form-card {
+  --page: #ffffff;
+  --raised: #f4f4f6;
+  --line: #dcdce1;
+  --edge: #85858f;
+  --text: #0b0b0d;
+  --muted: #55555f;
+  --accent-text: #b83d00;
+  --danger: #b3261e;
+  --chalk: rgb(11 11 13 / 0.12);
+  color-scheme: light;
+}
+/* A dark (or light) card on the orange: the page theme again. */
+.form-card {
+  background: var(--page);
+  color: var(--text);
+}
+/* On the orange only ink is readable (6.3:1). */
+.on-orange {
+  --page: #ff5a00;
+  --raised: #ff5a00;
+  --line: rgb(11 11 13 / 0.35);
+  --text: #0b0b0d;
+  --muted: #0b0b0d;
+  --accent-text: #0b0b0d;
+  --chalk: rgb(11 11 13 / 0.2);
+  background: var(--page);
+  color: var(--text);
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-edge: var(--edge);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-ink: #0b0b0d;
+  --color-orange-deep: #d94800;
+  --color-orange-light: #ff8a3d;
+  --font-sans: var(--font-body), system-ui, sans-serif;
+  --font-display: var(--font-title), var(--font-body), sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--page);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  :lang(ar) body {
+    line-height: 1.8;
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus, var(--accent-text));
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  button,
+  summary,
+  select,
+  label[for] {
+    cursor: pointer;
+  }
+  ::selection {
+    background: #ff5a00;
+    color: #0b0b0d;
+  }
+  .on-orange ::selection {
+    background: #0b0b0d;
+    color: #ff8a3d;
+  }
+}
+
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  }
+  .section {
+    position: relative;
+    padding-block: clamp(5rem, 11vw, 9rem);
+  }
+  /* Bebas Neue: capitals only, tight lines. Arabic uses its own face, normal case and height. */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 0.92;
+    letter-spacing: 0.005em;
+    text-wrap: balance;
+  }
+  :lang(ar) .display {
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+  .h1 {
+    font-size: clamp(4rem, 1.2rem + 10.5vw, 9.25rem);
+  }
+  :lang(ar) .h1 {
+    font-size: clamp(2.75rem, 1.4rem + 5.6vw, 5.75rem);
+  }
+  .h2 {
+    font-size: clamp(3rem, 1.8rem + 5vw, 5.75rem);
+  }
+  :lang(ar) .h2 {
+    font-size: clamp(2.1rem, 1.4rem + 2.8vw, 3.75rem);
+  }
+  .h3 {
+    font-size: clamp(1.9rem, 1.6rem + 1vw, 2.4rem);
+    line-height: 1;
+  }
+  :lang(ar) .h3 {
+    font-size: 1.4rem;
+    line-height: 1.5;
+  }
+  .btn {
+    display: inline-flex;
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.6rem;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    text-align: center;
+    transition:
+      background-color 160ms,
+      border-color 160ms,
+      color 160ms;
+  }
+  .btn-primary {
+    background: #ff5a00;
+    color: #0b0b0d;
+  }
+  .btn-primary:hover {
+    background: #ff8a3d;
+  }
+  .btn-ghost {
+    border-color: var(--edge);
+    color: var(--text);
+  }
+  .btn-ghost:hover {
+    border-color: var(--text);
+  }
+  .link {
+    color: var(--accent-text);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+  .link:hover {
+    text-decoration-thickness: 2px;
+  }
+  .field {
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0.6rem 1rem;
+    border: 1.5px solid var(--edge);
+    border-radius: 0.5rem;
+    background: var(--page);
+    color: var(--text);
+    font-size: 1rem;
+  }
+  .field[aria-invalid='true'] {
+    border-color: var(--danger);
+  }
+  /* The pitch markings behind sections: chalk lines, decoration only. */
+  .chalk {
+    position: absolute;
+    pointer-events: none;
+    fill: none;
+    stroke: var(--chalk);
+    stroke-width: 2;
+  }
+  .only-light {
+    display: none;
+  }
+  [data-theme='light'] .only-light {
+    display: revert;
+  }
+  [data-theme='light'] .only-dark {
+    display: none;
+  }
+}
+
+/* Scroll reveal without JavaScript: a small rise, never invisible text. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(2.5rem);
+    }
+  }
+}
+
+/* Longhands on purpose: the CSS minifier turns a shorthand without a name into none.
+   The hero drill: five seconds, once; "Replay" restarts it. Passes happen at 12, 34 and 56%. */
+.drill-mover {
+  animation-duration: 5s;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1);
+}
+.drill-ball {
+  animation-name: drill-ball;
+}
+.drill-d1 {
+  animation-name: drill-d1;
+}
+.drill-d2 {
+  animation-name: drill-d2;
+}
+.drill-d3 {
+  animation-name: drill-d3;
+}
+.drill-a4 {
+  animation-name: drill-a4;
+}
+.drill-pass {
+  stroke-dasharray: 1;
+  animation-duration: 5s;
+  animation-fill-mode: both;
+  animation-timing-function: linear;
+}
+.drill-p1 {
+  animation-name: drill-p1;
+}
+.drill-p2 {
+  animation-name: drill-p2;
+}
+.drill-p3 {
+  animation-name: drill-p3;
+}
+.drill-p4 {
+  animation-name: drill-p4;
+}
+@keyframes drill-ball {
+  0%,
+  10% {
+    transform: translate(84px, 318px);
+  }
+  24%,
+  34% {
+    transform: translate(186px, 396px);
+  }
+  48%,
+  56% {
+    transform: translate(312px, 372px);
+  }
+  68%,
+  78% {
+    transform: translate(402px, 250px);
+  }
+  90%,
+  100% {
+    transform: translate(268px, 40px);
+  }
+}
+@keyframes drill-d1 {
+  0%,
+  10% {
+    transform: translate(118px, 258px);
+  }
+  24%,
+  34% {
+    transform: translate(164px, 300px);
+  }
+  48%,
+  100% {
+    transform: translate(206px, 276px);
+  }
+}
+@keyframes drill-d2 {
+  0%,
+  10% {
+    transform: translate(206px, 232px);
+  }
+  34% {
+    transform: translate(238px, 252px);
+  }
+  56%,
+  100% {
+    transform: translate(262px, 216px);
+  }
+}
+@keyframes drill-d3 {
+  0%,
+  22% {
+    transform: translate(292px, 226px);
+  }
+  48% {
+    transform: translate(330px, 268px);
+  }
+  68%,
+  100% {
+    transform: translate(322px, 206px);
+  }
+}
+@keyframes drill-a4 {
+  0%,
+  44% {
+    transform: translate(412px, 340px);
+  }
+  66%,
+  100% {
+    transform: translate(418px, 262px);
+  }
+}
+@keyframes drill-p1 {
+  0%,
+  10% {
+    stroke-dashoffset: 1;
+  }
+  24%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes drill-p2 {
+  0%,
+  34% {
+    stroke-dashoffset: 1;
+  }
+  48%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes drill-p3 {
+  0%,
+  56% {
+    stroke-dashoffset: 1;
+  }
+  68%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes drill-p4 {
+  0%,
+  78% {
+    stroke-dashoffset: 1;
+  }
+  90%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

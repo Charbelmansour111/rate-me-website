@@ -1,3 +1,5 @@
+type FaqItem = { q: string; a: string; privacyLink?: string };
+
 export const en = {
   meta: {
     title: 'Rate Me: a home for football coaches',
@@ -28,7 +30,6 @@ export const en = {
     sub: "We're building a community of coaches in Lebanon first, then the Middle East and beyond.",
     join: 'Join the coaches community',
     drill: {
-      title: 'Pass, move, switch',
       replay: 'Replay the drill',
       alt: 'A drill drawn on a half pitch: four attackers pass the ball from the left to the right side while three defenders shift across with it, and the last attacker shoots.',
       caption: 'Defenders shift with the ball',
@@ -124,7 +125,7 @@ export const en = {
         q: 'How do I join the community?',
         a: 'Pre-register below. After you sign up you get the community link here, or by email once the community opens.',
       },
-    ],
+    ] as FaqItem[],
   },
   form: {
     title: 'Pre-register',
@@ -133,7 +134,8 @@ export const en = {
     name: 'Name',
     email: 'Email',
     phone: 'WhatsApp number',
-    phoneHint: 'Lebanese numbers work without +961. For other countries, start with + and the code.',
+    phoneHint:
+      'Lebanese numbers work without +961. For other countries, start with + and the code.',
     role: 'Your role',
     rolePlaceholder: 'Choose your role',
     roles: {
