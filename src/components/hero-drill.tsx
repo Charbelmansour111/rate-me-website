@@ -31,7 +31,7 @@ export function HeroDrill({ t }: { t: Dictionary['hero']['drill'] }) {
         fill="none"
       >
         {/* Half pitch */}
-        <g stroke="var(--edge)" strokeWidth="2" opacity="0.75">
+        <g stroke="var(--chalk)" strokeWidth="2">
           <path d="M16 32 H464 V484 H16 Z" />
           <path d="M112 32 V142 H368 V32 M178 32 V72 H302 V32" />
           <path d="M194 142 A52 52 0 0 0 286 142" />
@@ -39,21 +39,21 @@ export function HeroDrill({ t }: { t: Dictionary['hero']['drill'] }) {
           <path d="M16 46 A14 14 0 0 0 30 32 M450 32 A14 14 0 0 0 464 46" />
         </g>
         <path d="M202 32 V12 H278 V32" stroke="var(--text)" strokeWidth="4" />
-        <circle cx="240" cy="110" r="3" fill="var(--edge)" />
+        <circle cx="240" cy="110" r="3" fill="var(--chalk)" />
 
         {PASSES.map((d, i) => (
           <path
             key={d}
             d={d}
             pathLength={1}
-            stroke="var(--accent)"
+            stroke={i === 3 ? 'var(--accent)' : 'var(--muted)'}
             strokeWidth={i === 3 ? 5 : 3}
             strokeLinecap="round"
             className={`drill-pass drill-p${i + 1}`}
           />
         ))}
 
-        {/* Defenders: outlined. Attackers: filled orange. */}
+        {/* Defenders: outlined. Attackers: filled. Orange is for the ball and the shot. */}
         {[1, 2, 3].map((n) => (
           <g key={n} className={`drill-mover drill-d${n}`}>
             <circle r="17" fill="var(--page)" stroke="var(--text)" strokeWidth="3" />
@@ -61,13 +61,13 @@ export function HeroDrill({ t }: { t: Dictionary['hero']['drill'] }) {
           </g>
         ))}
         {ATTACKERS.map(([x, y]) => (
-          <circle key={x} cx={x} cy={y} r="18" fill="var(--accent)" />
+          <circle key={x} cx={x} cy={y} r="18" fill="var(--text)" />
         ))}
-        <circle r="18" fill="var(--accent)" className="drill-mover drill-a4" />
+        <circle r="18" fill="var(--text)" className="drill-mover drill-a4" />
 
         <g className="drill-mover drill-ball">
-          <circle r="10" fill="#fff" stroke="#0b0b0d" strokeWidth="2" />
-          <path d="M0 -4.5 L4.3 -1.4 L2.6 3.6 L-2.6 3.6 L-4.3 -1.4 Z" fill="#0b0b0d" />
+          <circle r="10" fill="var(--brand-orange)" stroke="var(--brand-black)" strokeWidth="2" />
+          <path d="M0 -4.5 L4.3 -1.4 L2.6 3.6 L-2.6 3.6 L-4.3 -1.4 Z" fill="var(--brand-black)" />
         </g>
       </svg>
       <figcaption

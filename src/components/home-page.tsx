@@ -21,9 +21,31 @@ export function HomePage({ locale }: { locale: Locale }) {
           <div className="wrap grid items-center gap-x-12 gap-y-14 pt-14 pb-20 lg:grid-cols-[1.2fr_1fr] lg:pt-20 lg:pb-28">
             <div>
               <h1 className="display h1">
-                {t.hero.title[0]} <span className="block text-accent">{t.hero.title[1]}</span>
+                {t.hero.title[0]}{' '}
+                <span className="block">
+                  {t.hero.title[1]}{' '}
+                  <span className="relative inline-block">
+                    {t.hero.title[2]}
+                    {/* A chalk stroke under one word */}
+                    <svg
+                      className="absolute inset-x-0 top-full -mt-[0.06em] h-[0.12em] w-full overflow-visible rtl:mt-[0.14em]"
+                      viewBox="0 0 100 10"
+                      preserveAspectRatio="none"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M1 7Q40 1 99 4"
+                        stroke="var(--accent)"
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  </span>
+                </span>
               </h1>
-              <p className="mt-7 max-w-xl text-xl font-semibold">{t.hero.lead}</p>
+              <p className="mt-10 max-w-xl text-xl font-semibold">{t.hero.lead}</p>
               <p className="mt-3 max-w-xl text-lg text-muted">{t.hero.sub}</p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <a className="btn btn-primary" href="#pre-register">
@@ -48,7 +70,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <section className="section on-orange overflow-hidden" aria-labelledby="why-title">
+        <section className="section overflow-hidden bg-soft" aria-labelledby="why-title">
           {/* Corner markings, kept clear of the text */}
           <svg
             className="chalk top-0 right-0 hidden h-[60%] max-h-64 md:block rtl:right-auto rtl:left-0 rtl:-scale-x-100"
@@ -56,7 +78,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             aria-hidden="true"
           >
             <circle cx="320" cy="0" r="290" />
-            <path d="M320 0L115 205" />
+            <path className="hint" d="M320 0L115 205" />
             <circle cx="320" cy="0" r="60" />
           </svg>
           <div className="wrap relative">
@@ -65,9 +87,9 @@ export function HomePage({ locale }: { locale: Locale }) {
             </h2>
             <ul className="mt-14 grid gap-x-12 gap-y-10 md:grid-cols-3">
               {t.why.items.map((item) => (
-                <li key={item.title} className="reveal border-t-4 border-ink pt-5">
+                <li key={item.title} className="reveal border-t-2 border-text pt-5">
                   <h3 className="display h3">{item.title}</h3>
-                  <p className="mt-3 text-lg">{item.text}</p>
+                  <p className="mt-3 text-lg text-muted">{item.text}</p>
                 </li>
               ))}
             </ul>
@@ -88,7 +110,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   <div className="flex items-start justify-between gap-4">
                     <FeatureIcon id={id} />
                     {!released && (
-                      <span className="rounded-full border border-accent-text px-3 py-0.5 text-sm font-semibold text-accent-text">
+                      <span className="rounded-full border-[1.5px] border-accent px-3 py-0.5 text-sm font-semibold">
                         {t.features.soon}
                       </span>
                     )}
@@ -104,22 +126,30 @@ export function HomePage({ locale }: { locale: Locale }) {
 
         <section
           id="community"
-          className="section overflow-hidden bg-raised"
+          className="inverse section overflow-hidden"
           aria-labelledby="community-title"
         >
           {/* Corner arcs */}
-          <svg className="chalk top-0 left-0 w-40" viewBox="0 0 100 100" aria-hidden="true">
+          <svg
+            className="chalk top-0 left-0 hidden w-40 md:block"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
             <path d="M0 80A80 80 0 0 0 80 0" />
           </svg>
-          <svg className="chalk top-0 right-0 w-40" viewBox="0 0 100 100" aria-hidden="true">
-            <path d="M20 0A80 80 0 0 0 100 80" />
+          <svg
+            className="chalk top-0 right-0 hidden w-40 md:block"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <path className="hint" d="M20 0A80 80 0 0 0 100 80" />
           </svg>
           <div className="wrap relative grid gap-16 lg:grid-cols-2">
             <div>
               <h2 id="community-title" className="display h2">
                 {t.community.title}
               </h2>
-              <p className="mt-7 max-w-xl text-lg">{t.community.text}</p>
+              <p className="mt-7 max-w-xl text-lg text-muted">{t.community.text}</p>
               <a className="btn btn-primary mt-8" href="#pre-register">
                 {t.nav.preRegister}
               </a>
@@ -130,11 +160,11 @@ export function HomePage({ locale }: { locale: Locale }) {
                 {t.community.steps.map((step, i) => (
                   <li
                     key={step.title}
-                    className="relative flex gap-6 pb-10 not-last:before:absolute not-last:before:inset-s-[1.7rem] not-last:before:top-14 not-last:before:bottom-0 not-last:before:border-s-2 not-last:before:border-dashed not-last:before:border-accent last:pb-0"
+                    className="relative flex gap-6 pb-10 not-last:before:absolute not-last:before:inset-s-[1.7rem] not-last:before:top-14 not-last:before:bottom-0 not-last:before:border-s-2 not-last:before:border-dashed not-last:before:border-edge last:pb-0"
                   >
                     <span
                       aria-hidden="true"
-                      className="display grid size-14 shrink-0 place-items-center rounded-full bg-accent text-3xl text-ink"
+                      className="display grid size-14 shrink-0 place-items-center rounded-full border-2 border-edge text-3xl"
                     >
                       {i + 1}
                     </span>
@@ -190,7 +220,7 @@ export function HomePage({ locale }: { locale: Locale }) {
 
         <section
           id="pre-register"
-          className="section on-orange overflow-hidden"
+          className="section overflow-hidden bg-softer"
           aria-labelledby="form-title"
         >
           {/* The box: this is where it ends up */}
@@ -199,13 +229,13 @@ export function HomePage({ locale }: { locale: Locale }) {
             viewBox="0 0 860 420"
             aria-hidden="true"
           >
-            <path d="M20 420V60H840V420 M200 420V250H660V420 M330 60A110 110 0 0 1 530 60" />
+            <path d="M20 420V60H840V420 M200 420V250H660V420" />
           </svg>
           <div className="wrap relative">
             <h2 id="form-title" className="display h2 text-center">
               {t.form.title}
             </h2>
-            <div className="form-card mx-auto mt-10 max-w-2xl rounded-2xl p-6 sm:p-10">
+            <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-line bg-page p-6 sm:p-10">
               <PreRegisterForm
                 t={t.form}
                 newTab={t.a11y.newTab}

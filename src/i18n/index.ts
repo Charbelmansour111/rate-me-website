@@ -8,7 +8,6 @@ export type { Dictionary };
 const dictionaries: Record<Locale, Dictionary> = { en, ar };
 
 export const getDictionary = (locale: Locale) => dictionaries[locale];
-export const otherLocale = (locale: Locale): Locale => (locale === 'en' ? 'ar' : 'en');
 
 /** English lives at the root ("/privacy"), Arabic under "/ar" ("/ar/privacy"). */
 export type PagePath = '/' | '/privacy' | '/terms';

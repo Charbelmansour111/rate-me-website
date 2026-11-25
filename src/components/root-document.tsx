@@ -2,10 +2,8 @@ import Script from 'next/script';
 import type { ReactNode } from 'react';
 
 import { site } from '@/config/site';
+import { THEME_SCRIPT } from '@/config/theme';
 import { getDictionary, type Locale } from '@/i18n';
-
-/** Runs before paint, so a saved light theme never flashes dark. */
-const THEME_SCRIPT = `try{if(localStorage.getItem('theme')==='light')document.documentElement.dataset.theme='light'}catch{}`;
 
 export function RootDocument({
   locale,
@@ -21,7 +19,7 @@ export function RootDocument({
     <html
       lang={locale}
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
-      data-theme="dark"
+      data-theme="light"
       className={`${fonts} antialiased`}
       suppressHydrationWarning
     >

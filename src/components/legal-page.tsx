@@ -35,7 +35,7 @@ export function LegalPage({ locale, kind }: { locale: Locale; kind: LegalKind })
     <>
       <SiteHeader locale={locale} path={`/${kind}`} />
       <main id="main" className="wrap max-w-4xl! py-16">
-        <p className="rounded-lg border-2 border-accent bg-raised px-5 py-4">
+        <p className="rounded-lg border border-s-4 border-line border-s-accent bg-soft px-5 py-4">
           <strong>{t.legal.draft}.</strong> {t.legal.draftText}
         </p>
         <h1 className="display h2 mt-10">{doc.title}</h1>

@@ -1,57 +1,10 @@
 @import 'tailwindcss';
-
-@custom-variant light (&:where([data-theme='light'], [data-theme='light'] *));
-
-/* Brand: the Rate Me app's tokens. Dark is the default, light is optional. */
-:root,
-.form-card {
-  --page: #0b0b0d;
-  --raised: #16161a;
-  --line: #2c2c33;
-  /* Outline of inputs: 3:1 against --page and --raised. */
-  --edge: #74747f;
-  --text: #ffffff;
-  --muted: #b9b9c2;
-  --accent: #ff5a00;
-  --accent-text: #ff8a3d;
-  --danger: #ffb4ab;
-  --chalk: rgb(255 255 255 / 0.14);
-  color-scheme: dark;
-}
-:root[data-theme='light'],
-[data-theme='light'] .form-card {
-  --page: #ffffff;
-  --raised: #f4f4f6;
-  --line: #dcdce1;
-  --edge: #85858f;
-  --text: #0b0b0d;
-  --muted: #55555f;
-  --accent-text: #b83d00;
-  --danger: #b3261e;
-  --chalk: rgb(11 11 13 / 0.12);
-  color-scheme: light;
-}
-/* A dark (or light) card on the orange: the page theme again. */
-.form-card {
-  background: var(--page);
-  color: var(--text);
-}
-/* On the orange only ink is readable (6.3:1). */
-.on-orange {
-  --page: #ff5a00;
-  --raised: #ff5a00;
-  --line: rgb(11 11 13 / 0.35);
-  --text: #0b0b0d;
-  --muted: #0b0b0d;
-  --accent-text: #0b0b0d;
-  --chalk: rgb(11 11 13 / 0.2);
-  background: var(--page);
-  color: var(--text);
-}
+@import './palette.css';
 
 @theme inline {
   --color-page: var(--page);
-  --color-raised: var(--raised);
+  --color-soft: var(--soft);
+  --color-softer: var(--softer);
   --color-line: var(--line);
   --color-edge: var(--edge);
   --color-text: var(--text);
@@ -59,9 +12,6 @@
   --color-accent: var(--accent);
   --color-accent-text: var(--accent-text);
   --color-danger: var(--danger);
-  --color-ink: #0b0b0d;
-  --color-orange-deep: #d94800;
-  --color-orange-light: #ff8a3d;
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-display: var(--font-title), var(--font-body), sans-serif;
 }
@@ -82,7 +32,7 @@
     line-height: 1.8;
   }
   :focus-visible {
-    outline: 3px solid var(--focus, var(--accent-text));
+    outline: 3px solid var(--accent);
     outline-offset: 3px;
     border-radius: 4px;
   }
@@ -93,12 +43,8 @@
     cursor: pointer;
   }
   ::selection {
-    background: #ff5a00;
-    color: #0b0b0d;
-  }
-  .on-orange ::selection {
-    background: #0b0b0d;
-    color: #ff8a3d;
+    background: var(--text);
+    color: var(--page);
   }
 }
 
@@ -163,11 +109,13 @@
       color 160ms;
   }
   .btn-primary {
-    background: #ff5a00;
-    color: #0b0b0d;
+    background: var(--button);
+    color: var(--on-button);
   }
+  /* The one orange fill on the site. Black on it: white would be 3.1:1. */
   .btn-primary:hover {
-    background: #ff8a3d;
+    background: var(--brand-orange);
+    color: var(--brand-black);
   }
   .btn-ghost {
     border-color: var(--edge);
@@ -177,12 +125,13 @@
     border-color: var(--text);
   }
   .link {
-    color: var(--accent-text);
-    text-decoration: underline;
+    color: var(--text);
+    text-decoration: underline var(--accent);
     text-underline-offset: 0.2em;
     text-decoration-thickness: 1px;
   }
   .link:hover {
+    color: var(--accent-text);
     text-decoration-thickness: 2px;
   }
   .field {
@@ -206,14 +155,15 @@
     stroke: var(--chalk);
     stroke-width: 2;
   }
-  .only-light {
+  .chalk .hint {
+    stroke: var(--accent);
+  }
+  .only-dark,
+  [data-theme='dark'] .only-light {
     display: none;
   }
-  [data-theme='light'] .only-light {
+  [data-theme='dark'] .only-dark {
     display: revert;
-  }
-  [data-theme='light'] .only-dark {
-    display: none;
   }
 }
 

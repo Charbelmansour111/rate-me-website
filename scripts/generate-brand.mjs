@@ -4,13 +4,19 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
 const icon = await readFile('public/brand/icon.svg', 'utf8');
-const wordmark = (await readFile('public/brand/wordmark-on-light.svg', 'utf8'))
-  // On the orange, "Me" is ink as well.
-  .replaceAll('#FF5A00', '#0B0B0D');
+const wordmark = await readFile('public/brand/wordmark-on-light.svg', 'utf8');
+
+// Colors come from the light theme, the first block of the palette.
+const palette = await readFile('src/app/palette.css', 'utf8');
+const color = (name) => palette.match(new RegExp(`--${name}: (#[0-9a-f]{6})`))[1];
+const SOFT = color('soft');
+const TEXT = color('text');
+const CHALK = color('chalk');
+const ORANGE = color('brand-orange');
 
 const COPY = {
-  en: { dir: 'ltr', lines: ['A home for', 'football coaches'], size: 156, height: 0.9 },
-  ar: { dir: 'rtl', lines: ['بيت مدرّبي', 'كرة القدم'], size: 118, height: 1.3 },
+  en: { dir: 'ltr', lines: ['A home for', 'football', 'coaches'], size: 156, height: 0.9 },
+  ar: { dir: 'rtl', lines: ['بيت مدرّبي', 'كرة', 'القدم'], size: 118, height: 1.3 },
 };
 const FONTS =
   'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Readex+Pro:wght@700&display=block';
@@ -22,14 +28,14 @@ for (const [locale, { dir, lines, size, height }] of Object.entries(COPY)) {
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
   await page.setContent(
     `<html dir="${dir}"><head><link rel="stylesheet" href="${FONTS}"></head>
-    <body style="margin:0;width:1200px;height:630px;overflow:hidden;position:relative;background:#FF5A00;color:#0B0B0D">
-      <svg style="position:absolute;inset:0" width="1200" height="630" fill="none" stroke="#0B0B0D" stroke-opacity=".22" stroke-width="4">
-        <circle cx="${dir === 'rtl' ? 60 : 1140}" cy="200" r="170"/><path d="M${dir === 'rtl' ? 60 : 1140} 0V630"/>
+    <body style="margin:0;width:1200px;height:630px;overflow:hidden;position:relative;background:${SOFT};color:${TEXT}">
+      <svg style="position:absolute;inset:0" width="1200" height="630" fill="none" stroke="${CHALK}" stroke-width="4">
+        <circle cx="${dir === 'rtl' ? 60 : 1140}" cy="200" r="170"/><path stroke="${ORANGE}" d="M${dir === 'rtl' ? 60 : 1140} 0V630"/>
         <path d="M24 24H1176V606H24Z"/>
       </svg>
       <div style="position:absolute;inset:72px 84px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start">
         <div style="width:320px">${wordmark}</div>
-        <div style="font:${locale === 'ar' ? 700 : 400} ${size}px/${height} 'Bebas Neue','Readex Pro'">${lines.join('<br>')}</div>
+        <div style="font:${locale === 'ar' ? 700 : 400} ${size}px/${height} 'Bebas Neue','Readex Pro'">${lines[0]}<br>${lines[1]} <span style="display:inline-block;border-bottom:10px solid ${ORANGE};padding-bottom:${dir === 'rtl' ? 22 : 6}px">${lines[2]}</span></div>
       </div>
     </body></html>`,
     { waitUntil: 'networkidle' },

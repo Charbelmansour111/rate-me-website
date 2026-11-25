@@ -1,13 +1,20 @@
 import type { Metadata, Viewport } from 'next';
 
 import { site } from '@/config/site';
+import { THEME_COLORS } from '@/config/theme';
 import { getDictionary, localePath, type Locale, type PagePath } from '@/i18n';
 import { getLegal } from '@/i18n/legal';
 
 export const absolute = (locale: Locale, path: PagePath = '/') =>
   `${site.url}${localePath(locale, path)}`;
 
-export const viewport: Viewport = { themeColor: '#0b0b0d', colorScheme: 'dark light' };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: THEME_COLORS.light },
+    { media: '(prefers-color-scheme: dark)', color: THEME_COLORS.dark },
+  ],
+  colorScheme: 'light dark',
+};
 
 export function pageMetadata(locale: Locale, path: PagePath): Metadata {
   const t = getDictionary(locale);

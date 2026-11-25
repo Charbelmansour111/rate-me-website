@@ -9,10 +9,10 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   const item = 'inline-flex min-h-11 items-center hover:text-accent-text';
   return (
-    <footer className="border-t border-line">
+    <footer className="inverse">
       <div className="wrap flex flex-wrap items-start justify-between gap-x-12 gap-y-8 py-12">
         <div>
-          <Wordmark className="h-8 w-auto" />
+          <Wordmark className="h-8 w-auto" onBlack />
           <p className="mt-3 text-muted">{t.footer.tagline}</p>
         </div>
         <nav aria-label={t.a11y.footerNav}>

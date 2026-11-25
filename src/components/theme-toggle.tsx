@@ -1,11 +1,43 @@
 'use client';
 
+import { useEffect } from 'react';
+
+import { THEME_COLORS, type Theme } from '@/config/theme';
+
+function apply(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+  // Next.js writes one tag per system preference; a choice on the page overrides both.
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.setAttribute('content', THEME_COLORS[theme]);
+  }
+}
+
+function saved(): string | null {
+  try {
+    return localStorage.getItem('theme');
+  } catch {
+    return null;
+  }
+}
+
 /** The current theme lives on <html data-theme>; CSS shows the matching label and icon. */
 export function ThemeToggle({ toLight, toDark }: { toLight: string; toDark: string }) {
+  useEffect(() => {
+    // Follow the system while the visitor has not chosen.
+    const system = matchMedia('(prefers-color-scheme: dark)');
+    const follow = () => {
+      if (!saved()) apply(system.matches ? 'dark' : 'light');
+    };
+    // Now as well: the system may have changed while the page was loading.
+    if (saved()) apply(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+    else follow();
+    system.addEventListener('change', follow);
+    return () => system.removeEventListener('change', follow);
+  }, []);
+
   function toggle() {
-    const root = document.documentElement;
-    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
-    root.dataset.theme = next;
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    apply(next);
     try {
       localStorage.setItem('theme', next);
     } catch {
@@ -26,7 +58,7 @@ export function ThemeToggle({ toLight, toDark }: { toLight: string; toDark: stri
     <button
       type="button"
       onClick={toggle}
-      className="grid size-11 place-items-center rounded-lg hover:bg-raised"
+      className="grid size-11 place-items-center rounded-lg hover:bg-soft"
     >
       <span className="only-dark">
         <svg {...icon}>

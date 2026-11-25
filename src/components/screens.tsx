@@ -38,7 +38,7 @@ export function Screens({ t, locale }: { t: Dictionary['features']['screens']; l
           return (
             <li key={slot} className="reveal">
               <figure className="mx-auto max-w-64">
-                <div className="relative aspect-[220/460] overflow-hidden rounded-[2rem] border-2 border-edge bg-raised">
+                <div className="relative aspect-[220/460] overflow-hidden rounded-[2rem] border-2 border-edge bg-soft">
                   {src ? (
                     <Image src={src} alt={t[slot]} fill sizes="16rem" className="object-cover" />
                   ) : (

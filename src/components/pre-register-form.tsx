@@ -241,7 +241,7 @@ export function PreRegisterForm({
             id="f-consent"
             name="consent"
             type="checkbox"
-            className="mt-0.5 size-6 shrink-0 accent-accent"
+            className="mt-0.5 size-6 shrink-0 accent-text"
             checked={values.consent}
             onChange={(event) => set('consent', event.target.checked)}
             aria-invalid={Boolean(errors.consent)}

@@ -51,16 +51,36 @@ for (const path of PAGES) {
 
 test('the language switch keeps the page', async ({ page }) => {
   await page.goto('/privacy');
-  await page.getByRole('link', { name: /العربية/ }).click();
+  await page.getByRole('link', { name: 'عربي' }).click();
   await expect(page).toHaveURL(/\/ar\/privacy$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
 });
 
-test('the theme choice is remembered', async ({ page }) => {
+test('light is the default, and the theme choice is remembered', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Use the light theme' }).click();
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+
+  await page.getByRole('button', { name: 'Use the dark theme' }).click();
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 12)');
+  for (const meta of await page.locator('meta[name=theme-color]').all()) {
+    await expect(meta).toHaveAttribute('content', '#0b0b0c');
+  }
+});
+
+test('follows the system preference until the visitor chooses', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/');
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  await page.getByRole('button', { name: 'Use the dark theme' }).click();
+  await page.reload();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
 });
 
 test('the main button leads to the form', async ({ page }) => {

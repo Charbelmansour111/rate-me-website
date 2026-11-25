@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { getDictionary, localePath, otherLocale, type Locale, type PagePath } from '@/i18n';
+import { getDictionary, LOCALES, localePath, type Locale, type PagePath } from '@/i18n';
 
 import { ThemeToggle } from './theme-toggle';
 import { Wordmark } from './wordmark';
@@ -8,7 +8,6 @@ import { Wordmark } from './wordmark';
 export function SiteHeader({ locale, path }: { locale: Locale; path: PagePath }) {
   const t = getDictionary(locale);
   const home = localePath(locale);
-  const other = otherLocale(locale);
   const links = [
     { href: `${home}#features`, label: t.nav.features },
     { href: `${home}#community`, label: t.nav.community },
@@ -33,15 +32,26 @@ export function SiteHeader({ locale, path }: { locale: Locale; path: PagePath })
         </nav>
         <div className="flex items-center gap-1 sm:gap-2">
           <ThemeToggle toLight={t.a11y.toLight} toDark={t.a11y.toDark} />
-          {/* A plain link: each language has its own root layout, so this is a full load. */}
-          <a
-            href={localePath(other, path)}
-            hrefLang={other}
-            className="grid min-h-11 place-items-center rounded-lg px-2 font-medium hover:bg-raised sm:px-3"
-          >
-            <span className="sr-only">{t.a11y.switchLanguage}: </span>
-            <span lang={other}>{t.nav.otherLanguage}</span>
-          </a>
+          {/* Plain links: each language has its own root layout, so this is a full load. */}
+          <ul className="flex">
+            {LOCALES.map((item) => (
+              <li key={item}>
+                <a
+                  href={localePath(item, path)}
+                  hrefLang={item}
+                  aria-current={item === locale || undefined}
+                  className="group grid min-h-11 place-items-center rounded-lg px-2 font-medium hover:bg-soft"
+                >
+                  <span
+                    lang={item}
+                    className="border-b-2 border-transparent group-aria-current:border-accent"
+                  >
+                    {t.nav.languages[item]}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
           <a
             href={`${home}#pre-register`}
             className="btn btn-primary hidden min-h-11! py-1! sm:inline-flex"
