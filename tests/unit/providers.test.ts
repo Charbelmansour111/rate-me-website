@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { BrevoProvider } from '@/lib/waitlist/brevo';
 import { MailerLiteProvider } from '@/lib/waitlist/mailerlite';
+import { ROLES } from '@/lib/waitlist/fields';
 import { MockProvider } from '@/lib/waitlist/mock';
 import { getWaitlistProvider } from '@/lib/waitlist/provider';
 import type { WaitlistEntry } from '@/lib/waitlist/types';
@@ -127,6 +128,17 @@ describe('MailerLite', () => {
   ] as [string, [number, unknown?][]][])('fails when %s fails', async (_, answers) => {
     mockFetch(...answers);
     await expect(provider.subscribe(entry)).rejects.toThrow('mailerlite:');
+  });
+});
+
+describe('roles reach the providers as they are', () => {
+  it.each(ROLES)('%s', async (role) => {
+    const brevo = mockFetch([201]);
+    await new BrevoProvider('k', 7).subscribe({ ...entry, role });
+    expect(brevo.call(0).body.attributes.ROLE).toBe(role);
+    const mailerlite = mockFetch([404], [201]);
+    await new MailerLiteProvider('k', '9').subscribe({ ...entry, role });
+    expect(mailerlite.call(1).body.fields.role).toBe(role);
   });
 });
 

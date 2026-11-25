@@ -1,3 +1,5 @@
+import type { Role } from './fields';
+
 /** Where someone signed up from. One value today; add more when there are more forms. */
 export type WaitlistSource = 'website-pre-register';
 
@@ -8,7 +10,7 @@ export type WaitlistEntry = {
   email: string;
   /** E.164 style ("+9613123456"), or an empty string. */
   phone: string;
-  role: string;
+  role: Role;
   city: string;
   club: string;
   locale: 'en' | 'ar';

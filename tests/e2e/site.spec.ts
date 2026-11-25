@@ -15,7 +15,9 @@ for (const path of PAGES) {
       await page.addInitScript((value) => localStorage.setItem('theme', value), theme);
       await page.goto(path);
       for (const summary of await page.locator('summary').all()) await summary.click();
-      if (!path.match(/privacy|terms/)) await page.locator('#pre-register [type=submit]').click();
+      if (!path.match(/privacy|terms/)) {
+        await page.locator('#pre-register .btn-primary:visible').click();
+      }
       const { violations } = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
         .analyze();

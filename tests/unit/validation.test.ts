@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { isJunkEmail } from '@/lib/waitlist/disposable';
-import { isEmail, normalizePhone, validateForm } from '@/lib/waitlist/fields';
+import { ar } from '@/i18n/ar';
+import { en } from '@/i18n/en';
+import { composePhone, isEmail, normalizePhone, ROLES, validateForm } from '@/lib/waitlist/fields';
 import { signupSchema, toFieldErrors } from '@/lib/waitlist/schema';
 
 const valid = {
@@ -49,6 +51,8 @@ describe('signup schema', () => {
     [{ email: 'a@mailinator.com' }, { email: 'emailJunk' }],
     [{ phone: 'call me' }, { phone: 'phoneInvalid' }],
     [{ role: 'king' }, { role: 'roleRequired' }],
+    [{ role: 'player' }, { role: 'roleRequired' }],
+    [{ role: 'parent' }, { role: 'roleRequired' }],
     [{ city: ' ' }, { city: 'cityRequired' }],
     [{ city: '<script>' }, { city: 'textInvalid' }],
     [{ club: 'c'.repeat(81) }, { club: 'textInvalid' }],
@@ -93,6 +97,26 @@ describe('form rules', () => {
     'refuses the email %j',
     (email) => expect(isEmail(email)).toBe(false),
   );
+});
+
+describe('composePhone', () => {
+  it.each([
+    ['961', '03 123 456', '+9613123456'],
+    ['961', '٠٣ ١٢٣ ٤٥٦', '+9613123456'],
+    ['33', '06 12 34 56 78', '+33612345678'],
+    ['961', '+1 202 555 0123', '+12025550123'],
+    ['961', '00971 50 123 4567', '+971501234567'],
+    ['961', '', ''],
+  ])('+%s and %j', (dial, number, expected) => {
+    expect(normalizePhone(composePhone(dial, number))).toBe(expected);
+  });
+});
+
+describe('roles', () => {
+  it('are the same in the code, the copy and the form', () => {
+    expect(ROLES).toEqual(['coach', 'academy_owner', 'assistant_coach', 'other']);
+    for (const { form } of [en, ar]) expect(Object.keys(form.roles)).toEqual([...ROLES]);
+  });
 });
 
 describe('junk emails', () => {

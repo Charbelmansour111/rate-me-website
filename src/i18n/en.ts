@@ -132,9 +132,12 @@ export const en = {
     items: [
       {
         q: 'Who is Rate Me for?',
-        a: 'Football coaches, assistant coaches and academies. Players use it too, to see their calendar and what their coach shares with them.',
+        a: 'Football coaches, assistant coaches and academies. Players join through their coach’s team, to see their calendar and what their coach shares with them.',
       },
-      { q: 'Is it free for players?', a: 'Yes. Players are always free.' },
+      {
+        q: 'Is it free for players?',
+        a: 'Yes. Players are always free. They join through their coach’s team, so there is nothing for them to sign up for here.',
+      },
       {
         q: 'When does it launch?',
         a: 'There is no public date yet. Lebanon comes first. Pre-register and we will email you when early access opens.',
@@ -157,21 +160,24 @@ export const en = {
   form: {
     kicker: 'Early access',
     title: 'Pre-register',
+    step: 'Step {n} of 2:',
+    step1: 'about you',
+    step2: 'your team',
+    next: 'Next',
+    back: 'Back',
+    dialCode: 'Country code',
+    citySuggestions: 'City suggestions',
     intro: 'Be one of the first coaches on Rate Me. Fields marked optional can stay empty.',
     optional: 'optional',
     name: 'Name',
     email: 'Email',
     phone: 'WhatsApp number',
-    phoneHint:
-      'Lebanese numbers work without +961. For other countries, start with + and the code.',
+    phoneHint: 'Lebanese numbers: 03 123 456. Country not listed? Type the number with its + code.',
     role: 'Your role',
-    rolePlaceholder: 'Choose your role',
     roles: {
       coach: 'Coach',
       academy_owner: 'Academy owner',
       assistant_coach: 'Assistant coach',
-      player: 'Player',
-      parent: 'Parent',
       other: 'Other',
     },
     city: 'City',
@@ -210,7 +216,7 @@ export const en = {
       roleRequired: 'Choose your role.',
       cityRequired: 'Enter your city.',
       textInvalid: 'Shorten this, and leave out links and the < > signs.',
-      consentRequired: 'Tick the box so we can contact you.',
+      consentRequired: 'Turn this on so we can contact you.',
     },
     formErrors: {
       invalid: 'Some fields need another look.',

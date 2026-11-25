@@ -2,14 +2,7 @@
  * Field rules shared by the form (inline errors) and the server (zod schema). Kept free of
  * dependencies so the browser does not download zod.
  */
-export const ROLES = [
-  'coach',
-  'academy_owner',
-  'assistant_coach',
-  'player',
-  'parent',
-  'other',
-] as const;
+export const ROLES = ['coach', 'academy_owner', 'assistant_coach', 'other'] as const;
 export type Role = (typeof ROLES)[number];
 
 export const LIMITS = { name: 80, email: 254, phone: 24, city: 60, club: 80 } as const;
@@ -42,6 +35,36 @@ export function normalizePhone(value: string): string | null {
     else if (/^(0\d{7}|\d{7,8})$/.test(digits)) digits = `961${digits.replace(/^0/, '')}`;
   }
   return /^[1-9]\d{7,14}$/.test(digits) ? `+${digits}` : null;
+}
+
+/** Lebanon first, then its region, then a few more. Other numbers are typed with their +. */
+export const DIAL_CODES = [
+  ['LB', '961'],
+  ['SY', '963'],
+  ['JO', '962'],
+  ['IQ', '964'],
+  ['PS', '970'],
+  ['EG', '20'],
+  ['AE', '971'],
+  ['SA', '966'],
+  ['QA', '974'],
+  ['KW', '965'],
+  ['BH', '973'],
+  ['OM', '968'],
+  ['TR', '90'],
+  ['CY', '357'],
+  ['FR', '33'],
+  ['DE', '49'],
+  ['GB', '44'],
+  ['US', '1'],
+  ['AU', '61'],
+].map(([country, code]) => ({ country, code }));
+
+/** The chosen code and the local number as one; a number typed with its own + or 00 wins. */
+export function composePhone(dial: string, number: string): string {
+  const local = latinDigits(number).trim();
+  if (!local || /^(\+|00)/.test(local)) return local;
+  return `+${dial} ${local.replace(/^0/, '')}`;
 }
 
 export const isEmail = (value: string) => value.length <= LIMITS.email && EMAIL.test(value);

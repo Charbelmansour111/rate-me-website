@@ -10,11 +10,17 @@ test.beforeEach(async ({ context }, info) => {
   });
 });
 
+/** Phones show the form in two steps. */
+async function next(page: Page) {
+  const button = page.getByRole('button', { name: /^(Next|التالي)$/ });
+  if (await button.isVisible()) await button.click();
+}
 async function fill(page: Page) {
   await page.locator('#f-name').fill('Rami Haddad');
   await page.locator('#f-email').fill('rami@club-beirut.com');
+  await page.locator('.role-chip').first().click();
+  await next(page);
   await page.locator('#f-phone').fill('03 123 456');
-  await page.locator('#f-role').selectOption('coach');
   await page.locator('#f-city').fill('Beirut');
   await page.locator('#f-consent').check();
 }
@@ -25,7 +31,12 @@ test('signs up, then shows the success state with focus on it', async ({ page })
   await fill(page);
   const request = page.waitForRequest('**/api/pre-register');
   await submit(page);
-  expect((await request).postDataJSON()).toMatchObject({ locale: 'en', website: '' });
+  expect((await request).postDataJSON()).toMatchObject({
+    locale: 'en',
+    website: '',
+    role: 'coach',
+    phone: '+961 3 123 456',
+  });
   const heading = page.getByRole('heading', { name: "You're on the list" });
   await expect(heading).toBeFocused();
   await expect(page.getByRole('button', { name: 'Share Rate Me' })).toBeVisible();
@@ -40,32 +51,81 @@ test('signs up in Arabic', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'أنت على القائمة' })).toBeVisible();
 });
 
-test('shows inline errors, focuses the first one and clears them when fixed', async ({ page }) => {
+test('shows inline errors, focuses the first one and clears them when fixed', async ({
+  page,
+  isMobile,
+}) => {
   let sent = false;
   page.on('request', (request) => (sent ||= request.url().includes('/api/')));
   await page.goto('/');
-  await submit(page);
+  if (isMobile) await next(page);
+  else await submit(page);
 
   await expect(page.locator('#f-name')).toBeFocused();
   await expect(page.locator('#f-name')).toHaveAccessibleDescription(/Enter your name/);
-  for (const field of ['name', 'email', 'role', 'city', 'consent']) {
+  await expect(page.locator('#f-name')).toHaveAttribute('aria-invalid', 'true');
+  for (const field of ['name', 'email', 'role']) {
     await expect(page.locator(`#e-${field}`)).toBeVisible();
-    await expect(page.locator(`#f-${field}`)).toHaveAttribute('aria-invalid', 'true');
   }
-  await expect(page.locator('#e-club')).toHaveCount(0);
-
   await page.locator('#f-name').fill('Rami');
   await expect(page.locator('#e-name')).toHaveCount(0);
   await page.locator('#f-email').fill('not an email');
-  await page.locator('#f-city').focus();
+  await page.locator('#f-name').focus();
   await expect(page.locator('#e-email')).toContainText('valid email');
+
+  await page.locator('#f-email').fill('rami@club-beirut.com');
+  await page.locator('.role-chip').first().click();
+  await expect(page.locator('#e-role')).toHaveCount(0);
+  if (isMobile) await next(page);
+  await submit(page);
+  for (const field of ['city', 'consent']) {
+    await expect(page.locator(`#e-${field}`)).toBeVisible();
+    await expect(page.locator(`#f-${field}`)).toHaveAttribute('aria-invalid', 'true');
+  }
+  await expect(page.locator('#f-city')).toBeFocused();
+  await expect(page.locator('#e-club')).toHaveCount(0);
   expect(sent).toBe(false);
 });
 
-test('shows the server’s own errors', async ({ page }) => {
+test('phones get two steps, and can go back', async ({ page, isMobile }) => {
+  test.skip(!isMobile);
+  await page.goto('/');
+  await expect(page.locator('#f-city')).toBeHidden();
+  await page.locator('#f-name').fill('Rami Haddad');
+  await page.locator('#f-email').fill('rami@club-beirut.com');
+  await page.getByText('Academy owner', { exact: true }).click();
+  // Enter means "next" here
+  await page.locator('#f-email').press('Enter');
+  await expect(page.getByRole('heading', { name: /Step 2 of 2/ })).toBeFocused();
+  await expect(page.locator('#f-name')).toBeHidden();
+  await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page.locator('#f-name')).toHaveValue('Rami Haddad');
+});
+
+test('roles are chips and cities can be picked', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('radio')).toHaveCount(4);
+  await expect(page.getByRole('radio', { name: /Player|Parent/ })).toHaveCount(0);
+  await page.getByRole('radio', { name: 'Coach', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'Academy owner' })).toBeChecked();
+  await page.locator('#f-name').fill('Rami Haddad');
+  await page.locator('#f-email').fill('rami@club-beirut.com');
+  await next(page);
+  await page.getByRole('button', { name: 'Tripoli' }).click();
+  await expect(page.locator('#f-city')).toHaveValue('Tripoli');
+  await expect(page.getByRole('button', { name: 'Tripoli' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+});
+
+test('shows the server’s own errors', async ({ page, isMobile }) => {
   await page.goto('/');
   await fill(page);
+  if (isMobile) await page.getByRole('button', { name: 'Back' }).click();
   await page.locator('#f-email').fill('rami@mailinator.com');
+  if (isMobile) await next(page);
   await submit(page);
   await expect(page.locator('#e-email')).toContainText('Temporary addresses');
   await expect(page.locator('#f-email')).toBeFocused();
