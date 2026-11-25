@@ -3,6 +3,11 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { frameAt, journey } from '../../src/config/journey.config';
 import { ARABIC_ENABLED } from '../../src/config/site';
+import { hasFrames } from '../../src/lib/journey-files';
+
+/** The sequence the page in hand is served. */
+const sequenceFor = (isMobile: boolean) =>
+  isMobile && hasFrames(journey.portrait) ? journey.portrait : journey.landscape;
 
 /** Scrolls like a person does, so the observers see every part of the page. */
 async function scrollThrough(page: Page) {
@@ -160,10 +165,14 @@ test('the hero runs different plays, and pauses', async ({ page }) => {
   await expect.poll(running).toBe(0);
 });
 
-test('the walk: from the first frame to the last, and every scroll moves it', async ({ page }) => {
+test('the walk: from the first frame to the last, and every scroll moves it', async ({
+  page,
+  isMobile,
+}) => {
+  const sequence = sequenceFor(isMobile);
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
-  const last = String(journey.count - 1);
+  const last = String(sequence.count - 1);
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   await expect(walk).toHaveAttribute('data-frame', '0');
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'locker');
@@ -175,11 +184,11 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
       scrollTo({ top, behavior: 'instant' });
     }, part);
   await to(0.45);
-  await expect(walk).toHaveAttribute('data-frame', String(frameAt(0.45)));
+  await expect(walk).toHaveAttribute('data-frame', String(frameAt(sequence, 0.45)));
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'tunnel');
   const pixels = () => walk.evaluate((el) => (el as HTMLCanvasElement).toDataURL('image/png'));
   await to(0.3);
-  await expect(walk).toHaveAttribute('data-frame', String(frameAt(0.3)));
+  await expect(walk).toHaveAttribute('data-frame', String(frameAt(sequence, 0.3)));
   await page.waitForTimeout(800);
   const before = await pixels();
   await page.evaluate(() => scrollBy({ top: 40, behavior: 'instant' }));
@@ -213,16 +222,100 @@ test('the walk: open gaps carry the label of the scene', async ({ page }) => {
   expect(named).toEqual(['The locker room', 'The tunnel', 'The pitch']);
 });
 
-test('the walk: saving data loads every second frame', async ({ page }) => {
+test('the walk: saving data loads every second frame', async ({ page, isMobile }) => {
+  const sequence = sequenceFor(isMobile);
   await page.addInitScript(() =>
     Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
   );
   const frames = new Set<string>();
   page.on('request', (request) => {
-    if (request.url().includes(journey.path)) frames.add(request.url());
+    if (request.url().includes('/journey/')) frames.add(request.url());
   });
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect.poll(() => frames.size).toBe(Math.ceil(journey.count / 2));
+  await expect.poll(() => frames.size).toBe(Math.ceil(sequence.count / 2));
+});
+
+/** Serves the page as it is built with a portrait set, whether or not there is one yet. */
+async function withPortrait(page: Page, files: 'there' | 'failing') {
+  await page.route('/', async (route) => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace(
+      /<canvas data-walk="true"( data-portrait="")?/,
+      '<canvas data-walk="true" data-portrait=""',
+    );
+    await route.fulfill({ response, body });
+  });
+  await page.route(`**${journey.portrait.path}*`, (route) => {
+    if (files === 'failing') return route.fulfill({ status: 404 });
+    const name = route.request().url().split('/').pop();
+    return route.fulfill({ path: `public/journey/seq/${name}` });
+  });
+  const asked: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/journey/')) asked.push(new URL(request.url()).pathname);
+  });
+  return (shape: 'landscape' | 'portrait') =>
+    // The first frame is also the CSS background of the page as it was built
+    asked.filter((path) => path.startsWith(journey[shape].path) && !path.includes('f000')).length;
+}
+
+test('the walk: tall screens load only the portrait set, and turning loads the other', async ({
+  page,
+}) => {
+  const asked = await withPortrait(page, 'there');
+  await page.setViewportSize({ width: 412, height: 839 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const walk = page.locator('[data-walk]');
+  await expect(walk).toHaveAttribute('data-shape', 'portrait');
+  await expect.poll(() => asked('portrait'), { timeout: 20_000 }).toBe(journey.portrait.count - 1);
+  expect(asked('landscape')).toBe(0);
+
+  // A keyboard: shorter, not wider
+  await page.setViewportSize({ width: 412, height: 380 });
+  await page.waitForTimeout(500);
+  await expect(walk).toHaveAttribute('data-shape', 'portrait');
+  expect(asked('landscape')).toBe(0);
+
+  await page.setViewportSize({ width: 839, height: 412 });
+  await expect(walk).toHaveAttribute('data-shape', 'landscape');
+  await expect
+    .poll(() => asked('landscape'), { timeout: 20_000 })
+    .toBe(journey.landscape.count - 1);
+  // And back, without loading anything again
+  await page.setViewportSize({ width: 412, height: 839 });
+  await expect(walk).toHaveAttribute('data-shape', 'portrait');
+  expect(asked('portrait')).toBe(journey.portrait.count - 1);
+});
+
+test('the walk: wide screens load only the landscape set', async ({ page }) => {
+  const asked = await withPortrait(page, 'there');
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
+  await expect
+    .poll(() => asked('landscape'), { timeout: 20_000 })
+    .toBe(journey.landscape.count - 1);
+  expect(asked('portrait')).toBe(0);
+});
+
+test('the walk: falls back to landscape when the portrait set fails', async ({ page }) => {
+  const asked = await withPortrait(page, 'failing');
+  await page.setViewportSize({ width: 412, height: 839 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
+  await expect
+    .poll(() => asked('landscape'), { timeout: 20_000 })
+    .toBe(journey.landscape.count - 1);
+});
+
+test('the walk: without a portrait folder nothing asks for it', async ({ page }) => {
+  test.skip(hasFrames(journey.portrait), 'There is a portrait set');
+  const asked: string[] = [];
+  page.on('request', (request) => asked.push(request.url()));
+  await page.setViewportSize({ width: 412, height: 839 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
+  expect(asked.filter((url) => url.includes('/portrait/'))).toEqual([]);
 });
 
 test('the walk: without a canvas or its frames, still pictures', async ({ page }) => {

@@ -1,8 +1,14 @@
 /**
- * The walk behind the home page: a numbered sequence of images, drawn by the scroll. For a new
- * render, replace the files and change `count`; everything else is worked out from it.
+ * The walk behind the home page: numbered images, drawn by the scroll. `portrait` is used where the
+ * screen is taller than wide, once all its files are there; until then `landscape` is used
+ * everywhere. For a new render, replace the files and change `count`; the rest follows from it.
  */
-export const journey = { path: '/journey/seq/f', count: 48, ext: 'webp', pad: 3 } as const;
+export type Sequence = { path: string; count: number; ext: string; pad: number };
+export type Shape = 'landscape' | 'portrait';
+export const journey: Record<Shape, Sequence> = {
+  landscape: { path: '/journey/seq/f', count: 48, ext: 'webp', pad: 3 },
+  portrait: { path: '/journey/portrait/f', count: 48, ext: 'webp', pad: 3 },
+};
 
 export type SceneId = 'locker' | 'tunnel' | 'pitch';
 
@@ -13,17 +19,18 @@ export const scenes: Record<SceneId, { from: number; to: number }> = {
   pitch: { from: 0.5, to: 1 },
 };
 
-export const frameUrl = (i: number) =>
-  `${journey.path}${String(i).padStart(journey.pad, '0')}.${journey.ext}`;
+export const frameUrl = ({ path, pad, ext }: Sequence, i: number) =>
+  `${path}${String(i).padStart(pad, '0')}.${ext}`;
 
-export const frameAt = (progress: number) => Math.round(progress * (journey.count - 1));
+export const frameAt = ({ count }: Sequence, progress: number) =>
+  Math.round(progress * (count - 1));
 
 export const sceneAt = (progress: number): SceneId =>
   (Object.keys(scenes) as SceneId[]).find((id) => progress < scenes[id].to) ?? 'pitch';
 
-/** The picture that stands for a scene where nothing is scrubbed: start, middle and end. */
-export const stillFrame: Record<SceneId, number> = {
+/** Where the picture that stands for a scene is taken, when nothing is scrubbed. */
+export const stillAt: Record<SceneId, number> = {
   locker: 0,
-  tunnel: frameAt((scenes.tunnel.from + scenes.tunnel.to) / 2),
-  pitch: journey.count - 1,
+  tunnel: (scenes.tunnel.from + scenes.tunnel.to) / 2,
+  pitch: 1,
 };

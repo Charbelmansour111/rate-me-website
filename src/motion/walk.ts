@@ -1,4 +1,11 @@
-import { frameAt, frameUrl, journey, sceneAt } from '@/config/journey.config';
+import {
+  frameAt,
+  frameUrl,
+  journey,
+  sceneAt,
+  type Sequence,
+  type Shape,
+} from '@/config/journey.config';
 
 const EASE = 0.15;
 const BATCH = 4;
@@ -12,8 +19,8 @@ const idle = (run: () => void) => {
 };
 
 /** The frames to fetch: all of them, or every second one to save data. */
-export const frameList = (saveData: boolean) =>
-  Array.from({ length: journey.count }, (_, i) => i).filter((i) => !saveData || i % 2 === 0);
+export const frameList = ({ count }: Sequence, saveData: boolean) =>
+  Array.from({ length: count }, (_, i) => i).filter((i) => !saveData || i % 2 === 0);
 
 /** The one closest to `frame`; the earlier one when two are as close. */
 export const nearest = (frames: Iterable<number>, frame: number) => {
@@ -24,6 +31,13 @@ export const nearest = (frames: Iterable<number>, frame: number) => {
   return best;
 };
 
+/** Which sequence a screen gets. */
+export const shapeFor = (width: number, height: number, hasPortrait: boolean): Shape =>
+  hasPortrait && height > width ? 'portrait' : 'landscape';
+
+/** A sequence, what is loaded of it and what is still to come. */
+type Reel = { sequence: Sequence; images: Map<number, HTMLImageElement>; waiting: Set<number> };
+
 /** Scrubs the image sequence with the scroll. On any failure the still pictures take over. */
 export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   const root = document.documentElement;
@@ -33,10 +47,17 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     root.dataset.journey = 'off';
     return;
   }
-  const last = journey.count - 1;
-  const images = new Map<number, HTMLImageElement>();
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  const saveData = Boolean(connection?.saveData);
+  /** Both are kept, so turning the phone back loads nothing twice. */
+  const reels = new Map<Shape, Reel>();
+  let hasPortrait = canvas.dataset.portrait !== undefined;
+  /** The sequence for this screen, and the one on show: the old one, until the new one starts. */
+  let reel: Reel;
+  let shown: Reel;
   const gapEls = [...document.querySelectorAll<HTMLElement>('[data-walk-gap]')];
   let range = 1;
+  /** Along the walk, 0 to 1. */
   let target = 0;
   let position = 0;
   let raf = 0;
@@ -44,12 +65,14 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   const progress = () => Math.min(1, Math.max(0, scrollY / range));
 
   function draw() {
-    const wanted = frameAt(position / last);
-    const i = nearest(images.keys(), wanted);
+    if (reel.images.size) shown = reel;
+    const { sequence, images } = shown;
+    const i = nearest(images.keys(), frameAt(sequence, position));
     if (i === undefined) return;
     const image = images.get(i)!;
+    const at = position * (sequence.count - 1);
     const { width, height } = canvas;
-    const part = Math.max(-0.5, Math.min(0.5, position - i)) + Math.min(0.5, position);
+    const part = Math.max(-0.5, Math.min(0.5, at - i)) + Math.min(0.5, at);
     const scale =
       Math.max(width / image.naturalWidth, height / image.naturalHeight) *
       (1 + STEP_ZOOM * Math.max(0, part));
@@ -57,26 +80,27 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     const h = image.naturalHeight * scale;
     context!.drawImage(image, (width - w) / 2, (height - h) / 2, w, h);
     canvas.dataset.frame = String(i);
-    root.dataset.scene = sceneAt(position / last);
+    canvas.dataset.shape = sequence === journey.portrait ? 'portrait' : 'landscape';
+    root.dataset.scene = sceneAt(position);
   }
 
   function tick() {
     position += (target - position) * EASE;
     // Close enough: land on it, and stop until the next scroll.
-    if (Math.abs(target - position) < 0.004) position = target;
+    if (Math.abs(target - position) < 0.0001) position = target;
     draw();
     raf = position === target ? 0 : requestAnimationFrame(tick);
   }
 
   function onScroll() {
-    target = progress() * last;
+    target = progress();
     if (!raf && target !== position) raf = requestAnimationFrame(tick);
   }
 
   function measure() {
     range = Math.max(1, page.offsetTop + page.offsetHeight - innerHeight);
     // Many more pixels than the pictures have would only cost time: the browser scales up for free.
-    const [first] = images.values();
+    const [first] = (reel.images.size ? reel : shown).images.values();
     const enough = first
       ? 1.25 *
         Math.min(first.naturalHeight / canvas.clientHeight, first.naturalWidth / canvas.clientWidth)
@@ -101,42 +125,73 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     onScroll();
   }
 
-  measure();
-  position = target;
-
-  const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-  const waiting = new Set(frameList(Boolean(connection?.saveData)));
-
-  async function load(i: number) {
-    waiting.delete(i);
+  async function load(from: Reel, i: number) {
+    from.waiting.delete(i);
     const image = new Image();
     image.decoding = 'async';
-    image.src = frameUrl(i);
+    image.src = frameUrl(from.sequence, i);
     try {
       await image.decode();
     } catch {
       return; // The nearest other frame stands in.
     }
-    if (signal.aborted) return;
-    const before = nearest(images.keys(), frameAt(position / last));
-    images.set(i, image);
-    if (images.size === 1) measure();
-    if (nearest(images.keys(), frameAt(position / last)) !== before && !raf) draw();
+    const best = () => nearest(from.images.keys(), frameAt(from.sequence, position));
+    const before = best();
+    from.images.set(i, image);
+    if (signal.aborted || from !== reel) return;
+    if (from.images.size === 1) measure();
+    if (best() !== before && !raf) draw();
   }
 
-  async function loadBatch() {
-    if (signal.aborted) return;
+  async function loadBatch(from: Reel) {
+    // Turned away from: the rest waits until the screen turns back.
+    if (signal.aborted || from !== reel) return;
+    const frame = target * (from.sequence.count - 1);
     const batch: Promise<void>[] = [];
-    while (batch.length < BATCH && waiting.size) batch.push(load(nearest(waiting, target)!));
+    while (batch.length < BATCH && from.waiting.size) {
+      batch.push(load(from, nearest(from.waiting, frame)!));
+    }
     await Promise.all(batch);
-    if (signal.aborted) return;
-    if (!images.size) root.dataset.journey = 'off';
-    else if (waiting.size) idle(() => void loadBatch());
+    if (signal.aborted || from !== reel) return;
+    if (!from.images.size) {
+      if (from.sequence !== journey.portrait) {
+        root.dataset.journey = 'off';
+        return;
+      }
+      hasPortrait = false;
+      pick();
+    } else if (from.waiting.size) idle(() => void loadBatch(from));
   }
-  void loadBatch();
 
+  /** Takes the sequence for this screen. Says whether that is another one than before. */
+  function pick() {
+    const shape = shapeFor(innerWidth, innerHeight, hasPortrait);
+    let next = reels.get(shape);
+    if (!next) {
+      const sequence = journey[shape];
+      next = { sequence, images: new Map(), waiting: new Set(frameList(sequence, saveData)) };
+      reels.set(shape, next);
+    }
+    if (next === reel) return;
+    reel = next;
+    shown ??= next;
+    measure();
+    draw();
+    void loadBatch(next);
+  }
+
+  pick();
+  position = target;
+
+  let width = innerWidth;
+  function onResize() {
+    // A keyboard that opens makes the screen wide, but not wider: that is no turn.
+    if (innerWidth !== width) pick();
+    width = innerWidth;
+    measure();
+  }
   addEventListener('scroll', onScroll, { signal, passive: true });
-  addEventListener('resize', measure, { signal });
+  addEventListener('resize', onResize, { signal });
   // Opening an answer or a form step changes how long the walk is.
   const resized = new ResizeObserver(measure);
   resized.observe(page);
@@ -159,5 +214,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     delete root.dataset.journey;
     delete root.dataset.scene;
     delete canvas.dataset.frame;
+    delete canvas.dataset.shape;
   });
 }

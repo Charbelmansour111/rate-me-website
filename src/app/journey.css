@@ -8,7 +8,7 @@
   width: 100vw;
   height: 100vh;
   height: 100lvh;
-  background: center / cover no-repeat;
+  background: var(--wide) center / cover no-repeat;
   pointer-events: none;
 }
 /* Otherwise: one still picture behind each part of the page. */
@@ -18,8 +18,14 @@
   top: 0;
   height: 100vh;
   margin-bottom: -100vh;
-  background: center / cover no-repeat;
+  background: var(--wide) center / cover no-repeat;
   pointer-events: none;
+}
+@media (orientation: portrait) {
+  .walk,
+  .walk-still {
+    background-image: var(--tall);
+  }
 }
 .walk-group {
   position: relative;
