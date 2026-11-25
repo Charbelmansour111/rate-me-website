@@ -7,73 +7,77 @@ import { EdgeLine } from './edge-line';
 import { FeatureIcon } from './feature-icon';
 import { HeroDrill } from './hero-drill';
 import { PreRegisterForm } from './pre-register-form';
-import { JourneyGroup } from './journey';
+import { WalkCanvas, WalkGap, WalkGroup } from './journey-walk';
 import { Showcase } from './showcase';
 import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
 import { TacticsSection } from './tactics-section';
 
-/** The page reads as a pitch from goal line to goal: markings continue from section to section. */
+/** A walk from the locker room (top) to the pitch (end), with the sections as panels in front. */
 export function HomePage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   return (
     <>
       <SiteHeader locale={locale} path="/" />
       <main id="main" className="overflow-x-clip">
-        <section className="relative z-1 bg-page">
-          <div className="wrap grid items-center gap-x-12 gap-y-14 pt-14 pb-20 lg:grid-cols-[1.5fr_1fr] lg:pt-20 lg:pb-28">
-            <div>
-              <h1 className="display h1">
-                {t.hero.title[0]}{' '}
-                <span className="block">
-                  {t.hero.title[1]}{' '}
-                  <span className="relative inline-block text-accent">
-                    {t.hero.title[2]}
-                    {/* A chalk stroke under one word */}
-                    <svg
-                      className="underline-draw absolute inset-x-0 top-full -mt-[0.06em] h-[0.12em] w-full overflow-visible rtl:mt-[0.14em]"
-                      viewBox="0 0 100 10"
-                      preserveAspectRatio="none"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M1 7Q40 1 99 4"
-                        stroke="var(--accent)"
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                    </svg>
-                  </span>
-                </span>
-              </h1>
-              <p className="mt-10 max-w-xl text-xl font-semibold">{t.hero.lead}</p>
-              <p className="mt-3 max-w-xl text-lg text-muted">{t.hero.sub}</p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <a className="btn btn-primary" href="#pre-register">
-                  {t.nav.preRegister}
-                </a>
-                {site.communityUrl && (
-                  <a
-                    className="btn btn-ghost"
-                    href={site.communityUrl}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    {t.hero.join}
-                    <span className="sr-only"> {t.a11y.newTab}</span>
-                  </a>
-                )}
+        <WalkCanvas />
+        <WalkGroup scene="locker">
+          <section className="walk-hero">
+            <div className="wrap">
+              <div className="panel grid items-center gap-x-12 gap-y-14 lg:grid-cols-[1.5fr_1fr]">
+                <div>
+                  <h1 className="display h1">
+                    {t.hero.title[0]}{' '}
+                    <span className="block">
+                      {t.hero.title[1]}{' '}
+                      <span className="relative inline-block text-accent">
+                        {t.hero.title[2]}
+                        {/* A chalk stroke under one word */}
+                        <svg
+                          className="underline-draw absolute inset-x-0 top-full -mt-[0.06em] h-[0.12em] w-full overflow-visible rtl:mt-[0.14em]"
+                          viewBox="0 0 100 10"
+                          preserveAspectRatio="none"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M1 7Q40 1 99 4"
+                            stroke="var(--accent)"
+                            strokeWidth="6"
+                            strokeLinecap="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        </svg>
+                      </span>
+                    </span>
+                  </h1>
+                  <p className="mt-10 max-w-xl text-xl font-semibold">{t.hero.lead}</p>
+                  <p className="mt-3 max-w-xl text-lg text-muted">{t.hero.sub}</p>
+                  <div className="mt-9 flex flex-wrap gap-3">
+                    <a className="btn btn-primary" href="#pre-register">
+                      {t.nav.preRegister}
+                    </a>
+                    {site.communityUrl && (
+                      <a
+                        className="btn btn-ghost"
+                        href={site.communityUrl}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        {t.hero.join}
+                        <span className="sr-only"> {t.a11y.newTab}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <div className="hero-parallax mx-auto w-full max-w-[23.75rem]">
+                  <HeroDrill locale={locale} />
+                </div>
               </div>
             </div>
-            <div className="hero-parallax mx-auto w-full max-w-[23.75rem]">
-              <HeroDrill locale={locale} />
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <JourneyGroup scene="locker" caption={t.journey.locker}>
+          <WalkGap scene="locker" locale={locale} />
           <section className="section" aria-labelledby="why-title">
             <EdgeLine />
             <div className="wrap">
@@ -107,6 +111,9 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
+          <WalkGap scene="locker" locale={locale} />
+        </WalkGroup>
+        <WalkGroup scene="tunnel">
           <section id="features" className="section" aria-labelledby="features-title">
             <EdgeLine end />
             <div className="wrap">
@@ -148,12 +155,15 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
+          <WalkGap scene="tunnel" locale={locale} />
           <Showcase locale={locale} />
-        </JourneyGroup>
 
-        <JourneyGroup scene="tunnel" caption={t.journey.tunnel}>
+          <WalkGap scene="tunnel" locale={locale} />
           <TacticsSection locale={locale} />
 
+          <WalkGap scene="tunnel" locale={locale} />
+        </WalkGroup>
+        <WalkGroup scene="pitch">
           <section id="community" className="section" aria-labelledby="community-title">
             <EdgeLine end />
             <div className="wrap">
@@ -217,9 +227,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               </div>
             </div>
           </section>
-        </JourneyGroup>
-
-        <JourneyGroup scene="pitch" caption={t.journey.pitch}>
+          <WalkGap scene="pitch" locale={locale} />
           <section id="faq" className="section" aria-labelledby="faq-title">
             <EdgeLine />
             <div className="wrap">
@@ -267,6 +275,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
+          <WalkGap scene="pitch" locale={locale} />
           <section id="pre-register" className="section" aria-labelledby="form-title">
             <EdgeLine end last />
             <div className="wrap">
@@ -290,7 +299,8 @@ export function HomePage({ locale }: { locale: Locale }) {
               </div>
             </div>
           </section>
-        </JourneyGroup>
+          <WalkGap scene="pitch" locale={locale} />
+        </WalkGroup>
       </main>
       <SiteFooter locale={locale} path="/" />
     </>

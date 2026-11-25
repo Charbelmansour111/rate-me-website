@@ -1,50 +1,44 @@
-/*
- * The scroll journey (src/components/journey.tsx) and the "Inside the app" carousel.
- * At rest: every group of sections has its own scene, stuck behind it. No script, no timeline.
- */
-.journey-group {
-  position: relative;
+/* --- The walk (src/components/journey-walk.tsx) --- */
+/* Shown where it can be scrubbed; its CSS background is the first frame. */
+.walk {
+  display: none;
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100lvh;
+  background: center / cover no-repeat;
+  pointer-events: none;
 }
-.scene {
+/* Otherwise: one still picture behind each part of the page. */
+.walk-still {
   position: sticky;
   z-index: 0;
   top: 0;
   height: 100vh;
   margin-bottom: -100vh;
-  overflow: clip;
-  background: var(--soft);
+  background: center / cover no-repeat;
   pointer-events: none;
 }
-[dir='rtl'] .scene {
-  scale: -1 1;
+.walk-group {
+  position: relative;
 }
-.scene-layer {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 42%;
-}
-.tunnel-light {
-  inset: 42% auto auto 50%;
-  width: 22vmax;
-  height: 22vmax;
-  margin: -11vmax;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, var(--light) 35%, transparent);
-  transform-origin: 50% 50%;
-}
-.journey-content {
+.walk-content {
   position: relative;
   z-index: 1;
 }
-/* An open view of the scene before its first section. */
-.journey-opener {
-  display: flex;
-  height: 62vh;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 2rem;
+.walk-hero {
+  padding-block: clamp(2rem, 9vh, 6rem);
 }
-.journey-caption {
+.walk-gap {
+  display: flex;
+  height: 70vh;
+  align-items: center;
+  justify-content: center;
+}
+.walk-label {
+  display: none;
   padding: 0.35rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -52,135 +46,53 @@
   font-size: 0.9375rem;
   font-weight: 600;
 }
-/* What people read always has a nearly solid ground. */
+.walk-label[data-default] {
+  display: block;
+}
+@media (max-width: 40rem) {
+  .walk-gap {
+    height: 60vh;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-js]:not([data-journey='off']) .walk {
+    display: block;
+  }
+  [data-js]:not([data-journey='off']) .walk-still {
+    display: none;
+  }
+  [data-journey='on'] .walk-label {
+    display: none;
+  }
+  [data-scene='locker'] [data-in] [data-label='locker'],
+  [data-scene='tunnel'] [data-in] [data-label='tunnel'],
+  [data-scene='pitch'] [data-in] [data-label='pitch'] {
+    display: block;
+    animation-name: walk-label;
+    animation-duration: 600ms;
+    animation-timing-function: ease-out;
+  }
+  @keyframes walk-label {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}
+
+/* What people read always has a solid ground. */
 .panel {
   padding: clamp(1.5rem, 4vw, 3.5rem);
   border: 1px solid var(--line);
   border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--page) 93%, transparent);
+  background: var(--page);
 }
 .panel.inverse {
   background: var(--page);
 }
-.journey-content .section {
+.walk-content .section {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
 }
-.journey-content .section:last-child {
-  padding-bottom: clamp(5rem, 14vw, 11rem);
-}
-@media (max-width: 40rem) {
-  .journey-opener {
-    height: 46vh;
-  }
-  /* Fewer layers on phones */
-  .scene-near {
-    display: none;
-  }
-}
-
-/* One layer that fades, for browsers without scroll-driven animations (src/motion/journey.ts). */
-[data-journey-fallback] .scene {
-  position: fixed;
-  inset: 0;
-  height: auto;
-  margin: 0;
-  opacity: 0;
-  transition: opacity 500ms;
-}
-[data-journey-fallback] [data-reached] .scene {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .journey-group {
-      view-timeline-name: --group;
-    }
-    /* Later scenes lie over earlier ones, so each only has to fade in. */
-    .scene {
-      position: fixed;
-      inset: 0;
-      height: auto;
-      margin: 0;
-      animation-name: scene-in;
-      animation-duration: auto;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --group;
-      animation-range: entry 15% entry 85%;
-    }
-    .scene-layer {
-      animation-duration: auto;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --group;
-      animation-range: cover 0% cover 100%;
-    }
-    .locker-back,
-    .pitch-back {
-      animation-name: scene-drift;
-    }
-    .locker-front,
-    .pitch-front {
-      animation-name: scene-drift-near;
-    }
-    .tunnel-walls {
-      animation-name: tunnel-walls;
-    }
-    .tunnel-doors {
-      animation-name: tunnel-doors;
-    }
-    .tunnel-light {
-      animation-name: tunnel-light;
-    }
-  }
-  /* Hidden, not only transparent: a scene whose turn has not come costs no painting. */
-  @keyframes scene-in {
-    from {
-      visibility: hidden;
-      opacity: 0;
-    }
-    to {
-      visibility: visible;
-      opacity: 1;
-    }
-  }
-  @keyframes scene-drift {
-    from {
-      transform: translateY(2%) scale(1.04);
-    }
-    to {
-      transform: translateY(-2%) scale(1.04);
-    }
-  }
-  @keyframes scene-drift-near {
-    from {
-      transform: translateY(5%) scale(1.1);
-    }
-    to {
-      transform: translateY(-4%) scale(1.1);
-    }
-  }
-  @keyframes tunnel-walls {
-    to {
-      transform: scale(1.7);
-    }
-  }
-  @keyframes tunnel-doors {
-    to {
-      transform: scale(3.2);
-    }
-  }
-  @keyframes tunnel-light {
-    from {
-      transform: scale(0.35);
-    }
-    to {
-      transform: scale(4.5);
-    }
-  }
-}
-
 /* --- Inside the app --- */
 .showcase-tabs {
   display: inline-flex;

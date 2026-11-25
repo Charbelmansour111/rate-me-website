@@ -18,7 +18,8 @@ export function MotionLoader() {
             if (!current.signal.aborted) startMotion(current.signal);
           },
           () => {
-            // Offline or blocked: the page is complete without it.
+            // Offline or blocked: the page is complete without it, with still pictures.
+            document.documentElement.dataset.journey = 'off';
           },
         );
       // Once the page has settled (Safari has no idle callback).

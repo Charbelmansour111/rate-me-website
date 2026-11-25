@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+import { frameAt, journey } from '../../src/config/journey.config';
 import { ARABIC_ENABLED } from '../../src/config/site';
 
 /** Scrolls like a person does, so the observers see every part of the page. */
@@ -17,7 +18,7 @@ async function scrollThrough(page: Page) {
 const hidden = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll('main *, footer *')]
-      .filter((el) => !el.closest('svg, .scene') && Number(getComputedStyle(el).opacity) < 1)
+      .filter((el) => !el.closest('svg') && Number(getComputedStyle(el).opacity) < 1)
       .map((el) => el.outerHTML.slice(0, 100)),
   );
 
@@ -54,7 +55,6 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       0.001,
     );
     // With motion on, as visitors get it
-    // Scroll-linked scenes are drawings, aria-hidden
     const { violations } = await new AxeBuilder({ page }).analyze();
     expect(violations.map((v) => v.id)).toEqual([]);
   });
@@ -115,9 +115,10 @@ test('reduced motion: the finished frame, no pinning, no animation', async ({ pa
   }
   await expect(section.locator('.tactics-pin')).toHaveCSS('position', 'static');
   expect(await hidden(page)).toEqual([]);
-  for (const scene of await page.locator('.scene').all()) {
-    await expect(scene).toHaveCSS('position', 'sticky');
-    await expect(scene).toHaveCSS('opacity', '1');
+  await expect(page.locator('[data-walk]')).toBeHidden();
+  await expect(page.locator('html')).not.toHaveAttribute('data-journey');
+  for (const still of await page.locator('.walk-still').all()) {
+    await expect(still).toHaveCSS('background-image', /journey/);
   }
   await expect(page.locator('[data-play-pause]')).toBeHidden();
   expect(
@@ -157,23 +158,84 @@ test('the hero runs different plays, and pauses', async ({ page }) => {
   await expect.poll(running).toBe(0);
 });
 
-test('the journey shows its three scenes in turn, behind the content', async ({ page }) => {
+test('the walk: from the first frame to the last, and every scroll moves it', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
-  const opacity = (scene: string) =>
-    page
-      .locator(`[data-journey=${scene}] .scene`)
-      .evaluate((el) => Number(getComputedStyle(el).opacity));
-  const scenes = ['locker', 'tunnel', 'pitch'];
-  for (const [i, scene] of scenes.entries()) {
-    await page
-      .locator(`[data-journey=${scene}]`)
-      .evaluate((el) =>
-        scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'instant' }),
-      );
-    await expect.poll(() => opacity(scene)).toBe(1);
-    if (scenes[i + 1]) expect(await opacity(scenes[i + 1])).toBe(0);
+  const walk = page.locator('[data-walk]');
+  const last = String(journey.count - 1);
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  await expect(walk).toHaveAttribute('data-frame', '0');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'locker');
+
+  const to = (part: number) =>
+    page.evaluate((p) => {
+      const main = document.querySelector('main')!;
+      const top = (main.offsetTop + main.offsetHeight - innerHeight) * p;
+      scrollTo({ top, behavior: 'instant' });
+    }, part);
+  await to(0.45);
+  await expect(walk).toHaveAttribute('data-frame', String(frameAt(0.45)));
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'tunnel');
+  const pixels = () => walk.evaluate((el) => (el as HTMLCanvasElement).toDataURL('image/png'));
+  await to(0.3);
+  await expect(walk).toHaveAttribute('data-frame', String(frameAt(0.3)));
+  await page.waitForTimeout(800);
+  const before = await pixels();
+  await page.evaluate(() => scrollBy({ top: 40, behavior: 'instant' }));
+  await expect.poll(pixels).not.toBe(before);
+  await to(1);
+  await expect(walk).toHaveAttribute('data-frame', last);
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'pitch');
+  // The canvas fills the screen, at no more than two pixels per point
+  const size = await walk.evaluate((el) => {
+    const { width, clientWidth } = el as HTMLCanvasElement;
+    return { ratio: width / clientWidth, full: clientWidth >= innerWidth - 20 };
+  });
+  expect(size.full).toBe(true);
+  expect(size.ratio).toBeLessThanOrEqual(2.01);
+});
+
+test('the walk: open gaps carry the label of the scene', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const gaps = page.locator('[data-walk-gap]');
+  await expect(gaps).toHaveCount(8);
+  for (const [i, label] of [
+    [0, 'The locker room'],
+    [3, 'The tunnel'],
+    [7, 'The pitch'],
+  ] as const) {
+    const gap = gaps.nth(i);
+    await gap.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await expect(gap.locator('p:visible')).toHaveText(label);
+    const share = await gap.evaluate((el) => el.clientHeight / innerHeight);
+    expect(share).toBeGreaterThanOrEqual(0.59);
+    expect(share).toBeLessThanOrEqual(0.81);
   }
-  await expect(page.locator('#f-name')).toBeVisible();
+});
+
+test('the walk: saving data loads every second frame', async ({ page }) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
+  );
+  const frames = new Set<string>();
+  page.on('request', (request) => {
+    if (request.url().includes(journey.path)) frames.add(request.url());
+  });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect.poll(() => frames.size).toBe(Math.ceil(journey.count / 2));
+});
+
+test('the walk: without a canvas or its frames, still pictures', async ({ page }) => {
+  await page.addInitScript(() => {
+    HTMLCanvasElement.prototype.getContext = () => null;
+  });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'off');
+  await expect(page.locator('[data-walk]')).toBeHidden();
+  await expect(page.locator('.walk-still')).toHaveCount(3);
+  for (const still of await page.locator('.walk-still').all()) {
+    await expect(still).toHaveCSS('background-image', /journey/);
+    await expect(still).toHaveCSS('position', 'sticky');
+  }
 });
 
 test('inside the app: views, arrows, dots and keys', async ({ page }) => {
@@ -208,6 +270,8 @@ test.describe('without JavaScript', () => {
   test('everything is there', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#tactics .tactics-pin')).toHaveCSS('position', 'static');
+    await expect(page.locator('[data-walk]')).toBeHidden();
+    await expect(page.locator('.walk-still').first()).toHaveCSS('background-image', /f000/);
     for (const view of await page.locator('.showcase-view').all()) await expect(view).toBeVisible();
     for (const el of await page.locator('[data-reveal]').all()) {
       await expect(el).toHaveCSS('opacity', '1');
