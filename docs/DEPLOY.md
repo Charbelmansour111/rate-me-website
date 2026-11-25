@@ -55,22 +55,56 @@ Public, Turnstile and analytics values are read at build time: **redeploy after 
 the waitlist settings are missing in production, the form shows an error instead of losing signups.
 For Preview deployments use `WAITLIST_PROVIDER=mock`, so tests never reach the real list.
 
-## 3. Vercel
+## 3. Deployment flow
 
-1. Push this repository to GitHub.
-2. https://vercel.com/new: import `rate-me-website`. Vercel detects Next.js; keep the defaults.
-3. Add the variables above and press **Deploy**.
-4. Check your plan: Vercel's free Hobby plan is for non-commercial use.
+The Vercel project is `rate-me-website` (team `charbelmansour111s-projects`), connected to this GitHub
+repository. There is nothing to run by hand:
+
+| What you do                         | What Vercel does                                     |
+| ----------------------------------- | ---------------------------------------------------- |
+| Push or merge to `main`             | Deploys to production                                |
+| Push any other branch, or open a PR | Deploys a preview (Vercel sign-in needed to open it) |
+| Change an environment variable      | Nothing until the next deploy: redeploy to apply it  |
+
+GitHub Actions runs the checks on the same push but does not block the deployment. To be safe, work on a
+branch, wait for CI to pass, then merge to `main`.
+
+- **Framework preset:** must stay **Next.js** (Settings > Build and Deployment). With "Other", the build
+  passes but every page answers 404.
+- **Environment variables** live in Vercel under **Project > Settings > Environment Variables**, per
+  environment (Production, Preview, Development), never in Git. `.env.local` is for your own computer.
+  `vercel link` and `vercel env pull` write to it; it is ignored by Git.
+- **Redeploy** without a code change: **Deployments > ... > Redeploy**.
+- **Manual deploy** if ever needed: `npx vercel@latest --prod`. It uploads your folder, so commit first.
+- **Plan:** Vercel's free Hobby plan is for non-commercial use.
+
+### Roll back
+
+- Dashboard: **Deployments**, choose the last good production deployment, **... > Instant Rollback**.
+- Or: `npx vercel@latest rollback` for the previous deployment (the Hobby plan goes back one step).
+
+A rollback keeps the old build and its old settings, and it turns off automatic promotion: new pushes
+to `main` still build, but do not go live until you promote one (**... > Promote to Production**, or
+`npx vercel@latest promote <deployment-url>`). Then revert the bad commit with `git revert` and push.
 
 ## 4. Domain (Namecheap)
 
-1. Vercel: **Project > Settings > Domains**, add `getrateme.space` and `www.getrateme.space`. Make
-   `getrateme.space` the primary one and redirect `www` to it.
-2. Vercel shows the DNS records (usually an `A` record for `@` and a `CNAME` for `www`). **Use the
-   values Vercel shows.**
-3. Namecheap: **Domain List > Manage > Advanced DNS**. Delete Namecheap's parking records for `@` and
-   `www`, then add Vercel's records. Keep any mail records (MX, TXT).
-4. Wait until Vercel shows both domains as valid. HTTPS is automatic.
+`getrateme.space` is the primary domain; `www.getrateme.space` redirects to it (308). Both are already
+added in Vercel. DNS stays at Namecheap.
+
+1. Namecheap: **Domain List > Manage > Advanced DNS**.
+2. Delete the parking records: the **URL Redirect Record** on `@` and the **CNAME** on `www` that points
+   to `parkingpage.namecheap.com`. **Keep the mail settings and MX records** (email forwarding).
+3. Add these, with TTL Automatic:
+
+   | Type  | Host  | Value                                  |
+   | ----- | ----- | -------------------------------------- |
+   | A     | `@`   | `216.198.79.1`                         |
+   | A     | `@`   | `64.29.17.1`                           |
+   | CNAME | `www` | `2d493e049b466229.vercel-dns-017.com.` |
+
+4. Check with `npx vercel@latest domains verify getrateme.space`, or in **Settings > Domains**. If Vercel
+   ever shows other values, use those. HTTPS is automatic once DNS is right.
 
 ## 5. Test end to end
 
