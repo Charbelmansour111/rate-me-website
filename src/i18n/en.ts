@@ -92,6 +92,29 @@ export const en = {
       squad: 'The squad',
     },
   },
+  tactics: {
+    kicker: 'Whiteboard',
+    title: 'Tactics that move',
+    illustration: 'Illustration',
+    pause: 'Pause',
+    description:
+      'Illustration: on a half pitch, four attackers pass the ball along curved lines from one side to the other. Of three defenders, one presses the player on the ball, one covers the passing lane and one closes the space behind them.',
+    roles: ['Press', 'Cover', 'Second cover'],
+    steps: [
+      {
+        title: 'Set the starting positions',
+        text: 'Put your players and the opponents where the drill begins.',
+      },
+      {
+        title: 'Give defenders roles',
+        text: 'One presses, one covers, one stays behind as second cover.',
+      },
+      {
+        title: 'Hit record and watch it play',
+        text: 'Pass the ball and see the defenders shift with it.',
+      },
+    ],
+  },
   community: {
     kicker: 'Community',
     title: 'Built with coaches in Lebanon',

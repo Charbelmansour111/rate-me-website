@@ -3,12 +3,14 @@ import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale } from '@/i18n';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
+import { EdgeLine } from './edge-line';
 import { FeatureIcon } from './feature-icon';
 import { HeroDrill } from './hero-drill';
 import { PreRegisterForm } from './pre-register-form';
 import { Screens } from './screens';
 import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
+import { TacticsSection } from './tactics-section';
 
 /** The page reads as a pitch from goal line to goal: markings continue from section to section. */
 export function HomePage({ locale }: { locale: Locale }) {
@@ -28,7 +30,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                     {t.hero.title[2]}
                     {/* A chalk stroke under one word */}
                     <svg
-                      className="absolute inset-x-0 top-full -mt-[0.06em] h-[0.12em] w-full overflow-visible rtl:mt-[0.14em]"
+                      className="underline-draw absolute inset-x-0 top-full -mt-[0.06em] h-[0.12em] w-full overflow-visible rtl:mt-[0.14em]"
                       viewBox="0 0 100 10"
                       preserveAspectRatio="none"
                       fill="none"
@@ -64,13 +66,14 @@ export function HomePage({ locale }: { locale: Locale }) {
                 )}
               </div>
             </div>
-            <div className="mx-auto w-full max-w-md lg:max-w-none">
+            <div className="hero-parallax mx-auto w-full max-w-md lg:max-w-none">
               <HeroDrill t={t.hero.drill} />
             </div>
           </div>
         </section>
 
-        <section className="section overflow-hidden bg-soft" aria-labelledby="why-title">
+        <section className="section overflow-clip bg-soft" aria-labelledby="why-title">
+          <EdgeLine />
           {/* Corner markings, kept clear of the text */}
           <svg
             className="chalk top-0 right-0 hidden h-[60%] max-h-64 md:block rtl:right-auto rtl:left-0 rtl:-scale-x-100"
@@ -82,13 +85,15 @@ export function HomePage({ locale }: { locale: Locale }) {
             <circle className="hint" cx="320" cy="0" r="60" />
           </svg>
           <div className="wrap relative">
-            <p className="kicker">{t.why.kicker}</p>
-            <h2 id="why-title" className="display h2">
+            <p data-reveal className="kicker">
+              {t.why.kicker}
+            </p>
+            <h2 data-reveal id="why-title" className="display h2">
               {t.why.title}
             </h2>
             <ul className="mt-14 grid gap-x-12 gap-y-10 md:grid-cols-3">
               {t.why.items.map((item) => (
-                <li key={item.title} className="reveal border-t-3 border-accent pt-5">
+                <li key={item.title} data-reveal className="border-t-3 border-accent pt-5">
                   <h3 className="display h3">{item.title}</h3>
                   <p className="mt-3 text-lg text-muted">{item.text}</p>
                 </li>
@@ -98,19 +103,28 @@ export function HomePage({ locale }: { locale: Locale }) {
         </section>
 
         <section id="features" className="section" aria-labelledby="features-title">
+          <EdgeLine end />
           <div className="wrap">
             <div className="grid items-end gap-6 lg:grid-cols-2">
               <div>
-                <p className="kicker">{t.features.kicker}</p>
-                <h2 id="features-title" className="display h2">
+                <p data-reveal className="kicker">
+                  {t.features.kicker}
+                </p>
+                <h2 data-reveal id="features-title" className="display h2">
                   {t.features.title}
                 </h2>
               </div>
-              <p className="max-w-lg text-muted lg:justify-self-end">{t.features.note}</p>
+              <p data-reveal className="max-w-lg text-muted lg:justify-self-end">
+                {t.features.note}
+              </p>
             </div>
             <ul className="mt-14 grid border-s border-t border-line sm:grid-cols-2 lg:grid-cols-3">
               {features.map(({ id, released }) => (
-                <li key={id} className="border-e border-b border-line p-7 sm:p-9">
+                <li
+                  key={id}
+                  data-reveal
+                  className="lift border-e border-b border-line bg-page p-7 sm:p-9"
+                >
                   <div className="flex items-start justify-between gap-4">
                     <FeatureIcon id={id} />
                     {!released && (
@@ -128,11 +142,14 @@ export function HomePage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
+        <TacticsSection locale={locale} />
+
         <section
           id="community"
-          className="inverse section overflow-hidden"
+          className="inverse section overflow-clip"
           aria-labelledby="community-title"
         >
+          <EdgeLine end />
           {/* Corner arcs */}
           <svg
             className="chalk top-0 left-0 hidden w-40 md:block"
@@ -150,24 +167,39 @@ export function HomePage({ locale }: { locale: Locale }) {
           </svg>
           <div className="wrap relative grid gap-16 lg:grid-cols-2">
             <div>
-              <p className="kicker">{t.community.kicker}</p>
-              <h2 id="community-title" className="display h2">
+              <p data-reveal className="kicker">
+                {t.community.kicker}
+              </p>
+              <h2 data-reveal id="community-title" className="display h2">
                 {t.community.title}
               </h2>
-              <p className="mt-7 max-w-xl text-lg text-muted">{t.community.text}</p>
-              <a className="btn btn-primary mt-8" href="#pre-register">
+              <p data-reveal className="mt-7 max-w-xl text-lg text-muted">
+                {t.community.text}
+              </p>
+              <a data-reveal className="btn btn-primary mt-8" href="#pre-register">
                 {t.nav.preRegister}
               </a>
             </div>
             <div>
-              <h3 className="text-lg font-semibold">{t.community.stepsTitle}</h3>
+              <h3 data-reveal className="text-lg font-semibold">
+                {t.community.stepsTitle}
+              </h3>
               <ol className="mt-6">
                 {t.community.steps.map((step, i) => (
                   <li
                     key={step.title}
-                    className="relative flex gap-6 pb-10 not-last:before:absolute not-last:before:inset-s-[1.7rem] not-last:before:top-14 not-last:before:bottom-0 not-last:before:border-s-2 not-last:before:border-dashed not-last:before:border-accent last:pb-0"
+                    data-reveal="step"
+                    className="relative flex gap-6 pb-10 last:pb-0"
                   >
+                    {i < t.community.steps.length - 1 && (
+                      <span
+                        data-connector
+                        aria-hidden="true"
+                        className="absolute inset-s-[1.7rem] top-14 bottom-0 origin-top border-s-2 border-dashed border-accent"
+                      />
+                    )}
                     <span
+                      data-number
                       aria-hidden="true"
                       className="display grid size-14 shrink-0 place-items-center rounded-full bg-accent text-3xl text-brand-black"
                     >
@@ -185,16 +217,19 @@ export function HomePage({ locale }: { locale: Locale }) {
         </section>
 
         <section id="faq" className="section" aria-labelledby="faq-title">
+          <EdgeLine />
           <div className="wrap grid gap-12 lg:grid-cols-[1fr_1.6fr]">
             <div>
-              <p className="kicker">{t.faq.kicker}</p>
-              <h2 id="faq-title" className="display h2">
+              <p data-reveal className="kicker">
+                {t.faq.kicker}
+              </p>
+              <h2 data-reveal id="faq-title" className="display h2">
                 {t.faq.title}
               </h2>
             </div>
-            <div className="border-t border-line">
+            <div className="faq border-t border-line">
               {t.faq.items.map((item) => (
-                <details key={item.q} className="group border-b border-line">
+                <details key={item.q} data-reveal="fade" className="group border-b border-line">
                   <summary className="flex list-none items-center justify-between gap-6 border-s-3 border-transparent py-5 text-lg font-semibold group-open:border-accent group-open:ps-4 hover:text-accent-text [&::-webkit-details-marker]:hidden">
                     {item.q}
                     <svg
@@ -228,26 +263,33 @@ export function HomePage({ locale }: { locale: Locale }) {
 
         <section
           id="pre-register"
-          className="section overflow-hidden bg-softer"
+          className="section overflow-clip bg-softer"
           aria-labelledby="form-title"
         >
+          <EdgeLine end last />
           {/* The box: this is where it ends up */}
           <svg
+            data-reveal="draw"
             className="chalk bottom-0 left-1/2 w-[86rem] max-w-none -translate-x-1/2"
             viewBox="0 0 860 420"
             aria-hidden="true"
           >
-            <path d="M20 420V60H840V420" />
-            <path className="hint" d="M200 420V250H660V420" />
+            <path pathLength={1} d="M20 420V60H840V420" />
+            <path pathLength={1} className="hint" d="M200 420V250H660V420" />
           </svg>
           <div className="wrap relative">
             <div>
-              <p className="kicker justify-center">{t.form.kicker}</p>
-              <h2 id="form-title" className="display h2 text-center">
+              <p data-reveal className="kicker justify-center">
+                {t.form.kicker}
+              </p>
+              <h2 data-reveal id="form-title" className="display h2 text-center">
                 {t.form.title}
               </h2>
             </div>
-            <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-line bg-page p-6 sm:p-10">
+            <div
+              data-reveal
+              className="mx-auto mt-10 max-w-2xl rounded-2xl border border-line bg-page p-6 sm:p-10"
+            >
               <PreRegisterForm
                 t={t.form}
                 newTab={t.a11y.newTab}

@@ -351,8 +351,10 @@ function Success({
         strokeLinejoin="round"
         aria-hidden="true"
       >
-        <path d="M6 54V12H58V54" />
-        <path d="M20 34l9 9 17-19" />
+        <g className="success-ball">
+          <circle cx="32" cy="36" r="24" />
+          <path className="success-tick" d="M21 36l8 8 15-16" pathLength={1} />
+        </g>
       </svg>
       <h3 ref={heading} tabIndex={-1} className="display h3 mt-5">
         {t.title}

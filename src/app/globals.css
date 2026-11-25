@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './palette.css';
+@import './motion.css';
 
 @theme inline {
   --color-page: var(--page);
@@ -199,6 +200,11 @@
   .chalk * {
     vector-effect: non-scaling-stroke;
   }
+  /* Drawn with a dash, which non-scaling strokes do not support: 2px once scaled. */
+  .chalk[data-reveal='draw'] * {
+    stroke-width: 1.25px;
+    vector-effect: none;
+  }
   .chalk .hint {
     stroke: var(--accent);
   }
@@ -211,22 +217,9 @@
   }
 }
 
-/* Scroll reveal without JavaScript: a small rise, never invisible text. */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
-  }
-  @supports (animation-timeline: view()) {
-    .reveal {
-      animation: rise linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 70%;
-    }
-  }
-  @keyframes rise {
-    from {
-      transform: translateY(2.5rem);
-    }
   }
 }
 

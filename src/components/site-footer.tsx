@@ -4,6 +4,7 @@ import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale, type PagePath } from '@/i18n';
 
 import { LanguageSwitch } from './language-switch';
+import { MotionLoader } from './motion-loader';
 import { SocialIcon } from './social-icon';
 import { Wordmark } from './wordmark';
 
@@ -12,7 +13,11 @@ export function SiteFooter({ locale, path }: { locale: Locale; path: PagePath })
   const item = 'inline-flex min-h-11 items-center hover:text-accent-text';
   return (
     <footer className="inverse">
-      <div className="wrap flex flex-wrap items-start justify-between gap-x-12 gap-y-8 py-12">
+      <MotionLoader />
+      <div
+        data-reveal="fade"
+        className="wrap flex flex-wrap items-start justify-between gap-x-12 gap-y-8 py-12"
+      >
         <div>
           <Wordmark className="h-8 w-auto" onBlack />
           <p className="mt-3 text-muted">{t.footer.tagline}</p>

@@ -15,7 +15,7 @@ const paths: Record<FeatureId, string> = {
 
 export function FeatureIcon({ id }: { id: FeatureId }) {
   return (
-    <span className="grid size-14 place-items-center rounded-full bg-tint">
+    <span data-pop className="grid size-14 place-items-center rounded-full bg-tint">
       <svg
         viewBox="0 0 48 48"
         className="size-8 text-accent"
