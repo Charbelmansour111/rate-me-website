@@ -50,6 +50,11 @@
 .walk-label[data-default] {
   display: block;
 }
+/* Bright stands would glare around the dark panels. */
+:root[data-theme='dark'] .walk,
+:root[data-theme='dark'] .walk-still {
+  opacity: 0.6;
+}
 @media (max-width: 40rem) {
   .walk-gap {
     height: 60vh;

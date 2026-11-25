@@ -18,7 +18,9 @@ async function scrollThrough(page: Page) {
 const hidden = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll('main *, footer *')]
-      .filter((el) => !el.closest('svg') && Number(getComputedStyle(el).opacity) < 1)
+      .filter(
+        (el) => !el.closest('svg, .walk, .walk-still') && Number(getComputedStyle(el).opacity) < 1,
+      )
       .map((el) => el.outerHTML.slice(0, 100)),
   );
 
