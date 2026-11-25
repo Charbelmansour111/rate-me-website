@@ -166,7 +166,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               <div className="panel inverse relative grid gap-16 overflow-clip lg:grid-cols-2">
                 {/* Corner arcs */}
                 <svg
-                  className="chalk top-0 right-0 hidden w-40 md:block"
+                  className="chalk top-0 right-0 hidden w-40 md:block rtl:right-auto rtl:left-0 rtl:-scale-x-100"
                   viewBox="0 0 100 100"
                   aria-hidden="true"
                 >
