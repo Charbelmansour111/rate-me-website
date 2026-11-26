@@ -16,6 +16,8 @@ export type StageTokens = {
   softer: string;
   text: string;
   muted: string;
+  /** Large orange text (24px and up), strokes and focus rings: 3:1. */
+  accent: string;
   /** Small orange text: the kicker, links. */
   accentText: string;
   line: string;
@@ -37,6 +39,7 @@ export const stageColors: Record<StageId, StageTokens> = {
     softer: '#e0d5c3',
     text: '#0b0b0c',
     muted: '#544c42',
+    accent: '#c44300',
     accentText: '#9e3400',
     line: '#d3c7b3',
     edge: '#7a6f61',
@@ -52,6 +55,7 @@ export const stageColors: Record<StageId, StageTokens> = {
     softer: '#23201c',
     text: '#f6f1e8',
     muted: '#bdb5a8',
+    accent: '#ff5a00',
     accentText: '#ff8a3d',
     line: '#34302a',
     edge: '#857d70',
@@ -67,6 +71,7 @@ export const stageColors: Record<StageId, StageTokens> = {
     softer: '#163f2d',
     text: '#ffffff',
     muted: '#bdd4c6',
+    accent: '#ff5a00',
     accentText: '#ffb07a',
     line: '#24503c',
     edge: '#7ea892',
@@ -85,6 +90,9 @@ const GROUNDS: (keyof StageTokens)[] = ['surface', 'soft', 'softer'];
 
 export const cssName = (token: string) =>
   `--st-${token.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+
+/** Steps of the walk the live colours are worked out at (src/motion/stages.ts). */
+export const STAGE_STEPS = 600;
 
 /** The colours at walk progress `p`: one stage's own, or a blend near a boundary. */
 export function stageAt(p: number): StageTokens {
@@ -110,6 +118,7 @@ export function blend(a: StageTokens, b: StageTokens, t: number): StageTokens {
   const grounds = GROUNDS.map((k) => out[k]);
   for (const key of TEXT) out[key] = readable(out[key], grounds, 4.6);
   out.edge = readable(out.edge, grounds, 3.05);
+  out.accent = readable(out.accent, grounds, 3.05);
   return out;
 }
 

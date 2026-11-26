@@ -1,8 +1,5 @@
-import { stageAt, stageVars, type StageTokens } from '@/config/stages';
+import { STAGE_STEPS as STEPS, stageAt, stageVars, type StageTokens } from '@/config/stages';
 import { luminance } from '@/lib/color';
-
-/** Steps of the walk the colours are worked out at: finer than a pixel of colour change. */
-const STEPS = 600;
 
 /**
  * The panels change colour with the walk (src/config/stages.ts). Called with the walk's progress

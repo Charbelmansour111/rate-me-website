@@ -60,6 +60,7 @@
   --st-softer: #23201c;
   --st-text: #f6f1e8;
   --st-muted: #bdb5a8;
+  --st-accent: #ff5a00;
   --st-accent-text: #ff8a3d;
   --st-line: #34302a;
   --st-edge: #857d70;
@@ -75,6 +76,7 @@ html:not([data-stages='live']) [data-stage='locker'] {
   --st-softer: #e0d5c3;
   --st-text: #0b0b0c;
   --st-muted: #544c42;
+  --st-accent: #c44300;
   --st-accent-text: #9e3400;
   --st-line: #d3c7b3;
   --st-edge: #7a6f61;
@@ -90,6 +92,7 @@ html:not([data-stages='live']) [data-stage='tunnel'] {
   --st-softer: #23201c;
   --st-text: #f6f1e8;
   --st-muted: #bdb5a8;
+  --st-accent: #ff5a00;
   --st-accent-text: #ff8a3d;
   --st-line: #34302a;
   --st-edge: #857d70;
@@ -105,6 +108,7 @@ html:not([data-stages='live']) [data-stage='field'] {
   --st-softer: #163f2d;
   --st-text: #ffffff;
   --st-muted: #bdd4c6;
+  --st-accent: #ff5a00;
   --st-accent-text: #ffb07a;
   --st-line: #24503c;
   --st-edge: #7ea892;
@@ -124,6 +128,7 @@ html:not([data-stages='live']) [data-stage='field'] {
   --line: var(--st-line);
   --edge: var(--st-edge);
   --chalk: var(--st-chalk);
+  --accent: var(--st-accent);
   --accent-text: var(--st-accent-text);
   --danger: var(--st-danger);
   --tint: rgb(255 90 0 / 0.14);

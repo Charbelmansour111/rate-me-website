@@ -37,8 +37,9 @@ describe.each(STAGES)('stage colours: %s', (id) => {
       expect(worstOn(s, fg), fg).toBeGreaterThanOrEqual(4.5);
     }
   });
-  it('outlines of fields reach 3:1', () => {
+  it('outlines of fields and large orange text reach 3:1', () => {
     expect(worstOn(s, s.edge)).toBeGreaterThanOrEqual(3);
+    expect(worstOn(s, s.accent)).toBeGreaterThanOrEqual(3);
   });
   it('the orange button stays orange with black text', () => {
     expect(contrast('#0b0b0c', '#ff5a00')).toBeGreaterThanOrEqual(4.5);
@@ -59,6 +60,7 @@ describe('every in-between mix stays AA', () => {
         expect(worstOn(s, fg), `${k}% ${fg}`).toBeGreaterThanOrEqual(4.5);
       }
       expect(worstOn(s, s.edge), `${k}% edge`).toBeGreaterThanOrEqual(3);
+      expect(worstOn(s, s.accent), `${k}% accent`).toBeGreaterThanOrEqual(3);
     }
   });
   it('along the whole walk, in 500 steps', () => {

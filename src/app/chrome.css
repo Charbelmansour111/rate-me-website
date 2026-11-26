@@ -36,6 +36,7 @@
   --muted: var(--st-muted);
   --soft: var(--st-soft);
   --line: var(--st-line);
+  --accent: var(--st-accent);
   --accent-text: var(--st-accent-text);
 }
 .site-bar[data-home][data-top] {
