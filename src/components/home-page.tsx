@@ -154,7 +154,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                     soon: released ? null : t.features.soon,
                   }))}
                   t={t.features.controls}
-                  label={t.features.title}
+                  label={t.features.controls.label}
                   preRegister="#pre-register"
                 />
                 <CtaSplit
