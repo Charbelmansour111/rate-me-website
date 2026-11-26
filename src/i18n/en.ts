@@ -239,7 +239,7 @@ export const en = {
   },
   community: {
     kicker: 'Community',
-    title: 'Built with coaches in Lebanon',
+    title: 'Built for coaches in Lebanon',
     text: 'We want coaches and academies to shape the app with us. Pre-register to become a founding member: you get early access, and you tell us what to fix, add or drop.',
     stepsTitle: 'How it works',
     steps: [
@@ -271,7 +271,7 @@ export const en = {
       },
       {
         q: 'Is it free for players?',
-        a: 'Yes. Players are always free. They join through their coach’s team, so there is nothing for them to sign up for here.',
+        a: 'Yes, players do not pay. They join through their coach’s team, so there is nothing for them to sign up for here.',
       },
       {
         q: 'Do parents see their child’s progress?',
@@ -384,6 +384,21 @@ export const en = {
     terms: 'Terms',
     contact: 'Contact',
     rights: 'All rights reserved.',
+    cookieSettings: 'Cookie settings',
+  },
+  // Who runs Rate Me (values in src/config/site.ts: business)
+  contactBlock: {
+    title: 'Contact',
+    business: 'Business',
+    email: 'Email',
+    place: 'City and country',
+    phone: 'Phone',
+  },
+  cookies: {
+    label: 'Cookie choice',
+    text: 'May we count visits to this site? Without cookies, in total only, and only if you accept.',
+    accept: 'Accept',
+    reject: 'Reject',
   },
   notFound: {
     title: 'Offside',
@@ -396,6 +411,8 @@ export const en = {
     updated: 'Last updated',
     contents: 'On this page',
     noEmail: 'a contact email will be published here before launch',
+    dataRequest: 'Data request',
+    writeRequest: 'Write a data request',
   },
 };
 

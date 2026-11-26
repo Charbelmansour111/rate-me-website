@@ -72,6 +72,17 @@
   border-radius: 1.25rem;
   background: var(--page);
 }
+/* The cookie choice (src/components/cookie-banner.tsx): a small panel at the bottom, two equal
+   buttons */
+.panel.cookie-banner {
+  position: fixed;
+  z-index: 40;
+  inset-inline: 1rem;
+  bottom: 1rem;
+  max-width: 26rem;
+  padding: 1.25rem;
+  font-size: 1rem;
+}
 .walk-content .section {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
 }

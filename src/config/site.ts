@@ -30,4 +30,23 @@ export const site = {
 export const ARABIC_ENABLED: boolean = true;
 
 /** The day the legal drafts last changed. */
-export const LEGAL_UPDATED = '2026-11-25';
+export const LEGAL_UPDATED = '2026-11-26';
+
+/**
+ * Who runs Rate Me, shown in the footer and on the privacy page. Every TODO- value is a
+ * placeholder to replace with the real details before launch; none of them is real.
+ */
+export const business = {
+  name: 'TODO-legal-or-business-name',
+  email: site.contactEmail || 'TODO-contact-email',
+  city: 'TODO-city',
+  country: 'TODO-country',
+  phone: 'TODO-phone',
+} as const;
+
+/**
+ * How long the waitlist is kept: until this many months after the app launches, or until the person
+ * unsubscribes or asks for deletion, whichever comes first. The privacy page reads it; see
+ * docs/DATA-RETENTION.md.
+ */
+export const WAITLIST_RETENTION_MONTHS = 12;

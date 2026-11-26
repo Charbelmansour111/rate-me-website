@@ -293,3 +293,56 @@ test('no API keys reach the browser', async ({ page }) => {
   expect(scripts.length).toBeGreaterThan(0);
   expect(scripts.join('')).not.toMatch(/BREVO|MAILERLITE|api\.brevo\.com|TURNSTILE_SECRET/);
 });
+
+for (const [path, yourData, retention, report] of [
+  [
+    '/privacy',
+    'Your data',
+    '12 months after the app launches',
+    'If their club uses monthly reports',
+  ],
+  ['/ar/privacy', 'بياناتك', '12 شهرًا بعد إطلاق التطبيق', 'إذا كان النادي يستخدم التقارير الشهرية'],
+] as const) {
+  test(`${path}: your data, how long it is kept, the parents' report, who to contact`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    await expect(page.locator('#your-data h2')).toHaveText(yourData);
+    await expect(page.locator('#website-retention')).toContainText(retention);
+    await expect(page.locator('#minors')).toContainText(report);
+    // Every email can be unsubscribed from
+    await expect(page.locator('#website-why')).toContainText(/unsubscribe|إلغاء الاشتراك/);
+    // Who runs it: on the page and in the footer, each with its own heading
+    await expect(page.locator('#contact-page')).toBeVisible();
+    await expect(page.locator('#contact-footer')).toBeVisible();
+    await expect(page.locator('main dl dd')).toHaveCount(4);
+  });
+}
+
+test('cookies: no banner and no settings while statistics are off; nothing pre-ticked', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('.cookie-banner')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Cookie settings' })).toHaveCount(0);
+  // The consent box starts empty: the visitor ticks it
+  await expect(page.locator('#f-consent')).not.toBeChecked();
+});
+
+test('no promises the product cannot back', async ({ page }) => {
+  for (const path of ['/', '/ar']) {
+    await page.goto(path);
+    const text = await page.locator('main').innerText();
+    for (const claim of [
+      /always free/i,
+      /free forever/i,
+      /built with coaches/i,
+      /used by/i,
+      /\bbest\b/i,
+      /countdown|days left|spots left/i,
+      /FIFA|UEFA|Champions League/i,
+    ]) {
+      expect(text, `${path} ${claim}`).not.toMatch(claim);
+    }
+  }
+});

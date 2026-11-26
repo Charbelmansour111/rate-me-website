@@ -30,6 +30,7 @@ export const legalEn: LegalTexts = {
         title: 'Website: why we use it',
         text: [
           'To notify you about the launch and early access, and to invite you to the coaches community. We rely on the consent you give in the form. We do not use it for anything else, and we do not sell it.',
+          'Every email we send has an unsubscribe link.',
         ],
       },
       {
@@ -44,7 +45,7 @@ export const legalEn: LegalTexts = {
         id: 'website-retention',
         title: 'Website: how long we keep it',
         text: [
-          'Until you unsubscribe or ask us to delete it. We review the list at least once a year and delete details we no longer need. After you unsubscribe, the provider may keep your email address on a block list so that we do not email you again.',
+          'Until {retentionMonths} months after the app launches, or until you unsubscribe or ask us to delete it, whichever comes first. We review the list at least once a year and delete details we no longer need. After you unsubscribe, the provider may keep your email address on a block list so that we do not email you again.',
         ],
       },
       {
@@ -52,6 +53,7 @@ export const legalEn: LegalTexts = {
         title: 'Cookies and analytics',
         text: [
           'The website sets no tracking cookies. If you choose a theme, that choice is kept in your browser. If we turn on visitor statistics, we use a privacy-friendly tool without cookies that counts visits in total and does not follow you across sites.',
+          'Those statistics are the only optional part, and they are off until you accept them in the banner. Accept and Reject are the same size. Your choice is kept in your browser, and Cookie settings at the bottom of every page changes it. While statistics are switched off on our side, no banner appears and nothing optional runs.',
         ],
       },
       {
@@ -97,6 +99,14 @@ export const legalEn: LegalTexts = {
         text: [
           'This website and its form are for adults (18 or older). Please do not send us a child’s details here. If you think someone did, write to {email} and we will delete them.',
           'In the app, players under 18 may use Rate Me only with the consent of a parent or legal guardian and through their club. Coaches and staff must be 18 or older. Clubs must get that consent before adding a minor. Minors have no access to the Coaches Channel. A parent or guardian can ask to see, correct or delete their child’s data, or withdraw consent, at {email}.',
+          'If their club uses monthly reports, the parent or guardian of a player under 18 receives a PDF at the end of each month with that player’s attendance, the coaches’ ratings and the coach’s notes, sent to the contact details the club holds for them. Only that player’s own parent or guardian receives it.',
+        ],
+      },
+      {
+        id: 'your-data',
+        title: 'Your data',
+        text: [
+          'You can ask to see the data we hold about you, to correct it or to delete it. Write to {email} with the subject “Data request”, from the address you signed up with if you can. We answer within 30 days.',
         ],
       },
       {

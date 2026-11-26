@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale, type PagePath } from '@/i18n';
 
+import { ContactBlock } from './contact-block';
+import { CookieSettingsButton } from './cookie-banner';
 import { LanguageSwitch } from './language-switch';
 import { MotionLoader } from './motion-loader';
 import { SocialIcon } from './social-icon';
@@ -41,6 +43,12 @@ export function SiteFooter({ locale, path }: { locale: Locale; path: PagePath })
                 </a>
               </li>
             )}
+            <li>
+              <CookieSettingsButton
+                label={t.footer.cookieSettings}
+                enabled={site.analytics.enabled}
+              />
+            </li>
             {site.socials.map((social) => (
               <li key={social.name}>
                 <a className={item} href={social.url} rel="noopener me" target="_blank">
@@ -54,6 +62,7 @@ export function SiteFooter({ locale, path }: { locale: Locale; path: PagePath })
           </ul>
         </nav>
         <LanguageSwitch locale={locale} path={path} />
+        <ContactBlock t={t.contactBlock} id="contact-footer" className="w-full text-sm" />
       </div>
       <p className="wrap pb-10 text-sm text-muted">
         © <bdi>{new Date().getFullYear()} Rate Me</bdi>. {t.footer.rights}

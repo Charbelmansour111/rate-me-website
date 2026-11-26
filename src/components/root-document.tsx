@@ -1,9 +1,10 @@
-import Script from 'next/script';
 import type { ReactNode } from 'react';
 
 import { site } from '@/config/site';
 import { THEME_SCRIPT } from '@/config/theme';
 import { getDictionary, type Locale } from '@/i18n';
+
+import { CookieBanner } from './cookie-banner';
 
 export function RootDocument({
   locale,
@@ -35,13 +36,8 @@ export function RootDocument({
           {t.a11y.skip}
         </a>
         {children}
-        {site.analytics.enabled && (
-          <Script
-            src={site.analytics.src}
-            data-domain={site.analytics.domain}
-            strategy="afterInteractive"
-          />
-        )}
+        {/* Visitor statistics, only after they are accepted */}
+        <CookieBanner t={t.cookies} analytics={site.analytics} />
       </body>
     </html>
   );

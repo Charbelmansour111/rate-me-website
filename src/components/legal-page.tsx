@@ -1,14 +1,19 @@
 import { Fragment } from 'react';
 
-import { LEGAL_UPDATED, site } from '@/config/site';
+import { LEGAL_UPDATED, site, WAITLIST_RETENTION_MONTHS } from '@/config/site';
 import { getDictionary, type Locale } from '@/i18n';
 import { getLegal, type LegalKind } from '@/i18n/legal';
 
+import { ContactBlock } from './contact-block';
 import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
 
-/** Replaces {email} with a mailto link, or with a plain note until an address is configured. */
-function Text({ text, noEmail }: { text: string; noEmail: string }) {
+/**
+ * Replaces {email} with a mailto link (or a plain note until an address is configured) and
+ * {retentionMonths} with the number in src/config/site.ts.
+ */
+function Text({ text: raw, noEmail }: { text: string; noEmail: string }) {
+  const text = raw.replaceAll('{retentionMonths}', String(WAITLIST_RETENTION_MONTHS));
   return text.split('{email}').map((part, i) => (
     <Fragment key={i}>
       {i > 0 &&
@@ -68,6 +73,15 @@ export function LegalPage({ locale, kind }: { locale: Locale; kind: LegalKind })
                 <Text text={text} noEmail={t.legal.noEmail} />
               </p>
             ))}
+            {/* Your data: a ready email to ask for it */}
+            {section.id === 'your-data' && site.contactEmail && (
+              <a
+                className="btn btn-ghost mt-5"
+                href={`mailto:${site.contactEmail}?subject=${encodeURIComponent(t.legal.dataRequest)}`}
+              >
+                {t.legal.writeRequest}
+              </a>
+            )}
             {section.points && (
               <ul className="mt-4 list-disc space-y-2 ps-6 marker:text-accent">
                 {section.points.map((point) => (
@@ -79,6 +93,9 @@ export function LegalPage({ locale, kind }: { locale: Locale; kind: LegalKind })
             )}
           </section>
         ))}
+        {kind === 'privacy' && (
+          <ContactBlock t={t.contactBlock} id="contact-page" className="mt-12" />
+        )}
       </main>
       <SiteFooter locale={locale} path={`/${kind}`} />
     </>
