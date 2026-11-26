@@ -20,18 +20,34 @@ export function startMagnets(signal: AbortSignal) {
   });
   if (!magnets.length) return;
   const pull = (offset: number) => Math.max(-MAX, Math.min(MAX, offset / STRENGTH));
+  const root = document.documentElement;
+  /** The lists they sit in: away from all of them, no tab is measured. */
+  const groups = [...new Set(magnets.map(({ el }) => el.parentElement!))];
+  const near = (event: PointerEvent) =>
+    groups.some((group) => {
+      const box = group.getBoundingClientRect();
+      return (
+        event.clientX > box.left - PADDING &&
+        event.clientX < box.right + PADDING &&
+        event.clientY > box.top - PADDING &&
+        event.clientY < box.bottom + PADDING
+      );
+    });
 
   addEventListener(
     'pointermove',
     (event) => {
       if (event.pointerType !== 'mouse') return;
+      // The browser sends moves as the page glides under a still mouse: nothing to pull.
+      if (root.classList.contains('lenis-smooth')) return;
+      if (!near(event) && !magnets.some(({ on }) => on)) return;
       for (const magnet of magnets) {
         const box = magnet.el.getBoundingClientRect();
         const dx = event.clientX - (box.left + box.width / 2);
         const dy = event.clientY - (box.top + box.height / 2);
-        const near =
+        const close =
           Math.abs(dx) < box.width / 2 + PADDING && Math.abs(dy) < box.height / 2 + PADDING;
-        if (near) {
+        if (close) {
           magnet.on = true;
           magnet.x(pull(dx));
           magnet.y(pull(dy));
