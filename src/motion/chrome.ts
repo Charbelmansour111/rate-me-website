@@ -106,8 +106,17 @@ function startRunningLine() {
     return true;
   };
   let tipShown = -1;
-  return (scroll: number, again = false) => {
-    if ((again || !svg || !svg.isConnected) && !read()) return;
+  let stale = true;
+  host.addEventListener('runline:layout', () => {
+    stale = true;
+    tipShown = -1;
+    follow(scrollY);
+  });
+  const follow = (scroll: number, again = false) => {
+    if (again || stale || !svg || !svg.isConnected) {
+      if (!read()) return;
+      stale = false;
+    }
     const tip = Math.max(top, Math.min(bottom, scroll + innerHeight * TIP - origin));
     if (Math.abs(tip - tipShown) < 0.5) return;
     tipShown = tip;
@@ -119,4 +128,5 @@ function startRunningLine() {
       if (on !== node.on) node.el.classList.toggle('run-on', (node.on = on));
     }
   };
+  return follow;
 }

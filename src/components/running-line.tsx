@@ -49,6 +49,11 @@ export function RunningLine() {
     return () => observer.disconnect();
   }, []);
 
+  // Tell the motion code the line was measured again (src/motion/chrome.ts)
+  useEffect(() => {
+    if (layout) box.current!.dispatchEvent(new Event('runline:layout'));
+  }, [layout]);
+
   return (
     <div ref={box} className="run-line" data-run-line aria-hidden="true">
       {layout && (
