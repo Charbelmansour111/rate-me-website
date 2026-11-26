@@ -100,14 +100,14 @@ test('light is the default, and the theme choice is remembered', async ({ page }
   await page.goto('/');
   const html = page.locator('html');
   await expect(html).toHaveAttribute('data-theme', 'light');
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 252, 247)');
 
   await page.getByRole('button', { name: 'Use the dark theme' }).click();
   await page.reload();
   await expect(html).toHaveAttribute('data-theme', 'dark');
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 12)');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(15, 14, 13)');
   for (const meta of await page.locator('meta[name=theme-color]').all()) {
-    await expect(meta).toHaveAttribute('content', '#0b0b0c');
+    await expect(meta).toHaveAttribute('content', '#0f0e0d');
   }
 });
 
