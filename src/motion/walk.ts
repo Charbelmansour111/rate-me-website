@@ -158,7 +158,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   let position = Math.min(1, Math.max(0, scrollY / end()));
   const decoder = frameDecoder();
 
-  /** What is on the canvas: the two frames and the fade, in 255ths (the finest a screen shows). */
+  /** What is on the canvas: the set, its two frames and the fade in 255ths (the finest shown). */
   let drawn = '';
 
   /** A frame over the whole canvas. The canvas is the frames' own size: CSS scales it. */
@@ -189,7 +189,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       drawn = '';
     }
     const fade = Math.round(mix.alpha * 255);
-    const key = `${mix.from} ${mix.to} ${fade}`;
+    // The set as well: turning the phone swaps it for one with the same frame numbers.
+    const key = `${sequence.path} ${mix.from} ${mix.to} ${fade}`;
     if (key !== drawn) {
       drawn = key;
       if (fade === 255) paint(images.get(mix.to)!, 1);
