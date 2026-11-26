@@ -74,6 +74,46 @@ html.lenis body {
   background: var(--soft);
 }
 
+/* --- Community: coach photos and the match request --- */
+.coach-photo {
+  width: 4.5rem;
+  height: 4.5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 3px solid var(--page);
+  border-radius: 50%;
+  background: var(--soft);
+}
+.coach-photo + .coach-photo {
+  margin-inline-start: -0.9rem;
+}
+.coach-photo img {
+  filter: grayscale(1) contrast(1.05);
+}
+.match-card {
+  position: relative; /* above the corner arc */
+  padding: 1.25rem 1.5rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: var(--soft);
+  box-shadow: 0 24px 48px -28px rgb(0 0 0 / 0.6);
+}
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.85rem 0.25rem 0.6rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--accent-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+[dir='rtl'] .status-chip {
+  padding: 0.25rem 0.6rem 0.25rem 0.85rem;
+}
+
 /* --- Tactics showcase --- */
 .tactics-pin {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);

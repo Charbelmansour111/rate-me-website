@@ -3,6 +3,7 @@ import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale } from '@/i18n';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
+import { CoachPhotos, MatchRequestCard } from './community-extras';
 import { FeatureArt } from './feature-art';
 import { HeroDrill } from './hero-drill';
 import { PreRegisterForm } from './pre-register-form';
@@ -195,12 +196,14 @@ export function HomePage({ locale }: { locale: Locale }) {
                   <p data-reveal className="mt-7 max-w-xl text-lg text-muted">
                     {t.community.text}
                   </p>
-                  <a data-reveal className="btn btn-primary mt-8" href="#pre-register">
+                  <CoachPhotos t={t.community} />
+                  <a data-reveal className="btn btn-primary mt-9" href="#pre-register">
                     {t.nav.preRegister}
                   </a>
                 </div>
                 <div>
-                  <h3 data-reveal className="text-lg font-semibold">
+                  <MatchRequestCard t={t.community} soon={t.features.soon} />
+                  <h3 data-reveal className="mt-12 text-lg font-semibold">
                     {t.community.stepsTitle}
                   </h3>
                   <ol className="mt-6">

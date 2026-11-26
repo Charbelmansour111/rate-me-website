@@ -123,6 +123,33 @@ test('follows the system preference until the visitor chooses', async ({ page })
   await expect(html).toHaveAttribute('data-theme', 'dark');
 });
 
+test('community: room for four coach photos, and a match request that says what it is', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const section = page.locator('#community');
+  const photos = section.locator('.coach-photo');
+  await expect(photos).toHaveCount(4);
+  for (const photo of await photos.all()) {
+    const box = (await photo.boundingBox())!;
+    expect(box.width).toBeCloseTo(box.height, 0);
+    await expect(photo).toHaveCSS('border-radius', '50%');
+  }
+  // Placeholders say nothing to screen readers; real photos come in black and white
+  await expect(section.locator('.coach-photo [data-placeholder]')).toHaveCount(
+    4 - (await section.locator('.coach-photo img').count()),
+  );
+  for (const img of await section.locator('.coach-photo img').all()) {
+    await expect(img).toHaveCSS('filter', /grayscale\(1\)/);
+  }
+  const card = section.locator('.match-card');
+  await expect(card).toContainText('Match request');
+  await expect(card).toContainText('Cedars FC');
+  await expect(card).toContainText('Pinewood Academy');
+  await expect(card.locator('.status-chip')).toHaveText('Request sent');
+  await expect(card).toContainText('Coming soon');
+});
+
 test('the main button leads to the form', async ({ page }) => {
   await page.goto('/');
   await page.locator('main').getByRole('link', { name: 'Pre-register' }).first().click();
