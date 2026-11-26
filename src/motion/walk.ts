@@ -7,11 +7,10 @@ import {
   type Shape,
 } from '@/config/journey.config';
 
-const EASE = 0.15;
+/** How much of the way to the scroll the picture goes each 60th of a second: it eases, never snaps. */
+const DAMPING = 0.1;
 const BATCH = 4;
 const MAX_DPR = 2;
-/** Between two frames the picture keeps growing by this much, so every bit of scroll shows. */
-const STEP_ZOOM = 0.02;
 
 const idle = (run: () => void) => {
   if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 1000 });
@@ -31,12 +30,56 @@ export const nearest = (frames: Iterable<number>, frame: number) => {
   return best;
 };
 
+/**
+ * The two loaded frames either side of `at` (a frame number with a fraction, 0 to count - 1) and
+ * how much of the upper one shows. One frame alone when `at` is on it or past the loaded ones.
+ */
+export function blend(frames: Iterable<number>, at: number) {
+  let below: number | undefined;
+  let above: number | undefined;
+  for (const i of frames) {
+    if (i <= at && (below === undefined || i > below)) below = i;
+    if (i >= at && (above === undefined || i < above)) above = i;
+  }
+  if (below === undefined || above === undefined || below === above) {
+    const only = below ?? above;
+    return only === undefined ? undefined : { from: only, to: only, alpha: 0 };
+  }
+  return { from: below, to: above, alpha: (at - below) / (above - below) };
+}
+
+/** One step of easing towards `to`, the same at any frame rate. `ms` since the last step. */
+export const damp = (from: number, to: number, ms: number, factor = DAMPING) =>
+  from + (to - from) * (1 - (1 - factor) ** (ms / (1000 / 60)));
+
+/** A frame, decoded. */
+type Frame = { source: CanvasImageSource; width: number; height: number; close?: () => void };
+
+/** Fetches and decodes a frame off the main thread where the browser can: whole, or not at all. */
+async function decode(url: string): Promise<Frame> {
+  if ('createImageBitmap' in window) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const bitmap = await createImageBitmap(await response.blob());
+    return {
+      source: bitmap,
+      width: bitmap.width,
+      height: bitmap.height,
+      close: () => bitmap.close(),
+    };
+  }
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  return { source: image, width: image.naturalWidth, height: image.naturalHeight };
+}
+
 /** Which sequence a screen gets. */
 export const shapeFor = (width: number, height: number, hasPortrait: boolean): Shape =>
   hasPortrait && height > width ? 'portrait' : 'landscape';
 
 /** A sequence, what is loaded of it and what is still to come. */
-type Reel = { sequence: Sequence; images: Map<number, HTMLImageElement>; waiting: Set<number> };
+type Reel = { sequence: Sequence; images: Map<number, Frame>; waiting: Set<number> };
 
 /** Scrubs the image sequence with the scroll. On any failure the still pictures take over. */
 export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
@@ -61,49 +104,61 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   let target = 0;
   let position = 0;
   let raf = 0;
+  let last = 0;
 
   const progress = () => Math.min(1, Math.max(0, scrollY / range));
 
+  /** A frame over the whole canvas, as `background-size: cover` would place it. */
+  function paint(frame: Frame, alpha: number) {
+    const { width, height } = canvas;
+    const scale = Math.max(width / frame.width, height / frame.height);
+    const w = frame.width * scale;
+    const h = frame.height * scale;
+    context!.globalAlpha = alpha;
+    context!.drawImage(frame.source, (width - w) / 2, (height - h) / 2, w, h);
+  }
+
+  /** The two frames around the position, the next one fading in by how far along it is. */
   function draw() {
     if (reel.images.size) shown = reel;
     const { sequence, images } = shown;
-    const i = nearest(images.keys(), frameAt(sequence, position));
-    if (i === undefined) return;
-    const image = images.get(i)!;
     const at = position * (sequence.count - 1);
-    const { width, height } = canvas;
-    const part = Math.max(-0.5, Math.min(0.5, at - i)) + Math.min(0.5, at);
-    const scale =
-      Math.max(width / image.naturalWidth, height / image.naturalHeight) *
-      (1 + STEP_ZOOM * Math.max(0, part));
-    const w = image.naturalWidth * scale;
-    const h = image.naturalHeight * scale;
-    context!.drawImage(image, (width - w) / 2, (height - h) / 2, w, h);
-    canvas.dataset.frame = String(i);
+    const mix = blend(images.keys(), at);
+    if (!mix) return;
+    paint(images.get(mix.from)!, 1);
+    if (mix.alpha > 0) paint(images.get(mix.to)!, mix.alpha);
+    context!.globalAlpha = 1;
+    // The frame mostly on show, and the blend: the tests read these.
+    canvas.dataset.frame = String(nearest(images.keys(), frameAt(sequence, position)));
+    canvas.dataset.blend = `${mix.from} ${mix.to} ${mix.alpha.toFixed(3)}`;
     canvas.dataset.shape = sequence === journey.portrait ? 'portrait' : 'landscape';
     root.dataset.scene = sceneAt(position);
   }
 
-  function tick() {
-    position += (target - position) * EASE;
+  function tick(now: number) {
+    position = damp(position, target, Math.min(100, now - last));
+    last = now;
     // Close enough: land on it, and stop until the next scroll.
-    if (Math.abs(target - position) < 0.0001) position = target;
+    if (Math.abs(target - position) < 0.00005) position = target;
     draw();
     raf = position === target ? 0 : requestAnimationFrame(tick);
   }
 
   function onScroll() {
     target = progress();
-    if (!raf && target !== position) raf = requestAnimationFrame(tick);
+    if (!raf && target !== position) {
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    }
   }
 
   function measure() {
     range = Math.max(1, page.offsetTop + page.offsetHeight - innerHeight);
-    // Many more pixels than the pictures have would only cost time: the browser scales up for free.
+    // The screen's pixel density, up to 2, but no finer than the frames themselves: past that
+    // every scroll would fill more pixels with no more detail. A sharper set raises it by itself.
     const [first] = (reel.images.size ? reel : shown).images.values();
     const enough = first
-      ? 1.25 *
-        Math.min(first.naturalHeight / canvas.clientHeight, first.naturalWidth / canvas.clientWidth)
+      ? 1.25 * Math.min(first.height / canvas.clientHeight, first.width / canvas.clientWidth)
       : 1;
     const ratio = Math.min(devicePixelRatio || 1, MAX_DPR, enough);
     const width = Math.round(canvas.clientWidth * ratio);
@@ -113,34 +168,23 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
       canvas.height = height;
       draw();
     }
-    // Each scene is named once, in the first gap that shows it.
-    const named = new Set<string>();
-    for (const gap of gapEls) {
-      const { top, height } = gap.getBoundingClientRect();
-      const middle = top + scrollY + height / 2 - innerHeight / 2;
-      const scene = sceneAt(Math.min(1, Math.max(0, middle / range)));
-      gap.dataset.name = named.has(scene) ? '' : scene;
-      named.add(scene);
-    }
     onScroll();
   }
 
   async function load(from: Reel, i: number) {
     from.waiting.delete(i);
-    const image = new Image();
-    image.decoding = 'async';
-    image.src = frameUrl(from.sequence, i);
+    let frame: Frame;
     try {
-      await image.decode();
+      frame = await decode(frameUrl(from.sequence, i));
     } catch {
-      return; // The nearest other frame stands in.
+      return; // The frames either side stand in.
     }
-    const best = () => nearest(from.images.keys(), frameAt(from.sequence, position));
-    const before = best();
-    from.images.set(i, image);
-    if (signal.aborted || from !== reel) return;
+    if (signal.aborted) return frame.close?.();
+    from.images.set(i, frame);
+    if (from !== reel) return;
     if (from.images.size === 1) measure();
-    if (best() !== before && !raf) draw();
+    // It may be one of the two on show now.
+    if (!raf) draw();
   }
 
   async function loadBatch(from: Reel) {
@@ -214,6 +258,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     delete root.dataset.journey;
     delete root.dataset.scene;
     delete canvas.dataset.frame;
+    delete canvas.dataset.blend;
     delete canvas.dataset.shape;
+    for (const { images } of reels.values()) for (const frame of images.values()) frame.close?.();
   });
 }

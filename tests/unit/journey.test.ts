@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { frameAt, frameUrl, journey, sceneAt, scenes, stillAt } from '@/config/journey.config';
 import { hasFrames } from '@/lib/journey-files';
-import { frameList, nearest, shapeFor } from '@/motion/walk';
+import { blend, damp, frameList, nearest, shapeFor } from '@/motion/walk';
 
 const { landscape, portrait } = journey;
 
@@ -58,5 +58,32 @@ describe('the walk', () => {
     expect(frameList(landscape, true)).toHaveLength(Math.ceil(landscape.count / 2));
     expect(nearest([0, 10, 20], 13)).toBe(10);
     expect(nearest([], 3)).toBeUndefined();
+  });
+  it('crossfades the two frames either side, by how far along it is', () => {
+    const all = frameList(landscape, false);
+    expect(blend(all, 12.25)).toEqual({ from: 12, to: 13, alpha: 0.25 });
+    expect(blend(all, 12)).toEqual({ from: 12, to: 12, alpha: 0 });
+    expect(blend(all, landscape.count - 1)).toEqual({
+      from: landscape.count - 1,
+      to: landscape.count - 1,
+      alpha: 0,
+    });
+    // Saving data, or still loading: across the gap, between the frames that are there
+    expect(blend([0, 2, 4], 3)).toEqual({ from: 2, to: 4, alpha: 0.5 });
+    expect(blend([4, 8], 2)).toEqual({ from: 4, to: 4, alpha: 0 });
+    expect(blend([], 2)).toBeUndefined();
+    // A denser set needs nothing but its count
+    const dense = { ...landscape, count: 120 };
+    expect(blend(frameList(dense, false), 0.5 * (dense.count - 1))).toEqual({
+      from: 59,
+      to: 60,
+      alpha: 0.5,
+    });
+  });
+  it('eases towards the scroll at the same pace at any frame rate', () => {
+    expect(damp(0, 1, 1000 / 60)).toBeCloseTo(0.1);
+    // Two steps at 60 per second land where one at 30 per second does
+    expect(damp(damp(0, 1, 1000 / 60), 1, 1000 / 60)).toBeCloseTo(damp(0, 1, 1000 / 30));
+    expect(damp(0.4, 0.4, 16)).toBe(0.4);
   });
 });

@@ -217,6 +217,109 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
   expect(size.ratio).toBeLessThanOrEqual(2.01);
 });
 
+test('the walk: between two frames both are drawn, crossfaded by how far along it is', async ({
+  page,
+  isMobile,
+}) => {
+  const sequence = sequenceFor(isMobile);
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const walk = page.locator('[data-walk]');
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  // Every frame in, so the neighbours are the next ones
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          performance.getEntriesByType('resource').filter((r) => r.name.includes('/journey/'))
+            .length,
+      ),
+    )
+    .toBeGreaterThanOrEqual(sequence.count);
+  const at = 10.5;
+  await page.evaluate(
+    ([frame, count]) => {
+      const main = document.querySelector('main')!;
+      const range = main.offsetTop + main.offsetHeight - innerHeight;
+      scrollTo({ top: (range * frame) / (count - 1), behavior: 'instant' });
+    },
+    [at, sequence.count],
+  );
+  await expect(walk).toHaveAttribute('data-blend', /^10 11 0\.(4[6-9]|5[0-4])\d$/);
+  // A whole frame shows alone
+  await page.evaluate(
+    ([frame, count]) => {
+      const main = document.querySelector('main')!;
+      const range = main.offsetTop + main.offsetHeight - innerHeight;
+      scrollTo({ top: Math.ceil((range * frame) / (count - 1)), behavior: 'instant' });
+    },
+    [20, sequence.count],
+  );
+  await expect(walk).toHaveAttribute('data-blend', /^20 (20 0\.000|21 0\.00\d)$/);
+});
+
+test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
+  page,
+  isMobile,
+}) => {
+  test.slow();
+  const sequence = sequenceFor(isMobile);
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          performance.getEntriesByType('resource').filter((r) => r.name.includes('/journey/'))
+            .length,
+      ),
+    )
+    .toBeGreaterThanOrEqual(sequence.count);
+  // Each painted frame against the one before: how much of the picture changed (0 to 255)
+  await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-walk]')!;
+    const probe = document.createElement('canvas');
+    probe.width = 64;
+    probe.height = 36;
+    const context = probe.getContext('2d', { willReadFrequently: true })!;
+    const w = window as unknown as { jumps: number[]; frames: string[]; recording: boolean };
+    w.jumps = [];
+    w.frames = [];
+    w.recording = true;
+    let last: Uint8ClampedArray | undefined;
+    const sample = () => {
+      context.drawImage(canvas, 0, 0, 64, 36);
+      const data = context.getImageData(0, 0, 64, 36).data;
+      if (last) {
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          for (let c = 0; c < 3; c++) sum += Math.abs(data[i + c] - last[i + c]);
+        }
+        w.jumps.push(sum / (64 * 36 * 3));
+        w.frames.push(canvas.dataset.frame!);
+      }
+      last = data;
+      if (w.recording) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+  // Notches of a mouse wheel: 100px at a time
+  for (let i = 0; i < 30; i++) {
+    await page.evaluate(() => scrollBy({ top: 100, behavior: 'instant' }));
+    await page.waitForTimeout(60);
+  }
+  await page.waitForTimeout(1500);
+  const { jumps, frames } = await page.evaluate(() => {
+    const w = window as unknown as { jumps: number[]; frames: string[]; recording: boolean };
+    w.recording = false;
+    return { jumps: w.jumps, frames: w.frames };
+  });
+  // It passed several frames, and moved on most painted frames
+  expect(new Set(frames).size).toBeGreaterThan(5);
+  expect(jumps.filter((jump) => jump > 0.05).length).toBeGreaterThan(60);
+  // A hard swap between two frames measured about 40 here; a crossfade stays far below
+  expect(Math.max(...jumps)).toBeLessThan(12);
+});
+
 test('the walk: under smooth scrolling the frame still follows the page', async ({
   page,
   isMobile,
