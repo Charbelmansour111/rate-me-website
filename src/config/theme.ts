@@ -1,5 +1,5 @@
 /** Browser-bar colors: --page of each theme in src/app/palette.css (a unit test compares them). */
-export const THEME_COLORS = { light: '#ffffff', dark: '#0b0b0c' } as const;
+export const THEME_COLORS = { light: '#fffcf7', dark: '#0f0e0d' } as const;
 export type Theme = keyof typeof THEME_COLORS;
 
 /**

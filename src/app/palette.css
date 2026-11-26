@@ -3,7 +3,8 @@
  * images, favicons) read this file. The only copies are the two browser-bar colors in
  * src/config/theme.ts, and tests/unit/palette.test.ts checks those plus every AA pair.
  *
- * Grey and white base, a bit of black, orange accents. Orange never fills a section.
+ * Warm off-white base, a bit of black, orange accents. Orange never fills a section. The greys are
+ * taken from the walk behind the page (sand, warm grey, charcoal), so the panels sit in it.
  * #ff5a00 text only at 24px+ (or bold 19px+); smaller orange text uses --accent-text.
  */
 :root {
@@ -16,15 +17,15 @@
   --button: #ff5a00;
   --button-hover: #e64f00;
   --on-button: #0b0b0c;
-  --page: #ffffff;
-  --soft: #f6f6f7; /* alternate sections */
-  --softer: #ededef; /* stronger grey: the form section, placeholders */
+  --page: #fffcf7; /* as warm as the orange allows: it stays 3:1 on it */
+  --soft: #f5f1ea; /* alternate sections */
+  --softer: #ebe5da; /* sand: the form section, placeholders */
   --text: #0b0b0c;
-  --muted: #6b6b72;
-  --line: #e3e3e6;
-  --edge: #85858c; /* input outlines: 3:1 on every background */
-  --chalk: #d9d9de; /* pitch line art */
-  --accent-text: #bf3f00; /* small orange text; #d94800 is only 4.3:1 on white */
+  --muted: #68625a;
+  --line: #e6e0d4;
+  --edge: #857e72; /* input outlines: 3:1 on every background */
+  --chalk: #dcd5c8; /* pitch line art */
+  --accent-text: #b83c00; /* small orange text; #d94800 is only 4.3:1 on white */
   --danger: #b3261e;
   --bezel: #17171a; /* the phone around a screenshot */
   --bezel-rim: #3d3d44;
@@ -33,14 +34,14 @@
 }
 
 :root[data-theme='dark'] {
-  --page: #0b0b0c;
-  --soft: #141416;
-  --softer: #1c1c1f;
+  --page: #0f0e0d; /* charcoal */
+  --soft: #181714;
+  --softer: #211f1b;
   --text: #ffffff;
-  --muted: #b4b4ba;
-  --line: #2c2c30;
-  --edge: #7c7c84;
-  --chalk: #34343a;
+  --muted: #b8b1a5;
+  --line: #2f2c27;
+  --edge: #80796d;
+  --chalk: #38342e;
   --accent-text: #ff8a3d;
   --danger: #ffb4ab;
   --bezel: #232327;
@@ -52,20 +53,20 @@
 /* The black blocks of the light theme (community, footer). In dark the
    community block lifts to a grey and the footer stays black. */
 .inverse {
-  --page: #0b0b0c;
-  --soft: #1c1c1f;
+  --page: #100f0d;
+  --soft: #1d1b18;
   --text: #ffffff;
-  --muted: #b4b4ba;
-  --line: #2c2c30;
-  --edge: #7c7c84;
-  --chalk: #34343a;
+  --muted: #b8b1a5;
+  --line: #2f2c27;
+  --edge: #80796d;
+  --chalk: #38342e;
   --accent-text: #ff8a3d;
   background: var(--page);
   color: var(--text);
   color-scheme: dark;
 }
 :root[data-theme='dark'] .panel.inverse {
-  --page: #1c1c1f;
-  --line: #3a3a40;
-  --chalk: #45454c;
+  --page: #211f1c;
+  --line: #3b3832;
+  --chalk: #47433c;
 }
