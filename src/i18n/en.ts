@@ -27,7 +27,7 @@ export const en = {
   hero: {
     title: ['A home for', 'football', 'coaches'],
     lead: 'Your calendar, drills, squad and matches in one app.',
-    sub: "We're building a community of coaches in Lebanon first, then the Middle East and beyond.",
+    sub: "We're building a community of coaches in Lebanon first, then the Middle East.",
     join: 'Join the coaches community',
     drill: {
       plays: ['Rondo', 'Wide overlap', 'Through ball', 'Switch of play', 'Press and win'],
@@ -71,7 +71,7 @@ export const en = {
       whiteboard: {
         title: 'Drill whiteboard',
         photo: 'A tactics board with red and blue magnets, propped up in a dugout',
-        text: 'Draw and animate drills. Smart defenders react to the ball, so you see how it could unfold.',
+        text: 'Draw and animate drills. Smart defenders react to the ball, so you see how the drill plays out.',
       },
       squad: {
         title: 'Squad and player cards',
@@ -229,7 +229,7 @@ export const en = {
       },
       {
         title: 'Give each player a role',
-        text: 'One for when we have the ball and one for when they have it: hold, press, cover, mark, overlap, run behind... Or leave it automatic.',
+        text: 'One for when we have the ball and one for when they have it: hold, press, cover, mark, overlap or run behind. Or leave it automatic.',
       },
       {
         title: 'Hit record and watch it play',
@@ -240,7 +240,7 @@ export const en = {
   community: {
     kicker: 'Community',
     title: 'Built for coaches in Lebanon',
-    text: 'We want coaches and academies to shape the app with us. Pre-register to become a founding member: you get early access, and you tell us what to fix, add or drop.',
+    text: 'We want coaches and academies to shape the app with us. Pre-register to become a founding member. You get early access and tell us what to fix, add or drop.',
     stepsTitle: 'How it works',
     steps: [
       { title: 'Pre-register', text: 'Leave your name and email. It takes about a minute.' },
@@ -283,7 +283,7 @@ export const en = {
       },
       {
         q: 'Can I give players roles in a drill?',
-        a: 'Yes. The coach gives each player a role for when we have the ball and one for when they have it (hold, press, cover, mark, overlap, run behind...), or leaves it automatic.',
+        a: 'Yes. The coach gives each player a role for when we have the ball and one for when they have it, such as hold, press, cover or mark. Or the coach leaves it automatic.',
       },
       {
         q: 'Which devices does it run on?',
