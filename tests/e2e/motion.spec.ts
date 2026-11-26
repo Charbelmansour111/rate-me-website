@@ -276,17 +276,29 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   await expect
     .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')))
     .toBe(sequence.count);
+  if (!isMobile) {
+    await page.mouse.move(600, 400);
+    await page.mouse.move(610, 410);
+  }
   // Each painted frame against the one before: how much of the picture changed (0 to 255)
-  await page.evaluate(() => {
+  await page.evaluate((count) => {
     const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-walk]')!;
     const probe = document.createElement('canvas');
     probe.width = 64;
     probe.height = 36;
     const context = probe.getContext('2d', { willReadFrequently: true })!;
-    const w = window as unknown as { jumps: number[]; frames: string[]; recording: boolean };
+    const w = window as unknown as {
+      jumps: number[];
+      frames: string[];
+      lags: number[];
+      recording: boolean;
+    };
     w.jumps = [];
     w.frames = [];
+    w.lags = [];
     w.recording = true;
+    const main = document.querySelector('main')!;
+    const range = main.offsetTop + main.offsetHeight - innerHeight;
     let last: Uint8ClampedArray | undefined;
     const sample = () => {
       context.drawImage(canvas, 0, 0, 64, 36);
@@ -298,28 +310,59 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
         }
         w.jumps.push(sum / (64 * 36 * 3));
         w.frames.push(canvas.dataset.frame!);
+        // Where the picture is against where the page is, in frames of the walk
+        const [from, to, alpha] = canvas.dataset.blend!.split(' ').map(Number);
+        const shown = from + (to - from) * alpha;
+        w.lags.push(Math.abs(Math.min(1, scrollY / range) * (count - 1) - shown));
       }
       last = data;
       if (w.recording) requestAnimationFrame(sample);
     };
     requestAnimationFrame(sample);
-  });
-  // Notches of a mouse wheel: 100px at a time
-  for (let i = 0; i < 30; i++) {
-    await page.evaluate(() => scrollBy({ top: 100, behavior: 'instant' }));
-    await page.waitForTimeout(60);
+  }, sequence.count);
+  if (isMobile) {
+    // A thumb dragging up the screen, 20px a frame: the walk follows the finger
+    const cdp = await page.context().newCDPSession(page);
+    for (let drag = 0; drag < 4; drag++) {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: 200, y: 700 }],
+      });
+      for (let i = 1; i <= 25; i++) {
+        await cdp.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: [{ x: 200, y: 700 - i * 20 }],
+        });
+        await page.waitForTimeout(16);
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    }
+  } else {
+    // Notches of a mouse wheel, glided by smooth scrolling: the walk moves with the page
+    await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
+    for (let i = 0; i < 30; i++) {
+      await page.mouse.wheel(0, 100);
+      await page.waitForTimeout(60);
+    }
   }
   await page.waitForTimeout(1500);
-  const { jumps, frames } = await page.evaluate(() => {
-    const w = window as unknown as { jumps: number[]; frames: string[]; recording: boolean };
+  const { jumps, frames, lags } = await page.evaluate(() => {
+    const w = window as unknown as {
+      jumps: number[];
+      frames: string[];
+      lags: number[];
+      recording: boolean;
+    };
     w.recording = false;
-    return { jumps: w.jumps, frames: w.frames };
+    return { jumps: w.jumps, frames: w.frames, lags: w.lags };
   });
   // It passed several frames, and moved on most painted frames
   expect(new Set(frames).size).toBeGreaterThan(5);
   expect(jumps.filter((jump) => jump > 0.05).length).toBeGreaterThan(60);
   // A hard swap between two frames measured about 40 here; a crossfade stays far below
   expect(Math.max(...jumps)).toBeLessThan(12);
+  // The picture and the page move in the same frame: it never trails behind
+  expect(Math.max(...lags)).toBeLessThan(0.01);
 });
 
 test('the walk: under smooth scrolling the frame still follows the page', async ({

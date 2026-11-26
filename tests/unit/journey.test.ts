@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { frameAt, frameUrl, journey, sceneAt, scenes, stillAt } from '@/config/journey.config';
 import { hasFrames } from '@/lib/journey-files';
-import { blend, damp, frameList, nearest, shapeFor } from '@/motion/walk';
+import { blend, frameList, nearest, shapeFor } from '@/motion/walk';
 
 const { landscape, portrait } = journey;
 
@@ -79,11 +79,5 @@ describe('the walk', () => {
       to: 60,
       alpha: 0.5,
     });
-  });
-  it('eases towards the scroll at the same pace at any frame rate', () => {
-    expect(damp(0, 1, 1000 / 60)).toBeCloseTo(0.1);
-    // Two steps at 60 per second land where one at 30 per second does
-    expect(damp(damp(0, 1, 1000 / 60), 1, 1000 / 60)).toBeCloseTo(damp(0, 1, 1000 / 30));
-    expect(damp(0.4, 0.4, 16)).toBe(0.4);
   });
 });

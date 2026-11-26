@@ -29,8 +29,8 @@ function whenStill(start: () => void, signal: AbortSignal) {
 
 export function startMotion(signal: AbortSignal) {
   startReveals(signal);
-  const walk = document.querySelector<HTMLCanvasElement>('[data-walk]');
-  if (walk) startWalk(walk, signal);
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-walk]');
+  const walk = canvas ? startWalk(canvas, signal) : undefined;
   const hero = document.querySelector<HTMLElement>('[data-hero-drill]');
   if (hero) startHero(hero, signal);
   const tactics = document.querySelector<HTMLElement>('[data-tactics]');
@@ -42,8 +42,15 @@ export function startMotion(signal: AbortSignal) {
   const load = () => {
     used.abort();
     import('./rich').then(
-      ({ startRich }) => whenStill(() => startRich(signal), signal),
-      () => {}, // Offline: the page works without it.
+      ({ startScroll, startRich }) => {
+        if (signal.aborted) return;
+        startScroll(signal, walk);
+        whenStill(() => startRich(signal), signal);
+      },
+      // Offline: the page works without it, with the still pictures behind it.
+      () => {
+        if (walk) document.documentElement.dataset.journey = 'off';
+      },
     );
   };
   for (const type of FIRST_USE) {

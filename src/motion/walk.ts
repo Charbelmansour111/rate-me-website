@@ -7,8 +7,6 @@ import {
   type Shape,
 } from '@/config/journey.config';
 
-/** How much of the way to the scroll the picture goes each 60th of a second: it eases, never snaps. */
-const DAMPING = 0.1;
 const BATCH = 4;
 const MAX_DPR = 2;
 
@@ -47,10 +45,6 @@ export function blend(frames: Iterable<number>, at: number) {
   }
   return { from: below, to: above, alpha: (at - below) / (above - below) };
 }
-
-/** One step of easing towards `to`, the same at any frame rate. `ms` since the last step. */
-export const damp = (from: number, to: number, ms: number, factor = DAMPING) =>
-  from + (to - from) * (1 - (1 - factor) ** (ms / (1000 / 60)));
 
 /** A frame, decoded. */
 type Frame = { source: CanvasImageSource; width: number; height: number; close?: () => void };
@@ -128,8 +122,22 @@ export const shapeFor = (width: number, height: number, hasPortrait: boolean): S
 /** A sequence, what is loaded of it and what is still to come. */
 type Reel = { sequence: Sequence; images: Map<number, Frame>; waiting: Set<number> };
 
-/** Scrubs the image sequence with the scroll. On any failure the still pictures take over. */
-export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
+/** The walk, for the scroll to drive: src/motion/rich.ts ties it to ScrollTrigger and Lenis. */
+export type Walk = {
+  /** Shows the walk at `progress` (0 to 1). */
+  seek(progress: number): void;
+  /** Where it is now, 0 to 1. */
+  progress(): number;
+  /** Where the walk ends: the scroll position of its last frame. */
+  end(): number;
+};
+
+/**
+ * Loads the image sequence and draws it where it is told to: the walk has no loop or scroll
+ * listener of its own, so it moves in the same frame as the page. On any failure the still
+ * pictures take over.
+ */
+export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk | undefined {
   const root = document.documentElement;
   const page = canvas.parentElement!;
   const context = canvas.getContext('2d', { alpha: false });
@@ -146,15 +154,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   let reel: Reel;
   let shown: Reel;
   const gapEls = [...document.querySelectorAll<HTMLElement>('[data-walk-gap]')];
-  let range = 1;
-  /** Along the walk, 0 to 1. */
-  let target = 0;
-  let position = 0;
-  let raf = 0;
-  let last = 0;
+  const end = () => Math.max(1, page.offsetTop + page.offsetHeight - innerHeight);
+  /** Along the walk, 0 to 1: until the scroll drives it, where the page was opened. */
+  let position = Math.min(1, Math.max(0, scrollY / end()));
   const decoder = frameDecoder();
-
-  const progress = () => Math.min(1, Math.max(0, scrollY / range));
 
   /** A frame over the whole canvas, as `background-size: cover` would place it. */
   function paint(frame: Frame, alpha: number) {
@@ -183,25 +186,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     root.dataset.scene = sceneAt(position);
   }
 
-  function tick(now: number) {
-    position = damp(position, target, Math.min(100, now - last));
-    last = now;
-    // Close enough: land on it, and stop until the next scroll.
-    if (Math.abs(target - position) < 0.00005) position = target;
-    draw();
-    raf = position === target ? 0 : requestAnimationFrame(tick);
-  }
-
-  function onScroll() {
-    target = progress();
-    if (!raf && target !== position) {
-      last = performance.now();
-      raf = requestAnimationFrame(tick);
-    }
-  }
-
   function measure() {
-    range = Math.max(1, page.offsetTop + page.offsetHeight - innerHeight);
     // The screen's pixel density, up to 2, but no finer than the frames themselves: past that
     // every scroll would fill more pixels with no more detail. A sharper set raises it by itself.
     const [first] = (reel.images.size ? reel : shown).images.values();
@@ -216,7 +201,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
       canvas.height = height;
       draw();
     }
-    onScroll();
   }
 
   async function load(from: Reel, i: number) {
@@ -233,13 +217,13 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     if (from !== reel) return;
     if (from.images.size === 1) measure();
     // It may be one of the two on show now.
-    if (!raf) draw();
+    draw();
   }
 
   async function loadBatch(from: Reel) {
     // Turned away from: the rest waits until the screen turns back.
     if (signal.aborted || from !== reel) return;
-    const frame = target * (from.sequence.count - 1);
+    const frame = position * (from.sequence.count - 1);
     const batch: Promise<void>[] = [];
     while (batch.length < BATCH && from.waiting.size) {
       batch.push(load(from, nearest(from.waiting, frame)!));
@@ -274,7 +258,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   }
 
   pick();
-  position = target;
 
   let width = innerWidth;
   function onResize() {
@@ -283,11 +266,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     width = innerWidth;
     measure();
   }
-  addEventListener('scroll', onScroll, { signal, passive: true });
   addEventListener('resize', onResize, { signal });
-  // Opening an answer or a form step changes how long the walk is.
-  const resized = new ResizeObserver(measure);
-  resized.observe(page);
 
   const gaps = new IntersectionObserver(
     (entries) => {
@@ -301,8 +280,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   root.dataset.journey = 'on';
 
   signal.addEventListener('abort', () => {
-    cancelAnimationFrame(raf);
-    resized.disconnect();
     decoder.stop();
     delete canvas.dataset.loaded;
     gaps.disconnect();
@@ -313,4 +290,13 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     delete canvas.dataset.shape;
     for (const { images } of reels.values()) for (const frame of images.values()) frame.close?.();
   });
+
+  return {
+    seek(progress) {
+      position = progress;
+      draw();
+    },
+    progress: () => position,
+    end,
+  };
 }

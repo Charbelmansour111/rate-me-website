@@ -3,10 +3,20 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import { startCardReveals, startParallax, startSpotlights } from './cards';
 import { startSmooth } from './smooth';
+import type { Walk } from './walk';
+import { scrubWalk } from './walk-scroll';
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** The GSAP half of the motion: loaded on the first scroll, touch, key or mouse move. */
+/** What follows the scroll: started as soon as GSAP is in, even in the middle of a scroll. */
+export function startScroll(signal: AbortSignal, walk: Walk | undefined) {
+  if (walk) scrubWalk(walk, signal);
+}
+
+/**
+ * The GSAP half of the motion: loaded on the first scroll, touch, key or mouse move. Started once
+ * the page is still, since smooth scrolling would stop a scroll under way.
+ */
 export function startRich(signal: AbortSignal) {
   startSmooth(signal);
   const context = gsap.context(() => {
