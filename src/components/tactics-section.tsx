@@ -2,7 +2,7 @@ import Image from 'next/image';
 import type { CSSProperties } from 'react';
 
 import { features } from '@/config/features.config';
-import { roleLetters, type RoleId } from '@/config/roles.config';
+import { roleLetters, rolesOf, type RoleId } from '@/config/roles.config';
 import { getDictionary, type Locale } from '@/i18n';
 import {
   arrowHead,
@@ -65,16 +65,21 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   <li key={step.title} data-caption className="tactics-caption">
                     <h3 className="font-semibold">{step.title}</h3>
                     <p className="text-muted">{step.text}</p>
-                    {i === 1 && (
-                      <ul aria-label={t.tactics.rolesLabel} className="mt-2 flex flex-wrap gap-1.5">
-                        {(Object.keys(roleLetters) as RoleId[]).map((role) => (
-                          <li key={role} className="tactics-role">
-                            <b aria-hidden="true">{roleLetters[role]}</b>
-                            {t.tactics.roles[role]}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {/* The app's roles, as a key: the letter each player carries, by family */}
+                    {i === 1 &&
+                      (['attack', 'defence'] as const).map((family) => (
+                        <div key={family} className="mt-3">
+                          <p className="text-sm font-semibold">{t.tactics.families[family]}</p>
+                          <ul aria-label={t.tactics.families[family]} className="tactics-key">
+                            {rolesOf(family).map((role) => (
+                              <li key={role} className="tactics-role">
+                                <b aria-hidden="true">{roleLetters[role]}</b>
+                                {t.tactics.roles[role]}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
                   </li>
                 ))}
               </ol>
@@ -129,6 +134,18 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                       d={`M${xy(at)}L${xy(MARKED[i])}`}
                       stroke="var(--accent)"
                       strokeDasharray="4 5"
+                    />
+                  ))}
+                  {ROLE_SHAPES.zone.map((at, i) => (
+                    <circle
+                      key={`zone-${i}`}
+                      data-show="zone"
+                      cx={mirror(at, rtl)[0]}
+                      cy={mirror(at, rtl)[1]}
+                      r="46"
+                      fill="none"
+                      stroke="var(--accent)"
+                      strokeDasharray="4 6"
                     />
                   ))}
                   <path

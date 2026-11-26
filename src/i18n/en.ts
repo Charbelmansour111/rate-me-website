@@ -257,15 +257,23 @@ export const en = {
     illustration: 'Illustration',
     pause: 'Pause',
     description:
-      'Illustration: on a half pitch, four attackers pass the ball along curved lines from one side to the other. Each player with a role carries its first letter. Of the three defenders, one presses the player on the ball (P), one covers behind (C) and one marks an attacker (M). One attacker overlaps on the outside (O) and one runs behind the defence (R).',
-    rolesLabel: 'Some of the roles',
+      'Illustration: on a half pitch, four attackers pass the ball along curved lines from one side to the other. Each player with a role carries its letter. Of the three defenders, one presses the player on the ball (P), one covers behind him (C) and one marks an attacker (M). Two attackers run (R): one round the outside and one behind the defence.',
+    families: {
+      attack: 'When we have the ball',
+      defence: 'When they have the ball',
+    },
     roles: {
+      smart: 'Smart',
+      support: 'Support',
+      run: 'Run',
+      hold: 'Hold',
+      passer: 'Passer',
+      finisher: 'Finisher',
       press: 'Press',
       cover: 'Cover',
-      mark: 'Mark a player',
-      overlap: 'Overlap',
-      run_behind: 'Run behind',
-      intercept: 'Intercept lanes',
+      mark: 'Mark',
+      zone: 'Zone',
+      intercept: 'Intercept',
     },
     // Buttons under the board: each shows what the defenders do with that role
     try: {
@@ -275,6 +283,7 @@ export const en = {
         press: 'Press',
         cover: 'Cover',
         mark: 'Mark',
+        zone: 'Zone',
         intercept: 'Intercept',
       },
       captions: {
@@ -282,6 +291,7 @@ export const en = {
         press: 'Press: the nearest defenders step up to the player on the ball.',
         cover: 'Cover: the defenders drop into a tight block in front of goal.',
         mark: 'Mark: each defender stays with one attacker.',
+        zone: 'Zone: each defender guards an area and steps in when the ball comes into it.',
         intercept: 'Intercept: a defender steps into the passing lane and cuts it.',
       },
     },
@@ -292,7 +302,7 @@ export const en = {
       },
       {
         title: 'Give each player a role',
-        text: 'One for when we have the ball and one for when they have it: hold, press, cover, mark, overlap or run behind. Or leave it automatic.',
+        text: 'One for when we have the ball and one for when they have it, from the roles below. Smart reads the play on its own.',
       },
       {
         title: 'Hit record and watch it play',
@@ -350,7 +360,7 @@ export const en = {
       },
       {
         q: 'Can I give players roles in a drill?',
-        a: 'Yes. The coach gives each player a role for when we have the ball and one for when they have it, such as hold, press, cover or mark. Or the coach leaves it automatic.',
+        a: 'Yes. The coach gives each player a role for when we have the ball, such as support, run or finisher, and one for when they have it, such as press, cover or zone. A player on Smart reads the play on its own.',
       },
       {
         q: 'Which devices does it run on?',

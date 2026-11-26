@@ -19,7 +19,8 @@ export const ATTACKERS: {
     at: [70, 300],
     from: [-30, 60],
     label: '6',
-    role: 'overlap',
+    // A run round the outside (the app's Run, its movement: overlap)
+    role: 'run',
     run: { after: 0, to: [56, 190] },
   },
   { at: [190, 350], from: [10, 50], label: '8' },
@@ -27,7 +28,8 @@ export const ATTACKERS: {
     at: [320, 340],
     from: [-10, 55],
     label: '10',
-    role: 'run_behind',
+    // A run behind the defence (Run, movement: behind)
+    role: 'run',
     run: { after: 2, to: [270, 116] },
   },
   { at: [410, 250], from: [40, 40], label: '7' },
@@ -117,7 +119,7 @@ export function along({ from, bend, to }: (typeof PASSES)[number], t: number): P
  * The roles a coach can try on the board (src/components/tactics-roles.tsx), as in the app: where
  * the three defenders go while the 6 has the ball. Smart is the play above, chosen by the app.
  */
-export const ROLE_CHOICES = ['smart', 'press', 'cover', 'mark', 'intercept'] as const;
+export const ROLE_CHOICES = ['smart', 'press', 'cover', 'mark', 'zone', 'intercept'] as const;
 export type RoleChoice = (typeof ROLE_CHOICES)[number];
 export const ROLE_SHAPES: Record<Exclude<RoleChoice, 'smart'>, [Point, Point, Point]> = {
   // The two nearest step up to the player on the ball; the third holds his zone
@@ -137,6 +139,12 @@ export const ROLE_SHAPES: Record<Exclude<RoleChoice, 'smart'>, [Point, Point, Po
     [194, 288],
     [312, 280],
     [398, 192],
+  ],
+  // Each guards an area across the box, and steps in when the ball comes into it
+  zone: [
+    [128, 238],
+    [244, 196],
+    [360, 238],
   ],
   // One steps into the lane from the 6 to the 8; the others screen the middle
   intercept: [

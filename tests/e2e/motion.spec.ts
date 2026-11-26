@@ -40,8 +40,23 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
     await expect(section.locator('[data-caption]')).toHaveCount(3);
     await expect(section.locator('svg').last()).toHaveAttribute('aria-hidden', 'true');
     await expect(section.locator('.sr-only')).not.toBeEmpty();
-    await expect(section.locator('.tactics-badge')).toHaveText(['P', 'C', 'M', 'O', 'R']);
-    await expect(section.locator('.tactics-role b')).toHaveText(['P', 'C', 'M', 'O', 'R', 'I']);
+    // The app's badges: Press, Cover, Mark on the defenders; two attackers on a Run
+    await expect(section.locator('.tactics-badge')).toHaveText(['P', 'C', 'M', 'R', 'R']);
+    // The key: the app's two sets of roles, Smart in both
+    await expect(section.locator('.tactics-role b')).toHaveText([
+      'S',
+      'U',
+      'R',
+      'H',
+      'P',
+      'F',
+      'S',
+      'P',
+      'C',
+      'M',
+      'Z',
+      'I',
+    ]);
     // An arrowhead for each pass, drawn in the finished frame too
     await expect(section.locator('[data-arrow]')).toHaveCount(3);
   });
@@ -921,7 +936,7 @@ for (const reduced of [false, true]) {
     if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/', { waitUntil: 'networkidle' });
     const chips = page.locator('[data-try]');
-    await expect(chips).toHaveText(['Smart', 'Press', 'Cover', 'Mark', 'Intercept']);
+    await expect(chips).toHaveText(['Smart', 'Press', 'Cover', 'Mark', 'Zone', 'Intercept']);
     await expect(chips.first()).toHaveAttribute('aria-pressed', 'true');
     const where = () =>
       page.locator('[data-defender]').evaluateAll((els) =>

@@ -303,6 +303,7 @@ html:not([data-js]) .tactics-try + p {
   transition: opacity 300ms;
 }
 [data-role='mark'] .tactics-role-lines [data-show='mark'],
+[data-role='zone'] .tactics-role-lines [data-show='zone'],
 [data-role='intercept'] .tactics-role-lines [data-show='intercept'] {
   opacity: 1;
 }
@@ -311,17 +312,18 @@ html:not([data-js]) .tactics-try + p {
 [data-role] .tactics-arrow {
   opacity: 0.25;
 }
+.tactics-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-top: 0.4rem;
+}
+/* A key, not buttons: the letter and the name, no outline */
 .tactics-role {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.1rem 0.7rem 0.1rem 0.15rem;
-  border: 1px solid var(--edge);
-  border-radius: 999px;
-  font-size: 0.875rem;
-}
-[dir='rtl'] .tactics-role {
-  padding: 0.1rem 0.15rem 0.1rem 0.7rem;
+  font-size: 0.9375rem;
 }
 .tactics-role b {
   display: grid;
