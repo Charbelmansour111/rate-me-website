@@ -188,6 +188,10 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   await expect(walk).toHaveAttribute('data-frame', '0');
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'locker');
+  // Every frame in, so the one asked for is the one shown
+  await expect
+    .poll(async () => Number(await walk.getAttribute('data-loaded')), { timeout: 30_000 })
+    .toBe(sequence.count);
 
   const to = (part: number) =>
     page.evaluate((p) => {
@@ -195,8 +199,9 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
       const top = (main.offsetTop + main.offsetHeight - innerHeight) * p;
       scrollTo({ top, behavior: 'instant' });
     }, part);
-  await to(0.45);
-  await expect(walk).toHaveAttribute('data-frame', String(frameAt(sequence, 0.45)));
+  // Clear of a half frame, where a rounded scroll position could fall either side
+  await to(0.44);
+  await expect(walk).toHaveAttribute('data-frame', String(frameAt(sequence, 0.44)));
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'tunnel');
   const pixels = () => walk.evaluate((el) => (el as HTMLCanvasElement).toDataURL('image/png'));
   await to(0.3);
@@ -414,8 +419,8 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   expect(new Set(frames).size).toBeGreaterThan(5);
   expect(jumps.filter((jump) => jump > 0.05).length).toBeGreaterThan(20);
   // No step: the picture changes only as far as the walk moved. A hard cut between two frames of
-  // the old 48-frame set measured 41 here; neighbours in a dense set change far less.
-  jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(20 * Math.max(1, steps[i])));
+  // the old 48-frame set measured 41 here; neighbours in the 191-frame set up to 23.
+  jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(30 * Math.max(1, steps[i])));
   // The picture and the page move in the same frame: it never trails behind
   expect(Math.max(...lags)).toBeLessThan(0.01);
 });
@@ -711,12 +716,13 @@ test('inside the app: three screens a view, arrows, dots and keys on phones', as
 for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
   test(`${path}: every screen is real, and loads`, async ({ page }) => {
     await page.goto(path);
-    // No sketch is left: every slide has its picture
+    // No sketch is left: every phone has its picture; the player view ends on the player card
     for (const view of ['coach', 'player']) {
-      const slides = page.locator(`#view-${view} .showcase-slide`);
-      await expect(slides.locator('.phone img')).toHaveCount(await slides.count());
-      await expect(slides.locator('.phone svg')).toHaveCount(0);
+      const phones = page.locator(`#view-${view} .phone`);
+      await expect(phones.locator('img')).toHaveCount(await phones.count());
+      await expect(phones.locator('svg')).toHaveCount(0);
     }
+    await expect(page.locator('#view-player .player-card')).toHaveCount(1);
     const roles = page.locator('.phone img[src*="coach-whiteboard-roles.png"]');
     for (const role of ['Press', 'Cover', 'Mark', 'Intercept']) {
       await expect(roles).toHaveAttribute('alt', new RegExp(role));
@@ -727,7 +733,6 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       'coach-channel',
       'player-home',
       'player-event',
-      'player-card',
     ]) {
       const image = page.locator(`.phone img[src*="${name}.png"]`);
       await expect(image).toHaveCount(1);
@@ -758,13 +763,20 @@ test('inside the app: big phones with a glow, big tabs, and the pill glides', as
     expect(Math.max(...widths)).toBeGreaterThan(screen * 0.6);
   } else {
     // About 300px each, three side by side
-    expect(Math.max(...widths)).toBeGreaterThanOrEqual(280);
-    expect(Math.max(...widths)).toBeLessThanOrEqual(310);
+    // About 340px each, three side by side
+    expect(Math.max(...widths)).toBeGreaterThanOrEqual(320);
+    expect(Math.max(...widths)).toBeLessThanOrEqual(350);
     const boxes = await phones.evaluateAll((els) => els.map((el) => el.getBoundingClientRect()));
     for (const box of boxes) expect(box.right).toBeLessThanOrEqual(screen);
   }
   // A soft glow behind each, no hard border
   await expect(view.locator('.phone-glow')).toHaveCount(3);
+  // Three frames for contrast on the charcoal: black, orange in the middle, white
+  expect(await phones.evaluateAll((els) => els.map((el) => el.getAttribute('data-look')))).toEqual([
+    'black',
+    'orange',
+    'white',
+  ]);
   for (const phone of await phones.all()) await expect(phone).toHaveCSS('outline-style', 'none');
   // Tabs: 44px tall at least, 16px text; captions 16px and up
   const tabs = page.locator('#inside [role="tab"]');
@@ -792,6 +804,63 @@ test('inside the app: big phones with a glow, big tabs, and the pill glides', as
   await expect.poll(left).toBeCloseTo(await tab(0), 0);
   await tabs.nth(1).click();
   await expect.poll(left).toBeCloseTo(await tab(1), 0);
+});
+
+for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
+  test(`${path}: a phone opens what its screen does, in a dialog`, async ({ page, isMobile }) => {
+    await page.goto(path, { waitUntil: 'networkidle' });
+    const phone = page.locator('#view-coach .phone-button').first();
+    await phone.scrollIntoViewIfNeeded();
+    await expect(phone).toHaveAttribute('aria-haspopup', 'dialog');
+    // By keyboard: Enter opens it
+    await phone.focus();
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute('aria-labelledby', 'screen-dialog-title');
+    await expect(page.locator('#screen-dialog-title')).not.toBeEmpty();
+    await expect(dialog.locator('.screen-dialog-facts li')).toHaveCount(3);
+    await expect(dialog.locator('a[href="#pre-register"]')).toBeVisible();
+    // Focus starts on Close and stays inside
+    await expect(dialog.locator('.screen-dialog-close')).toBeFocused();
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('Tab');
+      expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+    }
+    // Esc closes it and gives focus back to the phone
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(phone).toBeFocused();
+    // By mouse or finger too, and the close button closes it
+    if (isMobile) await phone.tap();
+    else await phone.click();
+    await expect(dialog).toBeVisible();
+    await dialog.locator('.screen-dialog-close').click();
+    await expect(dialog).toBeHidden();
+  });
+}
+
+test('inside the app: the player card, as the app draws it, leaning like the phones', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#tab-player').click();
+  const card = page.locator('#view-player .player-card');
+  await expect(card).toBeVisible();
+  await expect(card).toHaveAttribute('role', 'img');
+  await expect(card).toHaveAttribute('aria-label', /example/i);
+  // Inside React Bits' TiltedCard, with a ring, a position badge, six bars and a stock photo
+  await expect(card.locator('xpath=ancestor::*[@data-tilt]')).toHaveCount(1);
+  await expect(card.locator('.player-card-ring circle')).toHaveCount(2);
+  await expect(card.locator('.player-card-position')).toHaveCount(1);
+  await expect(card.locator('.player-card-bars li')).toHaveCount(6);
+  await card.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      card.locator('.player-card-photo').evaluate((el) => (el as HTMLImageElement).naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  await expect(page.locator('body')).not.toContainText(/FIFA/i);
 });
 
 test('inside the app: the phones beside the middle one float with the scroll', async ({
