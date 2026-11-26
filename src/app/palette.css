@@ -29,7 +29,6 @@
   --danger: #b3261e;
   --bezel: #17171a; /* the phone around a screenshot */
   --bezel-rim: #3d3d44;
-  --bezel-shadow: rgb(11 11 12 / 0.28);
   color-scheme: light;
 }
 
@@ -46,12 +45,33 @@
   --danger: #ffb4ab;
   --bezel: #232327;
   --bezel-rim: #5c5c66;
-  --bezel-shadow: rgb(0 0 0 / 0.7);
   color-scheme: dark;
 }
 
-/* The black blocks of the light theme (community, footer). In dark the
-   community block lifts to a grey and the footer stays black. */
+/*
+ * The panels over the walk (src/app/journey.css), in both themes: the walk's charcoal, warm white
+ * text, orange accents. One system for every section, so nothing cream floats on the dark photo.
+ */
+.panel {
+  --page: #0f0e0d;
+  --soft: #1a1815;
+  --softer: #23201c;
+  --text: #f6f1e8; /* warm white */
+  --muted: #bdb5a8;
+  --line: #34302a;
+  --edge: #857d70;
+  --chalk: #3a362f;
+  --accent-text: #ff8a3d;
+  --danger: #ffb4ab;
+  --tint: rgb(255 90 0 / 0.14);
+  --bezel: #232327;
+  --bezel-rim: #5c5c66;
+  --panel-edge: rgb(255 90 0 / 0.3); /* the thin orange line round a panel */
+  color: var(--text);
+  color-scheme: dark;
+}
+
+/* The black footer. */
 .inverse {
   --page: #100f0d;
   --soft: #1d1b18;
@@ -64,9 +84,4 @@
   background: var(--page);
   color: var(--text);
   color-scheme: dark;
-}
-:root[data-theme='dark'] .panel.inverse {
-  --page: #211f1c;
-  --line: #3b3832;
-  --chalk: #47433c;
 }

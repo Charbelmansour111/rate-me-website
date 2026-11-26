@@ -64,14 +64,12 @@
   }
 }
 
-/* What people read always has a solid ground. */
+/* What people read always has a solid ground: a charcoal panel (src/app/palette.css) with a thin
+   orange line, no blur and no shadow. */
 .panel {
   padding: clamp(1.5rem, 4vw, 3.5rem);
-  border: 1px solid var(--line);
+  border: 1px solid var(--panel-edge);
   border-radius: 1.25rem;
-  background: var(--page);
-}
-.panel.inverse {
   background: var(--page);
 }
 .walk-content .section {

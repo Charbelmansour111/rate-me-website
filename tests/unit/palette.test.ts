@@ -20,11 +20,10 @@ const themes = {
   light,
   dark,
   'black block': { ...light, ...inverse },
-  'black block in dark': {
-    ...dark,
-    ...inverse,
-    ...block(":root[data-theme='dark'] .panel.inverse"),
-  },
+  'black block in dark': { ...dark, ...inverse },
+  // The panels over the walk are the same in both themes
+  panel: { ...light, ...block('\n.panel') },
+  'panel in dark': { ...dark, ...block('\n.panel') },
 };
 
 function luminance(hex: string) {
@@ -83,4 +82,8 @@ describe.each(Object.entries(themes))('palette: %s', (name, palette) => {
 
 it('the browser bar matches the pages', () => {
   expect(THEME_COLORS).toEqual({ light: light.page, dark: dark.page });
+});
+
+it('the panels over the walk are charcoal with warm white text, in both themes', () => {
+  expect(block('\n.panel')).toMatchObject({ page: '#0f0e0d', text: '#f6f1e8' });
 });
