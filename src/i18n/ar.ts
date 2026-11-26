@@ -71,6 +71,7 @@ export const ar: Dictionary = {
       text: 'سجّل مسبقًا وسنراسلك بالبريد عند الإطلاق.',
     },
     controls: {
+      label: 'بطاقات المزايا',
       carousel: 'عرض متتابع',
       slide: 'شريحة',
       position: '{n} من {total}',

@@ -71,6 +71,7 @@ export const en = {
       text: 'Pre-register and we will email you about the launch.',
     },
     controls: {
+      label: 'Feature cards',
       carousel: 'carousel',
       slide: 'slide',
       position: '{n} of {total}',

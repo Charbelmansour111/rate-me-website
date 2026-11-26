@@ -265,18 +265,18 @@ function Carousel({
               {slide.card ? (
                 <TiltedCard className="card-tilt">{card}</TiltedCard>
               ) : (
-                // The phone is a button: it opens what the screen does
-                <button
-                  type="button"
-                  className="phone-button"
-                  aria-haspopup="dialog"
-                  aria-label={`${slide.title}: ${t.open}`}
-                  onClick={(event) => onOpen(slide, event.currentTarget)}
-                >
-                  <TiltedCard className="phone-tilt">
-                    <PhoneScreen slide={slide} />
-                  </TiltedCard>
-                </button>
+                <TiltedCard className="phone-tilt">
+                  <PhoneScreen slide={slide} />
+                  {/* A button over the whole phone opens what the screen does. Over it, not
+                      round it: the phone's own words (the clock, the tabs) stay out of its name. */}
+                  <button
+                    type="button"
+                    className="phone-button"
+                    aria-haspopup="dialog"
+                    aria-label={`${slide.title}: ${t.open}`}
+                    onClick={(event) => onOpen(slide, event.currentTarget)}
+                  />
+                </TiltedCard>
               )}
               <figcaption className="mx-auto mt-5 max-w-80 text-center">
                 <span className="text-lg font-semibold">{slide.title}</span>

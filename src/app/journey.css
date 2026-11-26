@@ -382,14 +382,15 @@ html:not([data-js]) .phone {
 }
 /* Each phone is a button that opens what its screen does. */
 .phone-button {
-  display: block;
-  margin-inline: auto;
-  border-radius: 2rem;
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: 2.6rem;
   cursor: pointer;
 }
 .phone-button:focus-visible {
   outline-offset: 6px;
-  border-radius: 2.2rem;
+  border-radius: 2.8rem;
 }
 
 /* --- The player card (src/components/player-card.tsx), as the app draws it --- */
@@ -644,7 +645,7 @@ html:not([data-js]) .phone {
 /* --- What you get (src/components/feature-carousel.tsx): a carousel of paper cards --- */
 .feature-track {
   --gap: 1.25rem;
-  --card: 62%;
+  --card: 67%;
   display: flex;
   gap: var(--gap);
   margin-top: 3rem;
@@ -683,6 +684,7 @@ html:not([data-js]) .phone {
 }
 /* A card: one photo shape for all, the icon, the title, one line of what it gives you, More */
 .feature-card {
+  position: relative;
   display: flex;
   width: 100%;
   flex-direction: column;
@@ -697,7 +699,13 @@ html:not([data-js]) .phone {
   border-color: var(--brand-orange);
   translate: 0 -2px;
 }
-.feature-card:focus-visible {
+.feature-card-hit {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: 1.25rem;
+}
+.feature-card-hit:focus-visible {
   border-radius: 1.25rem;
   outline-offset: 3px;
 }

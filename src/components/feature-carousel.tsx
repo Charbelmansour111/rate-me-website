@@ -51,7 +51,7 @@ export function FeatureCarousel({
   label: string;
   preRegister: string;
 }) {
-  const track = useRef<HTMLUListElement>(null);
+  const track = useRef<HTMLDivElement>(null);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const [first, setFirst] = useState(0);
   const [atEnd, setAtEnd] = useState(false);
@@ -177,7 +177,7 @@ export function FeatureCarousel({
       aria-label={label}
       className="feature-carousel"
     >
-      <ul
+      <div
         ref={track}
         id="feature-track"
         className="feature-track"
@@ -188,22 +188,17 @@ export function FeatureCarousel({
         onPointerCancel={onPointerUp}
       >
         {cards.map((card, i) => (
-          <li
+          <div
             key={card.id}
+            data-card-reveal
             className="feature-slide"
             role="group"
             aria-roledescription={t.slide}
             aria-label={fill(t.position, { n: i + 1, total: cards.length })}
           >
-            <button
-              ref={(el) => {
-                buttons.current[i] = el;
-              }}
-              type="button"
-              className="feature-card look-paper"
-              aria-haspopup="dialog"
-              onClick={(event) => setOpened({ card, from: event.currentTarget })}
-            >
+            {/* The card is a picture with words; a button over all of it opens it. Over it, not
+                round it: its name is the title, its description the line under it. */}
+            <div className="feature-card look-paper">
               <span className="feature-photo">
                 {card.src && (
                   <Image
@@ -220,8 +215,12 @@ export function FeatureCarousel({
               </span>
               <span className="feature-body">
                 <span className="feature-icon">{card.icon}</span>
-                <span className="display h3 feature-title">{card.title}</span>
-                <span className="feature-benefit">{card.benefit}</span>
+                <span id={`feature-${card.id}-title`} className="display h3 feature-title">
+                  {card.title}
+                </span>
+                <span id={`feature-${card.id}-benefit`} className="feature-benefit">
+                  {card.benefit}
+                </span>
                 <span className="feature-more">
                   {t.more}
                   <svg
@@ -238,10 +237,21 @@ export function FeatureCarousel({
                   </svg>
                 </span>
               </span>
-            </button>
-          </li>
+              <button
+                ref={(el) => {
+                  buttons.current[i] = el;
+                }}
+                type="button"
+                className="feature-card-hit"
+                aria-haspopup="dialog"
+                aria-labelledby={`feature-${card.id}-title`}
+                aria-describedby={`feature-${card.id}-benefit`}
+                onClick={(event) => setOpened({ card, from: event.currentTarget })}
+              />
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
       <div className="carousel-controls">
         {arrow(-1)}
         {/* One dot a card: a button on a computer, a mark on a phone (too many 44px targets) */}
