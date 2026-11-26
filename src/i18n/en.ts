@@ -159,7 +159,7 @@ export const en = {
       { title: 'Get early access', text: 'We email you when there is a version for you to try.' },
       { title: 'Share feedback', text: 'Use it with your team and tell us what you need.' },
     ],
-    coaches: 'Founding coaches',
+    coaches: 'Made for coaches like you',
     match: {
       label: 'Match request',
       example: 'An example of what is coming',

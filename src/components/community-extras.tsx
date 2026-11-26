@@ -71,8 +71,8 @@ export function MatchRequestCard({ t, soon }: { t: Community; soon: string }) {
             {soon}
           </span>
         )}
-        <span className="sr-only">{m.example}</span>
       </figcaption>
+      <p className="mt-1 text-sm text-muted">{m.example}</p>
 
       <div className="mt-5 grid gap-2">
         {[

@@ -142,12 +142,43 @@ test('community: room for four coach photos, and a match request that says what 
   for (const img of await section.locator('.coach-photo img').all()) {
     await expect(img).toHaveCSS('filter', /grayscale\(1\)/);
   }
+  // Stock photos: they load, and nothing says who they are
+  await expect(section.locator('.coach-photo img')).toHaveCount(4);
+  for (const img of await section.locator('.coach-photo img').all()) {
+    await expect(img).toHaveAttribute('alt', '');
+    await img.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+  }
+  await expect(section).not.toContainText(/founding coach/i);
   const card = section.locator('.match-card');
+  await expect(card).toContainText('An example of what is coming');
   await expect(card).toContainText('Match request');
   await expect(card).toContainText('Cedars FC');
   await expect(card).toContainText('Pinewood Academy');
   await expect(card.locator('.status-chip')).toHaveText('Request sent');
   await expect(card).toContainText('Coming soon');
+});
+
+test('feature cards: photos where there are some, drawings for the rest', async ({ page }) => {
+  await page.goto('/');
+  const cards = page.locator('#features [data-spotlight]');
+  for (const [i, photo] of [true, true, false, false, false, false].entries()) {
+    const art = cards.nth(i).locator('.feature-art');
+    await art.scrollIntoViewIfNeeded();
+    if (photo) {
+      const img = art.locator('img');
+      await expect(img).toHaveAttribute('alt', '');
+      await expect
+        .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+        .toBeGreaterThan(0);
+    } else {
+      await expect(art.locator('[data-placeholder]')).toHaveCount(1);
+    }
+    const box = (await art.boundingBox())!;
+    expect(box.width / box.height).toBeCloseTo(1.6, 1);
+  }
 });
 
 test('faq: an accordion of buttons, by mouse and by keyboard', async ({ page }) => {
