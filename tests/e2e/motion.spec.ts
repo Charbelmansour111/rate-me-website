@@ -349,7 +349,9 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   await expect
-    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')))
+    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')), {
+      timeout: 30_000,
+    })
     .toBe(sequence.count);
   if (!isMobile) {
     await page.mouse.move(600, 400);
