@@ -193,8 +193,8 @@ test('feature cards: a photo on every card, the same shape, each saying what it 
 });
 
 for (const [path, title, question] of [
-  ['/', 'Monthly report for parents', 'Do parents see their child’s progress?'],
-  ['/ar', 'تقرير شهري للأهل', 'هل يرى الأهل تقدّم أولادهم؟'],
+  ['/', 'Monthly player report', 'Do parents see their child’s progress?'],
+  ['/ar', 'تقرير شهري للاعب', 'هل يرى الأهل تقدّم أولادهم؟'],
 ]) {
   test(`${path}: the parents' monthly report has its card and its answer`, async ({ page }) => {
     test.skip(path === '/ar' && !ARABIC_ENABLED);
@@ -209,6 +209,10 @@ for (const [path, title, question] of [
     await button.click();
     const answer = page.locator(`#${await button.getAttribute('aria-controls')}`);
     await expect(answer).toContainText('PDF');
+    // The coach publishes it and the player shares it: parents have no accounts
+    await expect(answer).toContainText(
+      path === '/' ? 'share it with their parents' : 'مشاركته مع أهله',
+    );
     // Says what is in it, promises no date
     await expect(answer).not.toContainText(/\d{4}|(by|from) (january|june|september)/i);
   });

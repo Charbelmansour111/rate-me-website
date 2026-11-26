@@ -30,7 +30,7 @@ export const site = {
 export const ARABIC_ENABLED: boolean = true;
 
 /** The day the legal drafts last changed. */
-export const LEGAL_UPDATED = '2026-11-26';
+export const LEGAL_UPDATED = '2026-11-27';
 
 /**
  * Who runs Rate Me, shown in the footer and on the privacy page. Every TODO- value is a

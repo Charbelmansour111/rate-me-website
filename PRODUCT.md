@@ -11,7 +11,8 @@ web
 Football coaches first: head coaches, academy owners and assistant coaches, in Lebanon first, then
 the Middle East. They plan trainings, drills, squads and matches, usually from a phone, around
 evening sessions and weekend matches. Players join free through their coach's team and do not sign
-up on this site. Parents of youth players receive a monthly report from the app.
+up on this site. Each month the coach publishes a PDF report for each player, which the player can
+share with their parents; parents have no accounts.
 
 This website is the pre-launch page: it explains the app and collects pre-registrations (a
 waitlist) from coaches.
@@ -53,8 +54,8 @@ coaches, in Arabic and English, built with coaches in Lebanon.
 1. Say only what is true today: no numbers, claims or dates the product cannot back.
 2. Arabic is a first language, not a translation layer: every change works right to left.
 3. The coach's time is short: plain words, one action per section, pre-register always near.
-4. Children's data is handled with care: parents' reports go only to that player's own parent or
-   guardian.
+4. Children's data is handled with care: a player's monthly report is published to that player,
+   who decides whether to share it with their parents.
 
 ## Accessibility & Inclusion
 

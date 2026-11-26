@@ -99,7 +99,7 @@ export const legalEn: LegalTexts = {
         text: [
           'This website and its form are for adults (18 or older). Please do not send us a child’s details here. If you think someone did, write to {email} and we will delete them.',
           'In the app, players under 18 may use Rate Me only with the consent of a parent or legal guardian and through their club. Coaches and staff must be 18 or older. Clubs must get that consent before adding a minor. Minors have no access to the Coaches Channel. A parent or guardian can ask to see, correct or delete their child’s data, or withdraw consent, at {email}.',
-          'If their club uses monthly reports, the parent or guardian of a player under 18 receives a PDF at the end of each month with that player’s attendance, the coaches’ ratings and the coach’s notes, sent to the contact details the club holds for them. Only that player’s own parent or guardian receives it.',
+          'If their club uses monthly reports, the coach publishes a PDF for each player at the end of each month with that player’s attendance, the coaches’ ratings and the coach’s notes. The player sees it in the app and can share it with their parent or guardian. Parents and guardians do not have accounts, and Rate Me does not send the report to them.',
         ],
       },
       {

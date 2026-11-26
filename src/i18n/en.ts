@@ -117,14 +117,14 @@ export const en = {
         ],
       },
       parentReport: {
-        title: 'Monthly report for parents',
+        title: 'Monthly player report',
         photo: 'People watching a match from behind the fence',
-        text: 'At the end of each month, parents of youth players receive a PDF of their child’s progress: attendance, the coach’s ratings and the coach’s notes.',
+        text: 'Each month the coach publishes a PDF report for each player: attendance, match stats, the coach’s rating and notes. Players can share it with their parents.',
         benefit: 'Each player gets a PDF of their month to share.',
         bullets: [
           'One A4 page shows attendance, match stats and your rating with its trend.',
           'The head coach publishes it, for one player or for all of them at once.',
-          'The player opens it in the app and can share it with the family.',
+          'The player opens it in the app and can share it with their parents.',
         ],
       },
       matchRequests: {
@@ -182,7 +182,7 @@ export const en = {
         calendar: [
           'Trainings, matches and team days, month by month.',
           'Each event has its day, time and place.',
-          'Mark who came. Attendance goes into the parents’ monthly report.',
+          'Mark who came. Attendance goes into each player’s monthly report.',
         ],
         'whiteboard-roles': [
           'Give each player a role: Smart, Press, Cover, Mark or Intercept.',
@@ -352,7 +352,7 @@ export const en = {
       },
       {
         q: 'Do parents see their child’s progress?',
-        a: 'Yes, in a monthly report. At the end of each month, parents of youth players receive a PDF with their child’s attendance, the coach’s ratings and the coach’s notes.',
+        a: 'Yes, through a monthly report. The coach publishes a PDF for each player with attendance, match stats, the coach’s rating and notes, and the player can share it with their parents. Parents do not have their own accounts.',
       },
       {
         q: 'When does it launch?',
