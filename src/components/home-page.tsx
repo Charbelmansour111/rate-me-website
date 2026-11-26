@@ -10,6 +10,7 @@ import { HeroDrill } from './hero-drill';
 import { PreRegisterForm } from './pre-register-form';
 import { SpotlightCard, spotlightStops } from './react-bits/spotlight-card';
 import { WalkCanvas, WalkGap, WalkGroup } from './journey-walk';
+import { WhyCards } from './why-cards';
 import { Showcase } from './showcase';
 import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
@@ -101,20 +102,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   {t.why.title}
                 </h2>
                 <ul className="mt-14 grid gap-5 md:grid-cols-3" style={spotlightStops}>
-                  {t.why.items.map((item, i) => (
-                    <SpotlightCard key={item.title} as="li" className="p-7">
-                      <span
-                        aria-hidden="true"
-                        className="display block text-2xl text-accent-text tabular-nums"
-                      >
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <h3 className="display h3 mt-4">
-                        <span className="card-title">{item.title}</span>
-                      </h3>
-                      <p className="mt-3 text-lg text-muted">{item.text}</p>
-                    </SpotlightCard>
-                  ))}
+                  <WhyCards t={t.why} />
                 </ul>
               </div>
             </div>

@@ -177,6 +177,39 @@ html.lenis {
 .faq-icon::after {
   transform: rotate(90deg);
 }
+/* "Plan, build, organize" cards open the same way (src/components/why-cards.tsx) */
+.why-button {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: start;
+}
+.why-button:hover .card-title {
+  background-size: 100% 3px;
+}
+.why-drawing {
+  position: static;
+  width: 9rem;
+  height: auto;
+  stroke: var(--edge);
+}
+.why-item[data-open='true'] .faq-panel,
+html:not([data-js]) .why-item .faq-panel {
+  grid-template-rows: 1fr;
+}
+.why-item[data-open='true'] .faq-panel > *,
+html:not([data-js]) .why-item .faq-panel > * {
+  visibility: visible;
+}
+.why-item[data-open='true'] .faq-icon::after {
+  transform: rotate(90deg) scaleX(0);
+}
+.why-item[data-open='true'] .faq-icon::before {
+  transform: rotate(180deg);
+}
 .faq-item[data-open='true'] .faq-icon::after {
   transform: rotate(90deg) scaleX(0);
 }
@@ -214,6 +247,46 @@ html:not([data-js]) .faq-panel > * {
 .tactics-caption {
   padding-inline-start: 1rem;
   border-inline-start: 3px solid var(--accent);
+}
+/* Role buttons under the board (src/components/tactics-roles.tsx) */
+.tactics-try {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.tactics-try button {
+  min-height: 2.75rem;
+  padding: 0.35rem 1.15rem;
+  border: 1.5px solid var(--edge);
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.tactics-try button:hover {
+  border-color: var(--accent);
+}
+.tactics-try [aria-pressed='true'] {
+  border-color: var(--button);
+  background: var(--button);
+  color: var(--on-button);
+}
+/* They need JavaScript: without it the board is a still picture */
+html:not([data-js]) .tactics-try,
+html:not([data-js]) .tactics-try + p {
+  display: none;
+}
+.tactics-role-lines > * {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+[data-role='mark'] .tactics-role-lines [data-show='mark'],
+[data-role='intercept'] .tactics-role-lines [data-show='intercept'] {
+  opacity: 1;
+}
+/* With a role, the passes of the play step back */
+[data-role] .tactics-trail,
+[data-role] .tactics-arrow {
+  opacity: 0.25;
 }
 .tactics-role {
   display: inline-flex;

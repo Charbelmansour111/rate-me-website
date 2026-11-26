@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 import { fadeWindow, frameAt, journey } from '../../src/config/journey.config';
+import { ROLE_SHAPES } from '../../src/motion/tactics-data';
 import { ARABIC_ENABLED } from '../../src/config/site';
 import { hasFrames } from '../../src/lib/journey-files';
 
@@ -862,6 +863,75 @@ test('inside the app: the player card, as the app draws it, leaning like the pho
     .toBeGreaterThan(0);
   await expect(page.locator('body')).not.toContainText(/FIFA/i);
 });
+
+test('plan, build, organize: each card opens for a closer look, 18px text', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const buttons = page.locator('.why-button');
+  await expect(buttons).toHaveCount(3);
+  for (const button of await buttons.all()) {
+    await expect(button).toHaveAttribute('aria-expanded', 'false');
+  }
+  const first = buttons.first();
+  const panel = page.locator('#why-a-0');
+  await expect(panel.locator('p')).toBeHidden();
+  await first.scrollIntoViewIfNeeded();
+  await first.click();
+  await expect(first).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel.locator('p')).toBeVisible();
+  await expect(panel.locator('svg')).toBeVisible();
+  for (const text of await page.locator('.why-card p').all()) {
+    expect(
+      parseFloat(await text.evaluate((el) => getComputedStyle(el).fontSize)),
+    ).toBeGreaterThanOrEqual(18);
+  }
+  // By keyboard too
+  await first.focus();
+  await page.keyboard.press('Enter');
+  await expect(first).toHaveAttribute('aria-expanded', 'false');
+});
+
+for (const reduced of [false, true]) {
+  test(`the whiteboard: roles are buttons that move the defenders${reduced ? ', at once with reduced motion' : ''}`, async ({
+    page,
+  }) => {
+    if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/', { waitUntil: 'networkidle' });
+    const chips = page.locator('[data-try]');
+    await expect(chips).toHaveText(['Smart', 'Press', 'Cover', 'Mark', 'Intercept']);
+    await expect(chips.first()).toHaveAttribute('aria-pressed', 'true');
+    const where = () =>
+      page.locator('[data-defender]').evaluateAll((els) =>
+        els.map((el) => {
+          const m = new DOMMatrix(getComputedStyle(el).transform);
+          return [Math.round(m.e), Math.round(m.f)];
+        }),
+      );
+    const press = page.locator('[data-try="press"]');
+    await press.scrollIntoViewIfNeeded();
+    await press.click();
+    await expect(press).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-tactics]')).toHaveAttribute('data-role', 'press');
+    if (reduced) {
+      expect(await where()).toEqual(ROLE_SHAPES.press);
+    } else {
+      await expect.poll(where).toEqual(ROLE_SHAPES.press);
+    }
+    await expect(page.locator('.tactics-try + p')).toContainText('Press');
+    // Arrow keys move along and choose
+    await press.focus();
+    await page.keyboard.press('ArrowRight');
+    const cover = page.locator('[data-try="cover"]');
+    await expect(cover).toBeFocused();
+    await expect(cover).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(where).toEqual(ROLE_SHAPES.cover);
+    // Mark draws who marks whom
+    await page.locator('[data-try="mark"]').click();
+    await expect(page.locator('[data-show="mark"]').first()).toHaveCSS('opacity', '1');
+    // Smart gives the board back to the play
+    await page.locator('[data-try="smart"]').click();
+    await expect(page.locator('[data-tactics]')).not.toHaveAttribute('data-role', /./);
+  });
+}
 
 test('inside the app: the phones beside the middle one float with the scroll', async ({
   page,

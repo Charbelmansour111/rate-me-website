@@ -42,16 +42,20 @@ export const en = {
       {
         title: 'Plan the week',
         text: 'Trainings, matches and team days in one calendar, so everyone knows what comes next.',
+        more: 'Add a training, a match or a team day with its time and place. Your players see it in their calendar, and after it you mark who came.',
       },
       {
         title: 'Build the drill',
         text: 'Draw it on a smart whiteboard, then play it back so players see the movement.',
+        more: 'Place your players and the opponents, give each one a role and record the moves. Play it back at training, so the players see the drill before they run it.',
       },
       {
         title: 'Keep it organized',
         text: 'Your squad, lineups and match details stay together, not spread over chats and paper.',
+        more: 'Kit numbers, positions and a card for each player, in one squad. The lineup and the match details sit with the match itself.',
       },
     ],
+    more: 'More about this',
   },
   features: {
     kicker: 'Features',
@@ -193,6 +197,24 @@ export const en = {
       overlap: 'Overlap',
       run_behind: 'Run behind',
       intercept: 'Intercept lanes',
+    },
+    // Buttons under the board: each shows what the defenders do with that role
+    try: {
+      label: 'Try a role for the defenders',
+      chips: {
+        smart: 'Smart',
+        press: 'Press',
+        cover: 'Cover',
+        mark: 'Mark',
+        intercept: 'Intercept',
+      },
+      captions: {
+        smart: 'Smart: the app moves each defender with the ball.',
+        press: 'Press: the nearest defenders step up to the player on the ball.',
+        cover: 'Cover: the defenders drop into a tight block in front of goal.',
+        mark: 'Mark: each defender stays with one attacker.',
+        intercept: 'Intercept: a defender steps into the passing lane and cuts it.',
+      },
     },
     steps: [
       {

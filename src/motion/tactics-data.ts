@@ -112,3 +112,38 @@ export function along({ from, bend, to }: (typeof PASSES)[number], t: number): P
   const mix = (i: 0 | 1) => (1 - t) ** 2 * from[i] + 2 * (1 - t) * t * bend[i] + t ** 2 * to[i];
   return [Math.round(mix(0) * 10) / 10, Math.round(mix(1) * 10) / 10];
 }
+
+/**
+ * The roles a coach can try on the board (src/components/tactics-roles.tsx), as in the app: where
+ * the three defenders go while the 6 has the ball. Smart is the play above, chosen by the app.
+ */
+export const ROLE_CHOICES = ['smart', 'press', 'cover', 'mark', 'intercept'] as const;
+export type RoleChoice = (typeof ROLE_CHOICES)[number];
+export const ROLE_SHAPES: Record<Exclude<RoleChoice, 'smart'>, [Point, Point, Point]> = {
+  // The two nearest step up to the player on the ball; the third holds his zone
+  press: [
+    [104, 268],
+    [148, 262],
+    [330, 214],
+  ],
+  // A tight block in front of goal
+  cover: [
+    [196, 178],
+    [244, 142],
+    [292, 178],
+  ],
+  // Each defender goal side of one attacker: the 8, the 10 and the 7
+  mark: [
+    [194, 288],
+    [312, 280],
+    [398, 192],
+  ],
+  // One steps into the lane from the 6 to the 8; the others screen the middle
+  intercept: [
+    [122, 338],
+    [240, 262],
+    [372, 216],
+  ],
+};
+/** The attackers each defender marks, in the "mark" shape. */
+export const MARKED: [Point, Point, Point] = [ATTACKERS[1].at, ATTACKERS[2].at, ATTACKERS[3].at];

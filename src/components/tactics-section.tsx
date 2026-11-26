@@ -7,11 +7,15 @@ import {
   arrowHead,
   ATTACKERS,
   DEFENDERS,
+  MARKED,
   mirror,
   PASSES,
+  ROLE_SHAPES,
   translate,
   type Point,
 } from '@/motion/tactics-data';
+
+import { TacticsRoles } from './tactics-roles';
 
 /**
  * "Tactics that move". The server renders the finished frame with every label; src/motion plays it.
@@ -72,11 +76,11 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                 ))}
               </ol>
             </div>
-            <div data-stage className="relative mx-auto w-full max-w-[40rem]">
+            <div data-stage className="relative mx-auto w-full max-w-[46rem]">
               <p className="sr-only">{t.tactics.description}</p>
               <svg
                 viewBox="0 0 480 420"
-                className="block h-auto max-h-[56vh] w-full"
+                className="block h-auto max-h-[62vh] w-full"
                 fill="none"
                 aria-hidden="true"
               >
@@ -102,6 +106,31 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   strokeDasharray="5 6"
                 >
                   <path d={`M${xy(DEFENDERS[0].at)}L${xy(DEFENDERS[1].at)}`} />
+                </g>
+
+                {/* Shown by a role tried under the board: who marks whom, the lane that is cut */}
+                <g className="tactics-role-lines" strokeWidth="2.5" strokeLinecap="round">
+                  {ROLE_SHAPES.mark.map((at, i) => (
+                    <path
+                      key={i}
+                      data-show="mark"
+                      d={`M${xy(at)}L${xy(MARKED[i])}`}
+                      stroke="var(--accent)"
+                      strokeDasharray="4 5"
+                    />
+                  ))}
+                  <path
+                    data-show="intercept"
+                    d={`M${xy(PASSES[0].from)}Q${xy(PASSES[0].bend)} ${xy(PASSES[0].to)}`}
+                    stroke="var(--muted)"
+                    strokeDasharray="5 6"
+                  />
+                  <path
+                    data-show="intercept"
+                    d={`M${xy([108, 352])}L${xy([136, 324])}`}
+                    stroke="var(--accent)"
+                    strokeWidth="4"
+                  />
                 </g>
 
                 {PASSES.map((pass) => (
@@ -204,6 +233,7 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   {t.tactics.pause}
                 </button>
               </div>
+              <TacticsRoles t={t.tactics.try} rtl={rtl} />
             </div>
           </div>
         </div>

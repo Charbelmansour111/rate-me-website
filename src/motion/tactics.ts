@@ -193,7 +193,8 @@ export function startTactics(root: HTMLElement, signal: AbortSignal) {
   let visible = false;
   let stopped = false;
 
-  const running = () => visible && !stopped;
+  // A role tried under the board (src/components/tactics-roles.tsx) holds the play still.
+  const running = () => visible && !stopped && !root.dataset.role;
 
   function sync() {
     clearTimeout(timer);
@@ -244,6 +245,18 @@ export function startTactics(root: HTMLElement, signal: AbortSignal) {
     { rootMargin: '-50% 0px -49% 0px' },
   );
   for (const marker of markers) scroll.observe(marker);
+
+  // A role cancels the play's animations; Smart starts it again.
+  root.addEventListener(
+    'tactics:role',
+    () => {
+      for (const animation of loop) animation.cancel();
+      loop = [];
+      if (!root.dataset.role && root.dataset.step === '2') loop = playLoop(root, rtl);
+      sync();
+    },
+    { signal },
+  );
 
   button.hidden = false;
   button.addEventListener(
