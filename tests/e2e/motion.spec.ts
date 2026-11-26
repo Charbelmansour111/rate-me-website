@@ -236,7 +236,11 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
       () =>
         performance
           .getEntriesByType('resource')
-          .filter((r) => r.name.includes('/journey/') && r.initiatorType === 'fetch').length,
+          .filter(
+            (r) =>
+              r.name.includes('/journey/') &&
+              (r as PerformanceResourceTiming).initiatorType === 'fetch',
+          ).length,
     ),
   ).toBe(0);
   const at = 10.5;
