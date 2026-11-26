@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-import { frameAt, journey } from '../../src/config/journey.config';
+import { fadeWindow, frameAt, journey } from '../../src/config/journey.config';
 import { ARABIC_ENABLED } from '../../src/config/site';
 import { hasFrames } from '../../src/lib/journey-files';
 
@@ -208,13 +208,13 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
   await to(1);
   await expect(walk).toHaveAttribute('data-frame', last);
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'pitch');
-  // The canvas fills the screen, at no more than two pixels per point
+  // The canvas fills the screen and holds the frames at their own size, whatever the screen
   const size = await walk.evaluate((el) => {
     const { width, clientWidth } = el as HTMLCanvasElement;
-    return { ratio: width / clientWidth, full: clientWidth >= innerWidth - 20 };
+    return { width, full: clientWidth >= innerWidth - 20 };
   });
   expect(size.full).toBe(true);
-  expect(size.ratio).toBeLessThanOrEqual(2.01);
+  expect(size.width).toBe(960);
 });
 
 test('the walk: between two frames both are drawn, crossfaded by how far along it is', async ({
@@ -263,6 +263,54 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
     [20, sequence.count],
   );
   await expect(walk).toHaveAttribute('data-blend', /^20 (20 0\.000|21 0\.00\d)$/);
+  // A quarter of the way either side of the midpoint: one frame alone, never a double image
+  const window = fadeWindow(sequence.count);
+  if (window < 0.25) {
+    for (const [at, alpha] of [
+      [10.25, '0.000'],
+      [10.75, '1.000'],
+    ] as const) {
+      await page.evaluate(
+        ([frame, count]) => {
+          const main = document.querySelector('main')!;
+          const range = main.offsetTop + main.offsetHeight - innerHeight;
+          scrollTo({ top: (range * frame) / (count - 1), behavior: 'instant' });
+        },
+        [at, sequence.count],
+      );
+      await expect(walk).toHaveAttribute('data-blend', `10 11 ${alpha}`);
+    }
+  }
+});
+
+test('the walk: the very bottom of the page shows the last frame', async ({ page, isMobile }) => {
+  const sequence = sequenceFor(isMobile);
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const walk = page.locator('[data-walk]');
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  for (const [part, frame] of [
+    [0, '0'],
+    [0.5, String(frameAt(sequence, 0.5))],
+  ] as const) {
+    await page.evaluate((p) => {
+      const main = document.querySelector('main')!;
+      scrollTo({
+        top: (main.offsetTop + main.offsetHeight - innerHeight) * p,
+        behavior: 'instant',
+      });
+    }, part);
+    await expect(walk).toHaveAttribute('data-frame', frame);
+  }
+  // As far down as the page goes, past the footer: the pitch, the last frame
+  await page.evaluate(() =>
+    scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }),
+  );
+  await expect(walk).toHaveAttribute('data-frame', String(sequence.count - 1));
+  await expect(walk).toHaveAttribute(
+    'data-blend',
+    `${sequence.count - 1} ${sequence.count - 1} 0.000`,
+  );
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'pitch');
 });
 
 test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
@@ -291,8 +339,10 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
       jumps: number[];
       frames: string[];
       lags: number[];
+      steps: number[];
       recording: boolean;
     };
+    w.steps = [];
     w.jumps = [];
     w.frames = [];
     w.lags = [];
@@ -300,6 +350,7 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
     const main = document.querySelector('main')!;
     const range = main.offsetTop + main.offsetHeight - innerHeight;
     let last: Uint8ClampedArray | undefined;
+    let before = Number(canvas.dataset.at);
     const sample = () => {
       context.drawImage(canvas, 0, 0, 64, 36);
       const data = context.getImageData(0, 0, 64, 36).data;
@@ -311,9 +362,11 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
         w.jumps.push(sum / (64 * 36 * 3));
         w.frames.push(canvas.dataset.frame!);
         // Where the picture is against where the page is, in frames of the walk
-        const [from, to, alpha] = canvas.dataset.blend!.split(' ').map(Number);
-        const shown = from + (to - from) * alpha;
+        const shown = Number(canvas.dataset.at);
         w.lags.push(Math.abs(Math.min(1, scrollY / range) * (count - 1) - shown));
+        // How far the walk went since the last painted frame, in frames
+        w.steps.push(Math.abs(shown - before));
+        before = shown;
       }
       last = data;
       if (w.recording) requestAnimationFrame(sample);
@@ -346,21 +399,23 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
     }
   }
   await page.waitForTimeout(1500);
-  const { jumps, frames, lags } = await page.evaluate(() => {
+  const { jumps, frames, lags, steps } = await page.evaluate(() => {
     const w = window as unknown as {
       jumps: number[];
       frames: string[];
       lags: number[];
+      steps: number[];
       recording: boolean;
     };
     w.recording = false;
-    return { jumps: w.jumps, frames: w.frames, lags: w.lags };
+    return { jumps: w.jumps, frames: w.frames, lags: w.lags, steps: w.steps };
   });
   // It passed several frames, and moved on most painted frames
   expect(new Set(frames).size).toBeGreaterThan(5);
-  expect(jumps.filter((jump) => jump > 0.05).length).toBeGreaterThan(60);
-  // A hard swap between two frames measured about 40 here; a crossfade stays far below
-  expect(Math.max(...jumps)).toBeLessThan(12);
+  expect(jumps.filter((jump) => jump > 0.05).length).toBeGreaterThan(20);
+  // No step: the picture changes only as far as the walk moved. A hard cut between two frames of
+  // the old 48-frame set measured 41 here; neighbours in a dense set change far less.
+  jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(20 * Math.max(1, steps[i])));
   // The picture and the page move in the same frame: it never trails behind
   expect(Math.max(...lags)).toBeLessThan(0.01);
 });
@@ -398,6 +453,18 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
     'data-frame',
     String(frameAt(sequence, progress)),
   );
+});
+
+test('smooth scrolling: no CSS glide fights Lenis', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Lenis smooths the mouse wheel');
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const behavior = () =>
+    page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior);
+  // Before Lenis, CSS glides jumps to a section; with Lenis, CSS steps aside
+  expect(await behavior()).toBe('smooth');
+  await page.mouse.move(5, 5);
+  await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
+  expect(await behavior()).toBe('auto');
 });
 
 test('smooth scrolling never stops a scroll that is under way', async ({ page }) => {

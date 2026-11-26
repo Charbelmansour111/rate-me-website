@@ -10,6 +10,19 @@ export const journey: Record<Shape, Sequence> = {
   portrait: { path: '/journey/portrait/f', count: 48, ext: 'webp', pad: 3 },
 };
 
+/**
+ * How two neighbouring frames blend between them. A crossfade of two frames far apart is a double
+ * image (two jerseys where there is one), so in a dense set the nearest frame shows alone and the
+ * next one fades in only within `window` of a frame either side of the midpoint. A set with fewer
+ * than `denseFrom` frames fades over the whole gap (a window of 0.5): with 48 frames a cut would
+ * jump. The 191-frame set already showed a double "9" with a full fade, so it counts as dense.
+ */
+export const crossfade = { denseFrom: 150, window: 0.15 };
+
+/** The fade window for a set of `count` frames. */
+export const fadeWindow = (count: number) =>
+  count >= crossfade.denseFrom ? crossfade.window : 0.5;
+
 export type SceneId = 'locker' | 'tunnel' | 'pitch';
 
 /** The part of the walk (0 to 1) each label belongs to. Names live in src/i18n (journey). */

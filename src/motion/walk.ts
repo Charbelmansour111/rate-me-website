@@ -1,4 +1,5 @@
 import {
+  fadeWindow,
   frameAt,
   frameUrl,
   journey,
@@ -30,8 +31,9 @@ export const nearest = (frames: Iterable<number>, frame: number) => {
 /**
  * The two loaded frames either side of `at` (a frame number with a fraction, 0 to count - 1) and
  * how much of the upper one shows. One frame alone when `at` is on it or past the loaded ones.
+ * The upper one fades in only within `window` of the midpoint between them (0.5: all the way).
  */
-export function blend(frames: Iterable<number>, at: number) {
+export function blend(frames: Iterable<number>, at: number, window = 0.5) {
   let below: number | undefined;
   let above: number | undefined;
   for (const i of frames) {
@@ -42,7 +44,9 @@ export function blend(frames: Iterable<number>, at: number) {
     const only = below ?? above;
     return only === undefined ? undefined : { from: only, to: only, alpha: 0 };
   }
-  return { from: below, to: above, alpha: (at - below) / (above - below) };
+  const along = (at - below) / (above - below);
+  const alpha = Math.min(1, Math.max(0, (along - (0.5 - window)) / (2 * window)));
+  return { from: below, to: above, alpha };
 }
 
 /** A frame, decoded. */
@@ -99,6 +103,10 @@ function frameDecoder() {
     waiting.clear();
   });
   return {
+    /** Whether the work happens away from the page: then the next batch need not wait. */
+    get offPage() {
+      return worker !== undefined;
+    },
     decode(url: string): Promise<Frame> {
       if (!worker) return decodeHere(url);
       const id = next++;
@@ -179,7 +187,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   function draw() {
     if (reel.images.size) shown = reel;
     const { sequence, images } = shown;
-    const mix = blend(images.keys(), position * (sequence.count - 1));
+    const mix = blend(images.keys(), position * (sequence.count - 1), fadeWindow(sequence.count));
     if (!mix) return;
     const below = images.get(mix.from)!;
     // Sized to the frames, not the screen: a turn or a resize redraws nothing.
@@ -202,7 +210,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       // The blend: the tests read it.
       canvas.dataset.blend = `${mix.from} ${mix.to} ${mix.alpha.toFixed(3)}`;
     }
-    // The frame mostly on show, the set, and the part of the walk.
+    // Where the walk is, in frames; the frame mostly on show, the set, and the part of the walk.
+    canvas.dataset.at = (position * (sequence.count - 1)).toFixed(3);
     mark(canvas, 'frame', String(nearest(images.keys(), frameAt(sequence, position))));
     mark(canvas, 'shape', sequence === journey.portrait ? 'portrait' : 'landscape');
     mark(root, 'scene', sceneAt(position));
@@ -241,7 +250,13 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       }
       hasPortrait = false;
       pick();
-    } else if (from.waiting.size) idle(() => void loadBatch(from));
+    } else if (from.waiting.size) {
+      // In a worker the page only receives finished bitmaps: straight on. Otherwise the decoding
+      // is on the page, so it waits for a quiet moment.
+      const next = () => void loadBatch(from);
+      if (decoder.offPage) setTimeout(next, 0);
+      else idle(next);
+    }
   }
 
   /** Takes the sequence for this screen. Says whether that is another one than before. */
@@ -289,6 +304,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     delete root.dataset.scene;
     delete canvas.dataset.frame;
     delete canvas.dataset.blend;
+    delete canvas.dataset.at;
     delete canvas.dataset.shape;
     for (const { images } of reels.values()) for (const frame of images.values()) frame.close?.();
   });

@@ -1,7 +1,16 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-import { frameAt, frameUrl, journey, sceneAt, scenes, stillAt } from '@/config/journey.config';
+import {
+  crossfade,
+  fadeWindow,
+  frameAt,
+  frameUrl,
+  journey,
+  sceneAt,
+  scenes,
+  stillAt,
+} from '@/config/journey.config';
 import { hasFrames } from '@/lib/journey-files';
 import { blend, frameList, nearest, shapeFor } from '@/motion/walk';
 
@@ -79,5 +88,19 @@ describe('the walk', () => {
       to: 60,
       alpha: 0.5,
     });
+  });
+  it('in a dense set shows one frame, crossfading only near the midpoint', () => {
+    const frames = [10, 11];
+    const w = crossfade.window;
+    expect(fadeWindow(crossfade.denseFrom)).toBe(w);
+    expect(fadeWindow(crossfade.denseFrom - 1)).toBe(0.5);
+    // Up to the window: the lower frame alone; past it: the upper one alone
+    expect(blend(frames, 10.25, w)!.alpha).toBe(0);
+    expect(blend(frames, 10.5 - w, w)!.alpha).toBe(0);
+    expect(blend(frames, 10.5, w)!.alpha).toBeCloseTo(0.5);
+    expect(blend(frames, 10.5 + w, w)!.alpha).toBe(1);
+    expect(blend(frames, 10.75, w)!.alpha).toBe(1);
+    // A sparse set fades all the way, as before
+    expect(blend(frames, 10.25)!.alpha).toBeCloseTo(0.25);
   });
 });
