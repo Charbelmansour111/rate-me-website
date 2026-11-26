@@ -87,7 +87,7 @@ export const en = {
         title: 'Calendar and events',
         photo: 'Yellow training cones in a line on the grass',
         text: 'Trainings, matches, trips and team days, with attendance for each one.',
-        benefit: 'Every session in one place, with who came.',
+        benefit: 'See every session in one calendar, and who came.',
         bullets: [
           'Add trainings, matches and special days, each in its own colour.',
           'Mark attendance from 30 minutes before the start, for the whole squad at once.',
@@ -100,7 +100,7 @@ export const en = {
         text: 'Draw and animate drills. Smart defenders react to the ball, so you see how the drill plays out.',
         benefit: 'Draw a drill once, play it back at training.',
         bullets: [
-          'Record the moves, then play them back smoothly.',
+          'Record the moves, then play them back.',
           'Smart defenders press, cover and keep their shape as the ball moves.',
           'Give each player a role for when you have the ball and one for when they have it.',
         ],
@@ -109,7 +109,7 @@ export const en = {
         title: 'Squad and player cards',
         photo: 'A coach crouching on the touchline, explaining something to his players',
         text: 'Kit numbers, positions and a card for each player, shared only when the coach decides.',
-        benefit: 'Your squad, with a card for every player.',
+        benefit: 'Every player in your squad gets a card.',
         bullets: [
           'Players ask for a kit number, and you accept or decline.',
           'You decide which cards players see, one by one or all at once.',
@@ -120,9 +120,9 @@ export const en = {
         title: 'Monthly report for parents',
         photo: 'People watching a match from behind the fence',
         text: 'At the end of each month, parents of youth players receive a PDF of their child’s progress: attendance, the coach’s ratings and the coach’s notes.',
-        benefit: "Each player's month in a PDF, ready to share.",
+        benefit: 'Each player gets a PDF of their month to share.',
         bullets: [
-          'Attendance, match stats and your rating with its trend, on one A4 page.',
+          'One A4 page shows attendance, match stats and your rating with its trend.',
           'The head coach publishes it, for one player or for all of them at once.',
           'The player opens it in the app and can share it with the family.',
         ],
@@ -144,7 +144,7 @@ export const en = {
         text: 'Create a tournament, take registrations and follow the fixtures.',
         benefit: 'Run a tournament from sign-up to the final.',
         bullets: [
-          'Groups, a league, a knockout, or groups then a knockout.',
+          'Choose groups, a league, a knockout, or groups then a knockout.',
           'Take registrations and accept or refuse each team.',
           'The table shows who qualifies.',
         ],
