@@ -85,7 +85,6 @@ export const en = {
       },
     },
   },
-  journey: { locker: 'The locker room', tunnel: 'The tunnel', pitch: 'The pitch' },
   showcase: {
     kicker: 'Screens',
     title: 'Inside the app',

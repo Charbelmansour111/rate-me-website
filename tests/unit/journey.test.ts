@@ -2,8 +2,6 @@ import { existsSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import { frameAt, frameUrl, journey, sceneAt, scenes, stillAt } from '@/config/journey.config';
-import { ar } from '@/i18n/ar';
-import { en } from '@/i18n/en';
 import { hasFrames } from '@/lib/journey-files';
 import { frameList, nearest, shapeFor } from '@/motion/walk';
 
@@ -41,7 +39,7 @@ describe('the walk', () => {
     }
     expect(frameUrl(landscape, 7)).toBe('/journey/seq/f007.webp');
   });
-  it('has scenes that follow on from 0 to 1, labelled in both languages', () => {
+  it('has scenes that follow on from 0 to 1', () => {
     let end = 0;
     for (const { from, to } of Object.values(scenes)) {
       expect(from).toBe(end);
@@ -49,9 +47,6 @@ describe('the walk', () => {
     }
     expect(end).toBe(1);
     expect([0, 0.2, 0.9, 1].map(sceneAt)).toEqual(['locker', 'tunnel', 'pitch', 'pitch']);
-    for (const { journey: labels } of [en, ar]) {
-      expect(Object.keys(labels)).toEqual(Object.keys(scenes));
-    }
     for (const [id, at] of Object.entries(stillAt)) {
       const { from, to } = scenes[id as keyof typeof scenes];
       expect(at).toBeGreaterThanOrEqual(from);

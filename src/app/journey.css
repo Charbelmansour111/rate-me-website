@@ -38,23 +38,7 @@
   padding-block: clamp(2rem, 9vh, 6rem) clamp(1.5rem, 4vw, 3.5rem);
 }
 .walk-gap {
-  display: flex;
-  padding-bottom: 12vh; /* below the vanishing point, which is what people look at */
   height: 70vh;
-  align-items: flex-end;
-  justify-content: center;
-}
-.walk-label {
-  display: none;
-  padding: 0.35rem 1.1rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--page);
-  font-size: 0.9375rem;
-  font-weight: 600;
-}
-.walk-label[data-default] {
-  display: block;
 }
 /* Bright stands would glare around the dark panels. */
 :root[data-theme='dark'] .walk,
@@ -72,23 +56,6 @@
   }
   [data-js]:not([data-journey='off']) .walk-still {
     display: none;
-  }
-  [data-journey='on'] .walk-label {
-    display: none;
-  }
-  [data-journey='on'] [data-in][data-name='locker'] [data-label='locker'],
-  [data-journey='on'] [data-in][data-name='tunnel'] [data-label='tunnel'],
-  [data-journey='on'] [data-in][data-name='pitch'] [data-label='pitch'] {
-    display: block;
-    animation-name: walk-label;
-    animation-duration: 600ms;
-    animation-timing-function: ease-out;
-  }
-  @keyframes walk-label {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
   }
 }
 

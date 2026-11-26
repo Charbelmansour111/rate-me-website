@@ -130,14 +130,11 @@ test('reduced motion: the finished frame, no pinning, no animation', async ({ pa
     await expect(still).toHaveCSS('background-image', /journey/);
   }
   await expect(page.locator('[data-play-pause]')).toBeHidden();
-  // No smooth scrolling, and no GSAP: the wheel scrolls as the system does
+  // No smooth scrolling: the wheel scrolls as the system does
   await page.mouse.move(600, 400);
   await page.mouse.wheel(0, 600);
   await page.waitForTimeout(500);
   await expect(page.locator('html')).not.toHaveClass(/(^|\s)lenis(\s|$)/);
-  expect(
-    await page.evaluate(() => performance.getEntriesByType('resource').length),
-  ).toBeGreaterThan(0);
   expect(
     await page.evaluate(
       () => document.getAnimations().filter((a) => a.playState === 'running').length,
@@ -250,21 +247,19 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
   );
 });
 
-test('the walk: open gaps carry the label of the scene', async ({ page }) => {
+test('the walk: open gaps, with no titles on them', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   const gaps = page.locator('[data-walk-gap]');
   await expect(gaps).toHaveCount(8);
-  const named: string[] = [];
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   for (const gap of await gaps.all()) {
     await gap.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await expect(gap).toHaveAttribute('data-in');
-    named.push(...(await gap.locator('p:visible').allTextContents()));
+    await expect(gap).toBeEmpty();
     const share = await gap.evaluate((el) => (el as HTMLElement).offsetHeight / innerHeight);
     expect(share).toBeGreaterThanOrEqual(0.59);
     expect(share).toBeLessThanOrEqual(0.81);
   }
-  // Each once, in order
-  expect(named).toEqual(['The locker room', 'The tunnel', 'The pitch']);
 });
 
 test('the walk: saving data loads every second frame', async ({ page, isMobile }) => {

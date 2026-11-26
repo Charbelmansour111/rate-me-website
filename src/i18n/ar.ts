@@ -85,7 +85,6 @@ export const ar: Dictionary = {
       },
     },
   },
-  journey: { locker: 'غرفة الملابس', tunnel: 'النفق', pitch: 'الملعب' },
   showcase: {
     kicker: 'الشاشات',
     title: 'من داخل التطبيق',
