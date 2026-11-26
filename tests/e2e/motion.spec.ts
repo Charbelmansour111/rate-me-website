@@ -24,7 +24,9 @@ const hidden = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll('main *, footer *')]
       .filter(
-        (el) => !el.closest('svg, .walk, .walk-still') && Number(getComputedStyle(el).opacity) < 1,
+        (el) =>
+          !el.closest('svg, .walk, .walk-still, [aria-hidden="true"]') &&
+          Number(getComputedStyle(el).opacity) < 1,
       )
       .map((el) => el.outerHTML.slice(0, 100)),
   );
@@ -128,6 +130,14 @@ test('reduced motion: the finished frame, no pinning, no animation', async ({ pa
     await expect(still).toHaveCSS('background-image', /journey/);
   }
   await expect(page.locator('[data-play-pause]')).toBeHidden();
+  // No smooth scrolling, and no GSAP: the wheel scrolls as the system does
+  await page.mouse.move(600, 400);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(500);
+  await expect(page.locator('html')).not.toHaveClass(/(^|\s)lenis(\s|$)/);
+  expect(
+    await page.evaluate(() => performance.getEntriesByType('resource').length),
+  ).toBeGreaterThan(0);
   expect(
     await page.evaluate(
       () => document.getAnimations().filter((a) => a.playState === 'running').length,
@@ -203,6 +213,41 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
   });
   expect(size.full).toBe(true);
   expect(size.ratio).toBeLessThanOrEqual(2.01);
+});
+
+test('the walk: under smooth scrolling the frame still follows the page', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'smooth scrolling is for the mouse wheel; touch scrolls natively');
+  const sequence = sequenceFor(isMobile);
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  await page.mouse.move(600, 400);
+  await page.mouse.move(610, 410);
+  await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
+  const y = () => page.evaluate(() => scrollY);
+  // One notch glides: part of the way after a moment, all of it later
+  await page.mouse.wheel(0, 800);
+  await page.waitForTimeout(60);
+  const early = await y();
+  await expect.poll(y).toBeGreaterThan(early + 100);
+  for (let i = 0; i < 10; i++) {
+    await page.mouse.wheel(0, 700);
+    await page.waitForTimeout(40);
+  }
+  // Settled: the frame is the one for where the page is
+  let last = -1;
+  await expect.poll(async () => [last, (last = await y())][0] === last).toBe(true);
+  const progress = await page.evaluate(() => {
+    const main = document.querySelector('main')!;
+    return scrollY / (main.offsetTop + main.offsetHeight - innerHeight);
+  });
+  expect(progress).toBeGreaterThan(0.1);
+  await expect(page.locator('[data-walk]')).toHaveAttribute(
+    'data-frame',
+    String(frameAt(sequence, progress)),
+  );
 });
 
 test('the walk: open gaps carry the label of the scene', async ({ page }) => {

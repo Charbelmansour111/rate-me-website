@@ -5,6 +5,18 @@
 
 /* Longhands on purpose: the CSS minifier turns an animation shorthand without a name into none. */
 
+/* --- Smooth scrolling (src/motion/smooth.ts), from lenis/dist/lenis.css --- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 /* --- Tactics showcase --- */
 .tactics-pin {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
