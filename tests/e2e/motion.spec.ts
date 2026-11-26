@@ -141,9 +141,16 @@ test('reduced motion: the finished frame, no pinning, no animation', async ({ pa
   await page.mouse.wheel(0, 600);
   await page.waitForTimeout(500);
   await expect(page.locator('html')).not.toHaveClass(/(^|\s)lenis(\s|$)/);
+  // Nothing plays by itself. The header's progress line is moved by the scroll itself (a CSS
+  // scroll timeline): it shows where you are, it does not animate.
   expect(
     await page.evaluate(
-      () => document.getAnimations().filter((a) => a.playState === 'running').length,
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (a) => a.playState === 'running' && a.timeline?.constructor.name !== 'ScrollTimeline',
+          ).length,
     ),
   ).toBe(0);
 });
@@ -233,7 +240,10 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   // Every frame in, so the neighbours are the next ones
   await expect
-    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')))
+    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')), {
+      // Loaded 12 at a time in quiet moments: a long set takes a while
+      timeout: 30_000,
+    })
     .toBe(sequence.count);
   // Fetched and decoded in a worker: the page itself fetched no frame after the first paint
   expect(page.workers().length).toBeGreaterThan(0);
@@ -258,7 +268,18 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
     },
     [at, sequence.count],
   );
-  await expect(walk).toHaveAttribute('data-blend', /^10 11 0\.(4[6-9]|5[0-4])\d$/);
+  // Half way between 10 and 11 (to the scroll's whole pixels): both drawn, faded by the config's
+  // window round the midpoint
+  await expect(walk).toHaveAttribute('data-blend', /^10 11 0\.\d{3}$/);
+  const { exact, alpha } = await walk.evaluate((el) => ({
+    exact: Number((el as HTMLElement).dataset.at),
+    alpha: Number((el as HTMLElement).dataset.blend!.split(' ')[2]),
+  }));
+  const w = fadeWindow(sequence.count);
+  const expected = Math.min(1, Math.max(0, (exact - 10 - (0.5 - w)) / (2 * w)));
+  expect(alpha).toBeCloseTo(expected, 2);
+  expect(alpha).toBeGreaterThan(0.2);
+  expect(alpha).toBeLessThan(0.8);
   // A whole frame shows alone
   await page.evaluate(
     ([frame, count]) => {
@@ -620,13 +641,11 @@ test('cards: a light and a lean follow the mouse; touch screens only get the rev
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   const why = page.locator('#why-title + ul [data-spotlight]');
-  const features = page.locator('#features [data-spotlight]');
   await expect(why).toHaveCount(3);
-  await expect(features).toHaveCount(7);
-  // Each feature has a picture slot, the same shape whether it holds a picture or not
-  for (const art of await page.locator('#features .feature-art').all()) {
+  // Every feature card has its photo in the same shape (the carousel: tests/e2e/chrome.spec.ts)
+  for (const art of await page.locator('#features .feature-photo').all()) {
     const box = (await art.boundingBox())!;
-    expect(box.width / box.height).toBeCloseTo(1.6, 1);
+    expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
   }
   const card = why.nth(1);
   await card.scrollIntoViewIfNeeded();
@@ -724,7 +743,7 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
     for (const view of ['coach', 'player']) {
       const phones = page.locator(`#view-${view} .phone`);
       await expect(phones.locator('img')).toHaveCount(await phones.count());
-      await expect(phones.locator('svg')).toHaveCount(0);
+      await expect(phones.locator('.phone-sketch')).toHaveCount(0);
     }
     await expect(page.locator('#view-player .player-card')).toHaveCount(1);
     const roles = page.locator('.phone img[src*="coach-whiteboard-roles.png"]');
@@ -856,7 +875,7 @@ test('inside the app: the player card, as the app draws it, leaning like the pho
   // Inside React Bits' TiltedCard, with a ring, a position badge, six bars and a stock photo
   await expect(card.locator('xpath=ancestor::*[@data-tilt]')).toHaveCount(1);
   await expect(card.locator('.player-card-ring circle')).toHaveCount(2);
-  await expect(card.locator('.player-card-position')).toHaveCount(1);
+  await expect(card.locator('.player-card-badge')).toHaveCount(1);
   await expect(card.locator('.player-card-bars li')).toHaveCount(6);
   await card.scrollIntoViewIfNeeded();
   await expect
@@ -975,11 +994,15 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
   await page.waitForTimeout(500);
   const at = isMobile ? 0 : 1;
   await expect(slides.nth(at)).toHaveAttribute('data-current');
-  const screen = await slides
+  // The screenshot keeps its own shape under the status bar
+  const shot = await slides
     .first()
-    .locator('.phone-screen')
-    .evaluate((el) => (el as HTMLElement).offsetHeight / (el as HTMLElement).offsetWidth);
-  expect(screen).toBeCloseTo(19.5 / 9, 1);
+    .locator('.phone-shot img')
+    .evaluate((el) => {
+      const img = el as HTMLImageElement;
+      return { shown: img.offsetHeight / img.offsetWidth, own: 2532 / 1170 };
+    });
+  expect(shot.shown).toBeCloseTo(shot.own, 2);
   const width = (i: number) =>
     slides
       .nth(i)
@@ -1028,7 +1051,8 @@ for (const width of [360, 390, 430, 1440]) {
             .filter((el) => size(el).width < 43.5 || size(el).height < 43.5)
             .map((el) => el.outerHTML.slice(0, 120)),
           tiny: [...document.querySelectorAll('body *')]
-            .filter((el) => !el.closest('svg, script') && size(el).width > 1)
+            // The phones' clock and tab labels are part of the picture, like a screenshot's text
+            .filter((el) => !el.closest('svg, script, [aria-hidden="true"]') && size(el).width > 1)
             .filter((el) =>
               [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim()),
             )

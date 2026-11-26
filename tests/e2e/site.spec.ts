@@ -1,7 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { ARABIC_ENABLED } from '../../src/config/site';
+
+/** On a phone the language and theme are in the menu. */
+async function openMenu(page: Page, isMobile: boolean) {
+  if (isMobile) await page.locator('.bar-menu-button').click();
+}
 
 const ENGLISH = ['/', '/privacy', '/terms'];
 const ARABIC = ['/ar', '/ar/privacy', '/ar/terms'];
@@ -59,10 +64,11 @@ for (const path of PAGES) {
   });
 }
 
-test('the language switch keeps the page', async ({ page }) => {
+test('the language switch keeps the page', async ({ page, isMobile }) => {
   test.skip(!ARABIC_ENABLED);
   await page.goto('/privacy');
   await expect(page.locator('footer').getByRole('link', { name: 'عربي' })).toBeVisible();
+  await openMenu(page, isMobile);
   await page.locator('header').getByRole('link', { name: 'عربي' }).click();
   await expect(page).toHaveURL(/\/ar\/privacy$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
@@ -96,12 +102,13 @@ test('the nav underlines the section being read', async ({ page, isMobile }) => 
   await expect(nav.locator('[aria-current]')).toHaveText('FAQ');
 });
 
-test('light is the default, and the theme choice is remembered', async ({ page }) => {
+test('light is the default, and the theme choice is remembered', async ({ page, isMobile }) => {
   await page.goto('/');
   const html = page.locator('html');
   await expect(html).toHaveAttribute('data-theme', 'light');
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 252, 247)');
 
+  await openMenu(page, isMobile);
   await page.getByRole('button', { name: 'Use the dark theme' }).click();
   await page.reload();
   await expect(html).toHaveAttribute('data-theme', 'dark');
@@ -111,13 +118,14 @@ test('light is the default, and the theme choice is remembered', async ({ page }
   }
 });
 
-test('follows the system preference until the visitor chooses', async ({ page }) => {
+test('follows the system preference until the visitor chooses', async ({ page, isMobile }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
   const html = page.locator('html');
   await expect(html).toHaveAttribute('data-theme', 'dark');
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(html).toHaveAttribute('data-theme', 'light');
+  await openMenu(page, isMobile);
   await page.getByRole('button', { name: 'Use the dark theme' }).click();
   await page.reload();
   await expect(html).toHaveAttribute('data-theme', 'dark');
@@ -165,24 +173,22 @@ test('community: a strip of stock portraits, and a match request that says what 
   await expect(card).toContainText('Coming soon');
 });
 
-test('feature cards: photos where there are some, drawings for the rest', async ({ page }) => {
+test('feature cards: a photo on every card, the same shape, each saying what it shows', async ({
+  page,
+}) => {
   await page.goto('/');
-  const cards = page.locator('#features [data-spotlight]');
-  for (const [i, photo] of [true, true, true, true, true, true, false].entries()) {
-    const art = cards.nth(i).locator('.feature-art');
-    await art.scrollIntoViewIfNeeded();
-    if (photo) {
-      const img = art.locator('img');
-      // Each says what it shows
-      expect(((await img.getAttribute('alt')) ?? '').length).toBeGreaterThan(15);
-      await expect
-        .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
-        .toBeGreaterThan(0);
-    } else {
-      await expect(art.locator('[data-placeholder]')).toHaveCount(1);
-    }
+  const cards = page.locator('#features .feature-card');
+  await expect(cards).toHaveCount(7);
+  for (let i = 0; i < 7; i++) {
+    const art = cards.nth(i).locator('.feature-photo');
+    await art.evaluate((el) => el.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+    const img = art.locator('img');
+    expect(((await img.getAttribute('alt')) ?? '').length).toBeGreaterThan(15);
+    await expect
+      .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
     const box = (await art.boundingBox())!;
-    expect(box.width / box.height).toBeCloseTo(1.6, 1);
+    expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
   }
 });
 
@@ -193,11 +199,11 @@ for (const [path, title, question] of [
   test(`${path}: the parents' monthly report has its card and its answer`, async ({ page }) => {
     test.skip(path === '/ar' && !ARABIC_ENABLED);
     await page.goto(path);
-    const card = page.locator('#features [data-spotlight]').filter({ hasText: title });
+    const card = page.locator('#features .feature-card').filter({ hasText: title });
     await expect(card).toHaveCount(1);
-    // Released: no Coming soon tag; a picture slot like the others
+    // Released: no Coming soon tag; a photo like the others
     await expect(card).not.toContainText(/Coming soon|قريبًا/);
-    await expect(card.locator('.feature-art')).toHaveCount(1);
+    await expect(card.locator('.feature-photo img')).toHaveCount(1);
     await expect(card).toContainText('PDF');
     const button = page.locator('#faq').getByRole('button', { name: question });
     await button.click();
