@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { CSSProperties } from 'react';
 
 import { features } from '@/config/features.config';
@@ -75,6 +76,15 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   </li>
                 ))}
               </ol>
+              {/* A real board, from the dugout: the drawing on the right is the app's version */}
+              <Image
+                src="/features/whiteboard.webp"
+                alt={t.features.items.whiteboard.photo}
+                width={1200}
+                height={750}
+                sizes="15rem"
+                className="tactics-photo mt-8"
+              />
             </div>
             <div data-stage className="relative mx-auto w-full max-w-[46rem]">
               <p className="sr-only">{t.tactics.description}</p>

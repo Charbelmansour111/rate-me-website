@@ -89,6 +89,16 @@ html.lenis {
   border-radius: 50%;
   background: var(--soft);
 }
+/* On a phone, six in one row */
+@media (max-width: 39.99rem) {
+  .coach-photo {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+  .coach-photo:nth-child(n + 7) {
+    display: none;
+  }
+}
 .coach-photo + .coach-photo {
   margin-inline-start: -0.9rem;
 }
@@ -247,6 +257,19 @@ html:not([data-js]) .faq-panel > * {
 .tactics-caption {
   padding-inline-start: 1rem;
   border-inline-start: 3px solid var(--accent);
+}
+/* The photo of a real board, small beside the drawn one */
+.tactics-photo {
+  width: 15rem;
+  height: auto;
+  border-radius: 0.85rem;
+}
+/* Where the section is pinned (src/motion/tactics.ts) it must fit the screen: there the photo is
+   left out, and the Drill whiteboard card above shows it. */
+@media (min-width: 64rem) and (min-height: 44rem) {
+  .tactics-photo {
+    display: none;
+  }
 }
 /* Role buttons under the board (src/components/tactics-roles.tsx) */
 .tactics-try {

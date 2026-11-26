@@ -123,28 +123,32 @@ test('follows the system preference until the visitor chooses', async ({ page })
   await expect(html).toHaveAttribute('data-theme', 'dark');
 });
 
-test('community: room for four coach photos, and a match request that says what it is', async ({
+test('community: a strip of stock portraits, and a match request that says what it is', async ({
   page,
+  isMobile,
 }) => {
   await page.goto('/');
   const section = page.locator('#community');
   const photos = section.locator('.coach-photo');
-  await expect(photos).toHaveCount(4);
-  for (const photo of await photos.all()) {
+  await expect(photos).toHaveCount(8);
+  // Six in a row on a phone, all eight on a computer
+  const shown = section.locator('.coach-photo:visible');
+  await expect(shown).toHaveCount(isMobile ? 6 : 8);
+  for (const photo of await shown.all()) {
     const box = (await photo.boundingBox())!;
     expect(box.width).toBeCloseTo(box.height, 0);
     await expect(photo).toHaveCSS('border-radius', '50%');
   }
   // Placeholders say nothing to screen readers; real photos come in black and white
   await expect(section.locator('.coach-photo [data-placeholder]')).toHaveCount(
-    4 - (await section.locator('.coach-photo img').count()),
+    8 - (await section.locator('.coach-photo img').count()),
   );
   for (const img of await section.locator('.coach-photo img').all()) {
     await expect(img).toHaveCSS('filter', /grayscale\(1\)/);
   }
-  // Stock photos: they load, and nothing says who they are
-  await expect(section.locator('.coach-photo img')).toHaveCount(4);
-  for (const img of await section.locator('.coach-photo img').all()) {
+  // Stock photos: they load, and nothing says who they are (alt="": decorative, no names)
+  await expect(section.locator('.coach-photo img')).toHaveCount(8);
+  for (const img of await section.locator('.coach-photo:visible img').all()) {
     await expect(img).toHaveAttribute('alt', '');
     await img.scrollIntoViewIfNeeded();
     await expect
@@ -164,12 +168,13 @@ test('community: room for four coach photos, and a match request that says what 
 test('feature cards: photos where there are some, drawings for the rest', async ({ page }) => {
   await page.goto('/');
   const cards = page.locator('#features [data-spotlight]');
-  for (const [i, photo] of [true, true, false, false, false, false, false].entries()) {
+  for (const [i, photo] of [true, true, true, true, true, true, false].entries()) {
     const art = cards.nth(i).locator('.feature-art');
     await art.scrollIntoViewIfNeeded();
     if (photo) {
       const img = art.locator('img');
-      await expect(img).toHaveAttribute('alt', '');
+      // Each says what it shows
+      expect(((await img.getAttribute('alt')) ?? '').length).toBeGreaterThan(15);
       await expect
         .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
         .toBeGreaterThan(0);

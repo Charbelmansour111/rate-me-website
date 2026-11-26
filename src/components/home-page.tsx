@@ -19,6 +19,8 @@ import { TacticsSection } from './tactics-section';
 /** A walk from the locker room (top) to the pitch (end), with the sections as panels in front. */
 export function HomePage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
+  /** What each feature's photo shows, where it has one. */
+  const photos: Partial<Record<string, { title: string; photo?: string }>> = t.features.items;
   return (
     <>
       <SiteHeader locale={locale} path="/" />
@@ -134,7 +136,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   {features.map(({ id, released }) => (
                     <SpotlightCard key={id} as="li" className="flex flex-col p-3">
                       <div className="relative">
-                        <FeatureArt id={id} />
+                        <FeatureArt id={id} alt={photos[id]?.photo} />
                         {!released && (
                           <span className="absolute end-3 top-3 rounded-full border-[1.5px] border-accent bg-page px-3 py-0.5 text-sm font-semibold text-accent-text">
                             {t.features.soon}

@@ -65,26 +65,32 @@ export const en = {
     items: {
       calendar: {
         title: 'Calendar and events',
+        photo: 'Yellow training cones in a line on the grass',
         text: 'Trainings, matches, trips and team days, with attendance for each one.',
       },
       whiteboard: {
         title: 'Drill whiteboard',
+        photo: 'A tactics board with red and blue magnets, propped up in a dugout',
         text: 'Draw and animate drills. Smart defenders react to the ball, so you see how it could unfold.',
       },
       squad: {
         title: 'Squad and player cards',
+        photo: 'A coach crouching on the touchline, explaining something to his players',
         text: 'Kit numbers, positions and a card for each player, shared only when the coach decides.',
       },
       parentReport: {
         title: 'Monthly report for parents',
+        photo: 'People watching a match from behind the fence',
         text: 'At the end of each month, parents of youth players receive a PDF of their child’s progress: attendance, the coach’s ratings and the coach’s notes.',
       },
       matchRequests: {
         title: 'Match requests',
+        photo: 'A ball on the line of an empty pitch, a goal in the distance',
         text: 'Find a friendly by sending a request to other clubs, and answer the ones you receive.',
       },
       tournaments: {
         title: 'Tournaments',
+        photo: 'The corner of a goal net against a blue sky',
         text: 'Create a tournament, take registrations and follow the fixtures.',
       },
       assistant: {

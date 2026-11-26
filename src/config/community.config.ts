@@ -1,5 +1,5 @@
 /**
- * The coaches pictured in the community section, three or four. Each photo is
+ * The people pictured in the community section: a strip of up to eight. Each photo is
  * public/community/<photo>.webp (or .jpg, .png), square, at least 256 x 256; it shows in black and
  * white. Until a file is there a drawn silhouette holds its place.
  *
@@ -14,4 +14,8 @@ export const coaches: { photo: string; name: string }[] = [
   { photo: 'coach-2', name: '' },
   { photo: 'coach-3', name: '' },
   { photo: 'coach-4', name: '' },
+  { photo: 'coach-5', name: '' },
+  { photo: 'coach-6', name: '' },
+  { photo: 'coach-7', name: '' },
+  { photo: 'coach-8', name: '' },
 ];

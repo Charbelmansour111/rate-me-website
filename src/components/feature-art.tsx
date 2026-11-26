@@ -8,16 +8,16 @@ import { FeatureIcon } from './feature-icon';
 /**
  * The picture at the top of a feature card: public/features/<id>.webp (or .jpg, .png) once it is
  * there, 1600 x 1000 or the same shape. Until then a drawn placeholder holds the space, so
- * swapping in the image moves nothing. Decorative: the card's title says what it is.
+ * swapping in the image moves nothing. `alt` says what the photo shows (src/i18n features.items).
  */
-export function FeatureArt({ id }: { id: FeatureId }) {
+export function FeatureArt({ id, alt = '' }: { id: FeatureId; alt?: string }) {
   const src = publicFile('features', id);
   return (
     <div className="feature-art">
       {src ? (
         <Image
           src={src}
-          alt=""
+          alt={alt}
           fill
           sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 90vw"
           className="object-cover"
