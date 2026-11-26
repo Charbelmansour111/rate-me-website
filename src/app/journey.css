@@ -76,21 +76,36 @@
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
 }
 /* --- Inside the app --- */
+/* Coach view | Player view: big pills, 16px+ text, 48px tall. */
 .showcase-tabs {
+  position: relative; /* the gliding pill (src/motion/tabs.ts) is placed within it */
   display: inline-flex;
   padding: 4px;
   border: 1.5px solid var(--edge);
   border-radius: 999px;
 }
 .showcase-tabs button {
-  min-height: 2.75rem;
-  padding: 0.3rem 1.3rem;
+  position: relative;
+  min-height: 3rem;
+  padding: 0.4rem 1.6rem;
   border-radius: 999px;
+  font-size: 1.0625rem;
   font-weight: 600;
 }
 .showcase-tabs [aria-selected='true'] {
   background: var(--button);
   color: var(--on-button);
+}
+/* With motion, one pill glides under the chosen tab instead. */
+.showcase-tabs[data-gliding] [aria-selected='true'] {
+  background: transparent;
+}
+.tab-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--button);
 }
 .showcase-tabs button:focus-visible {
   border-radius: 999px;
@@ -98,13 +113,17 @@
 [data-js] .showcase-view[data-active='false'] {
   display: none;
 }
+
+/* The phones: one big one at a time on a phone (swipe, it snaps), three side by side on a computer,
+   each about 300px wide there. --phone is a phone's width; a slide is a little wider. */
 .showcase-track {
-  --slide: 14.5rem;
+  --phone: min(66vw, 18rem);
+  --slide: calc(var(--phone) + 0.75rem);
   display: flex;
   gap: 0.75rem;
   /* Out to the edges of the panel, so the next screen peeks in */
   margin-inline: calc(-1 * clamp(1.5rem, 4vw, 3.5rem));
-  padding-block: 1.5rem 0.5rem;
+  padding-block: 2rem 0.5rem;
   padding-inline: calc(50% - var(--slide) / 2);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -122,31 +141,87 @@
   width: var(--slide);
   flex-shrink: 0;
   scroll-snap-align: center;
+  scroll-snap-stop: always;
 }
 @media (min-width: 40rem) {
   .showcase-track {
-    --slide: 17.5rem;
+    --phone: 17rem;
     gap: 1.25rem;
   }
 }
 /* Three side by side, the middle one in front. */
 @media (min-width: 64rem) {
   .showcase-track {
+    --phone: clamp(15.5rem, 20.5vw, 18.75rem);
+    --slide: var(--phone);
     justify-content: center;
     gap: clamp(1.5rem, 4vw, 3.5rem);
     margin-inline: 0;
-    padding-block: 2.5rem 1rem;
+    padding-block: 3rem 1rem;
     padding-inline: 0;
     overflow: visible;
   }
+}
+
+.showcase-figure {
+  position: relative;
+  isolation: isolate; /* the glow stays behind the phone and its caption, on the panel */
+}
+/* A soft orange light behind each phone: a gradient, no blur, nothing to repaint as it moves. */
+.phone-glow {
+  position: absolute;
+  z-index: -1;
+  /* An ellipse round the phone, reaching out past its sides */
+  inset: -8% -45% 12%;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 90 0 / 0.5),
+    rgb(255 90 0 / 0.3) 55%,
+    rgb(255 90 0 / 0.1) 80%,
+    rgb(255 90 0 / 0) 100%
+  );
+  pointer-events: none;
+}
+.phone-glow[data-strong] {
+  background: radial-gradient(
+    closest-side,
+    rgb(255 90 0 / 0.65),
+    rgb(255 90 0 / 0.42) 55%,
+    rgb(255 90 0 / 0.14) 80%,
+    rgb(255 90 0 / 0) 100%
+  );
+}
+
+/* React Bits TiltedCard (src/components/react-bits): GSAP turns it and moves the glare. */
+.tilted-card {
+  --tc-gx: 50;
+  --tc-gy: 50;
+  --tc-glare: 0;
+  position: relative;
+  width: fit-content;
+  margin-inline: auto;
+  border-radius: 2rem;
+}
+.tilted-card-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    farthest-corner circle at calc(var(--tc-gx) * 1%) calc(var(--tc-gy) * 1%),
+    rgb(255 255 255 / calc(var(--tc-glare) * 0.34)) 0%,
+    rgb(255 255 255 / calc(var(--tc-glare) * 0.2)) 18%,
+    rgb(255 255 255 / calc(var(--tc-glare) * 0.06)) 36%,
+    rgb(255 255 255 / 0) 60%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 /* A phone: a thin dark rim, camera in the top of the bezel (the screenshots reach the very top).
    No blurred shadow: it would be repainted over the walk as the phones move. */
 .phone {
   position: relative;
-  width: 13.25rem;
-  margin-inline: auto;
+  width: var(--phone, 13.25rem);
   padding: 0.9rem 0.3rem 0.35rem;
   border-radius: 2rem;
   background: var(--bezel);
@@ -163,10 +238,6 @@
   background: radial-gradient(circle at 85% 50%, var(--bezel-rim) 2px, #000 2.5px);
   transform: translateX(-50%);
 }
-.phone[data-highlight] {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
 .phone-screen {
   aspect-ratio: 9 / 19.5;
   overflow: hidden;
@@ -176,24 +247,13 @@
 .phone {
   transform: scale(0.93);
 }
-[data-current] > * > .phone,
+[data-current] > * > * > .phone,
 html:not([data-js]) .phone {
   transform: none;
-}
-@media (min-width: 40rem) {
-  .phone {
-    width: 15.5rem;
-  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .phone {
     transition: transform 250ms ease-out;
-  }
-  @media (hover: hover) and (pointer: fine) and (min-width: 64rem) {
-    [data-js] [data-current] > * > .phone {
-      transform: perspective(900px) rotateX(calc(var(--lean-y, 0) * -4deg))
-        rotateY(calc(var(--lean-x, 0) * 5deg));
-    }
   }
 }
 /* On phones the neighbours only peek in: no cut-off words under them. */

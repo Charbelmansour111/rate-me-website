@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import type { Dictionary } from '@/i18n';
+
+import { TiltedCard } from './react-bits/tilted-card';
 
 export type Slide = {
   id: string;
@@ -38,7 +40,14 @@ export function ShowcaseTabs({ views, t }: { views: View[]; t: Controls }) {
 
   return (
     <>
-      <div role="tablist" aria-label={t.views} className="showcase-tabs mt-8" onKeyDown={onKey}>
+      {/* The chosen pill glides between them, and each leans to the mouse (src/motion). */}
+      <div
+        role="tablist"
+        aria-label={t.views}
+        data-glide
+        className="showcase-tabs mt-8"
+        onKeyDown={onKey}
+      >
         {views.map((view, i) => (
           <button
             key={view.id}
@@ -46,6 +55,7 @@ export function ShowcaseTabs({ views, t }: { views: View[]; t: Controls }) {
               tabs.current[i] = el;
             }}
             type="button"
+            data-magnet
             role="tab"
             id={`tab-${view.id}`}
             aria-controls={`view-${view.id}`}
@@ -110,22 +120,6 @@ function Carousel({ view, t }: { view: View; t: Controls }) {
     event.preventDefault();
     show(current + (rtl ? -step : step));
   }
-  /** The screen in front leans a little towards the mouse. CSS decides whether it shows. */
-  function tilt(event: PointerEvent) {
-    if (event.pointerType !== 'mouse') return;
-    const phone = track.current!.children[current].querySelector<HTMLElement>('.phone')!;
-    const box = phone.getBoundingClientRect();
-    const part = (at: number, start: number, size: number) =>
-      Math.max(-1, Math.min(1, ((at - start) / size) * 2 - 1));
-    phone.style.setProperty('--lean-x', String(part(event.clientX, box.left, box.width)));
-    phone.style.setProperty('--lean-y', String(part(event.clientY, box.top, box.height)));
-  }
-  function untilt() {
-    for (const phone of track.current!.querySelectorAll<HTMLElement>('.phone')) {
-      phone.style.removeProperty('--lean-x');
-      phone.style.removeProperty('--lean-y');
-    }
-  }
   const arrow = (direction: 1 | -1, label: string) => (
     <button
       type="button"
@@ -156,45 +150,49 @@ function Carousel({ view, t }: { view: View; t: Controls }) {
         tabIndex={0}
         aria-label={t.slides}
         onKeyDown={onKey}
-        onPointerMove={tilt}
-        onPointerLeave={untilt}
         className="showcase-track mt-6"
       >
         {view.slides.map((slide, i) => (
           <li key={slide.id} className="showcase-slide" data-current={i === current || undefined}>
-            <figure data-parallax>
-              <div className="phone" data-highlight={slide.highlight || undefined}>
-                <div className="phone-screen">
-                  {slide.src ? (
-                    <Image
-                      src={slide.src}
-                      alt={slide.alt ?? slide.title}
-                      width={234}
-                      height={507}
-                      sizes="234px"
-                      className="size-full object-cover"
-                    />
-                  ) : (
-                    <svg
-                      viewBox="0 20 220 440"
-                      className="size-full bg-soft"
-                      fill="none"
-                      stroke="var(--edge)"
-                      strokeWidth="1.5"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d={slide.sketch!}
-                        stroke={slide.highlight ? 'var(--accent)' : undefined}
+            <figure data-parallax className="showcase-figure">
+              {/* A soft orange light behind it, so it floats off the panel */}
+              <span
+                className="phone-glow"
+                data-strong={slide.highlight || undefined}
+                aria-hidden="true"
+              />
+              <TiltedCard className="phone-tilt">
+                <div className="phone" data-highlight={slide.highlight || undefined}>
+                  <div className="phone-screen">
+                    {slide.src ? (
+                      <Image
+                        src={slide.src}
+                        alt={slide.alt ?? slide.title}
+                        width={288}
+                        height={624}
+                        sizes="(min-width: 64rem) 288px, 256px"
+                        className="size-full object-cover"
                       />
-                    </svg>
-                  )}
+                    ) : (
+                      <svg
+                        viewBox="0 20 220 440"
+                        className="size-full bg-soft"
+                        fill="none"
+                        stroke="var(--edge)"
+                        strokeWidth="1.5"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d={slide.sketch!}
+                          stroke={slide.highlight ? 'var(--accent)' : undefined}
+                        />
+                      </svg>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <figcaption className="mx-auto mt-4 max-w-64 text-center">
-                <span className={slide.highlight ? 'text-lg font-semibold' : 'font-semibold'}>
-                  {slide.title}
-                </span>
+              </TiltedCard>
+              <figcaption className="mx-auto mt-5 max-w-72 text-center">
+                <span className="text-lg font-semibold">{slide.title}</span>
                 {slide.soon && (
                   <span className="mt-1 block">
                     <span className="rounded-full border-[1.5px] border-accent bg-tint px-3 py-0.5 text-sm font-semibold text-accent-text">
@@ -202,7 +200,7 @@ function Carousel({ view, t }: { view: View; t: Controls }) {
                     </span>
                   </span>
                 )}
-                <span className="mt-1 block text-sm text-muted">{slide.text}</span>
+                <span className="mt-1 block text-base text-muted">{slide.text}</span>
               </figcaption>
             </figure>
           </li>

@@ -1,9 +1,13 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import { startMagnets } from '@/components/react-bits/magnet.motion';
+import { startTilts } from '@/components/react-bits/tilted-card.motion';
+
 import { startCardReveals, startParallax, startSpotlights } from './cards';
 import { startReveals } from './reveal';
 import { startSmooth } from './smooth';
+import { startTabGlide } from './tabs';
 import type { Walk } from './walk';
 import { scrubWalk } from './walk-scroll';
 
@@ -24,6 +28,9 @@ export function startRich(signal: AbortSignal) {
   const context = gsap.context(() => {
     startSpotlights(signal);
     startCardReveals(signal);
+    startTilts(signal);
+    startMagnets(signal);
+    startTabGlide(signal);
   });
   const parallax = startParallax();
   // Opening an answer or a form step moves everything below it. Not on the first call, which only

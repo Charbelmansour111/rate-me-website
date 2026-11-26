@@ -672,6 +672,61 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
   });
 }
 
+test('inside the app: big phones with a glow, big tabs, and the pill glides', async ({
+  page,
+  isMobile,
+}) => {
+  // The widths the brief names: a 1440px computer, a 390px phone
+  await page.setViewportSize(isMobile ? { width: 390, height: 844 } : { width: 1440, height: 900 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const view = page.locator('#view-coach');
+  await view.scrollIntoViewIfNeeded();
+  const phones = view.locator('.phone');
+  const widths = await phones.evaluateAll((els) =>
+    els.map((el) => el.getBoundingClientRect().width),
+  );
+  const screen = page.viewportSize()!.width;
+  if (isMobile) {
+    // One big phone at a time, the next one peeking in
+    expect(Math.max(...widths)).toBeGreaterThan(screen * 0.6);
+  } else {
+    // About 300px each, three side by side
+    expect(Math.max(...widths)).toBeGreaterThanOrEqual(280);
+    expect(Math.max(...widths)).toBeLessThanOrEqual(310);
+    const boxes = await phones.evaluateAll((els) => els.map((el) => el.getBoundingClientRect()));
+    for (const box of boxes) expect(box.right).toBeLessThanOrEqual(screen);
+  }
+  // A soft glow behind each, no hard border
+  await expect(view.locator('.phone-glow')).toHaveCount(3);
+  for (const phone of await phones.all()) await expect(phone).toHaveCSS('outline-style', 'none');
+  // Tabs: 44px tall at least, 16px text; captions 16px and up
+  const tabs = page.locator('#inside [role="tab"]');
+  for (const tab of await tabs.all()) {
+    expect((await tab.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    expect(
+      parseFloat(await tab.evaluate((el) => getComputedStyle(el).fontSize)),
+    ).toBeGreaterThanOrEqual(16);
+  }
+  const title = view.locator('figcaption .text-lg').first();
+  expect(
+    parseFloat(await title.evaluate((el) => getComputedStyle(el).fontSize)),
+  ).toBeGreaterThanOrEqual(18);
+  const text = view.locator('figcaption .text-muted').first();
+  expect(
+    parseFloat(await text.evaluate((el) => getComputedStyle(el).fontSize)),
+  ).toBeGreaterThanOrEqual(16);
+  // With GSAP in, one pill glides to the chosen tab
+  if (isMobile) await page.touchscreen.tap(5, 300);
+  else await page.mouse.move(5, 5);
+  const pill = page.locator('#inside .tab-pill');
+  await expect(pill).toHaveCount(1);
+  const left = () => pill.evaluate((el) => el.getBoundingClientRect().left);
+  const tab = (i: number) => tabs.nth(i).evaluate((el) => el.getBoundingClientRect().left);
+  await expect.poll(left).toBeCloseTo(await tab(0), 0);
+  await tabs.nth(1).click();
+  await expect.poll(left).toBeCloseTo(await tab(1), 0);
+});
+
 test('inside the app: the phones beside the middle one float with the scroll', async ({
   page,
   isMobile,
@@ -734,15 +789,19 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
     expect(page.viewportSize()!.width - 20 - next.x).toBeGreaterThan(16);
   }
 
-  const transform = () =>
-    slides
-      .nth(at)
-      .locator('.phone')
-      .evaluate((el) => getComputedStyle(el).transform);
+  // React Bits TiltedCard, on GSAP: it turns towards the mouse, and a glare follows
+  const tilt = slides.nth(at).locator('[data-tilt]');
+  const transform = () => tilt.evaluate((el) => getComputedStyle(el).transform);
   if (isMobile) return;
-  const box = (await slides.nth(at).locator('.phone').boundingBox())!;
-  await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.5);
+  await page.mouse.move(5, 5);
+  await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
+  const box = (await tilt.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.5, { steps: 4 });
   await expect.poll(transform).toContain('matrix3d');
+  await expect
+    .poll(() => tilt.evaluate((el) => Number(getComputedStyle(el).getPropertyValue('--tc-glare'))))
+    .toBeGreaterThan(0.3);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect.poll(transform).toBe('none');
 });
