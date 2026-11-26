@@ -6,7 +6,7 @@
 export type Sequence = { path: string; count: number; ext: string; pad: number };
 export type Shape = 'landscape' | 'portrait';
 export const journey: Record<Shape, Sequence> = {
-  landscape: { path: '/journey/seq/f', count: 191, ext: 'webp', pad: 3 },
+  landscape: { path: '/journey/seq/f', count: 381, ext: 'webp', pad: 3 },
   portrait: { path: '/journey/portrait/f', count: 48, ext: 'webp', pad: 3 },
 };
 
