@@ -1,105 +1,106 @@
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
 /**
- * Scroll reveals. Content is visible at rest: an element is only hidden ("armed") during the last
- * bit of scrolling before it enters, and only by a paused animation. No JavaScript, a fast jump,
- * a crawler or a screen reader all find the page as it is.
+ * Scroll reveals, on ScrollTrigger. Content is visible at rest: an element is only hidden
+ * ("armed") during the last bit of scrolling before it enters, and is shown again if the page goes
+ * back up first. No JavaScript, a fast jump, a crawler or a screen reader all find the page as it
+ * is; what was on screen when this started is never hidden.
  */
 const ARM = 200;
-const STAGGER = 70;
-const EASE = 'cubic-bezier(0.2, 0.7, 0.2, 1)';
+const STAGGER = 0.07;
+/** Steps light up one after the other. */
+const STEP_GAP = 0.45;
+const EASE = 'power3.out';
+/** What a reveal touches, given back to the stylesheet when it is done. */
+const PROPS = 'opacity,transform,backgroundColor,color';
 
-const RISE: Keyframe[] = [{ opacity: 0, transform: 'translateY(20px)' }, {}];
-
-function build(el: HTMLElement | SVGElement, delay: number): Animation[] {
-  const make = (target: Element, frames: Keyframe[], duration: number, extra = 0, easing = EASE) =>
-    target.animate(frames, { duration, delay: delay + extra, easing, fill: 'backwards' });
-  const within = (selector: string) => [...el.querySelectorAll(selector)];
-
+function build(el: HTMLElement) {
+  const tl = gsap.timeline({ paused: true });
+  const within = (selector: string) => gsap.utils.toArray<Element>(selector, el);
   switch (el.dataset.reveal) {
-    case 'step':
-      return [
-        make(el.lastElementChild!, RISE, 500),
-        ...within('[data-number]').map((number) =>
-          make(number, [{ backgroundColor: 'transparent', color: 'var(--text)' }, {}], 400, 150),
-        ),
-        ...within('[data-connector]').map((line) =>
-          make(line, [{ transform: 'scaleY(0)' }, {}], 500, 350),
-        ),
-      ];
+    case 'step': {
+      const text = getComputedStyle(el).getPropertyValue('--text').trim();
+      tl.from(el.lastElementChild, { opacity: 0, y: 20, duration: 0.5, ease: EASE }, 0);
+      const numbers = within('[data-number]');
+      if (numbers.length) {
+        tl.from(numbers, { backgroundColor: 'transparent', color: text, duration: 0.4 }, 0.15);
+      }
+      const lines = within('[data-connector]');
+      if (lines.length) tl.from(lines, { scaleY: 0, duration: 0.5, ease: EASE }, 0.35);
+      break;
+    }
     case 'fade':
-      return [make(el, [{ opacity: 0, transform: 'translateY(8px)' }, {}], 300)];
-    default:
-      return [
-        make(el, RISE, 600),
-        ...within('[data-pop]').map((pop) =>
-          make(pop, [{ transform: 'scale(0.4)' }, {}], 600, 120, 'cubic-bezier(0.3, 1.6, 0.5, 1)'),
-        ),
-      ];
+      tl.from(el, { opacity: 0, y: 8, duration: 0.3, ease: EASE });
+      break;
+    default: {
+      tl.from(el, { opacity: 0, y: 20, duration: 0.6, ease: EASE });
+      const pops = within('[data-pop]');
+      if (pops.length) tl.from(pops, { scale: 0.4, duration: 0.6, ease: 'back.out(3)' }, 0.12);
+    }
   }
+  return tl;
 }
 
 export function startReveals(signal: AbortSignal) {
-  const armed = new Map<Element, Animation[]>();
+  const armed = new Map<HTMLElement, gsap.core.Timeline>();
   const done = new WeakSet<Element>();
+  const targets = (el: HTMLElement) => [
+    el,
+    ...el.querySelectorAll('[data-number], [data-connector], [data-pop]'),
+  ];
 
-  const arm = new IntersectionObserver(
-    (entries) => {
-      for (const { target, isIntersecting, boundingClientRect } of entries) {
-        if (done.has(target)) continue;
-        if (!isIntersecting) {
-          // Scrolled away again before it came in: visible at rest.
-          if (armed.has(target)) {
-            for (const animation of armed.get(target)!) animation.cancel();
-            armed.delete(target);
-          }
-        } else if (boundingClientRect.top >= innerHeight) {
-          const animations = build(target as HTMLElement, 0);
-          for (const animation of animations) animation.pause();
-          armed.set(target, animations);
-        } else {
-          // Already on screen: never hide something that is being looked at.
-          done.add(target);
-        }
-      }
-    },
-    { rootMargin: `0px 0px ${ARM}px 0px` },
-  );
-
-  const enter = new IntersectionObserver(
-    (entries) => {
-      let order = 0;
-      for (const { target, isIntersecting } of entries) {
-        const animations = armed.get(target);
-        if (!isIntersecting || !animations || done.has(target)) continue;
-        const index = order++;
-        for (const animation of animations) {
-          const { delay = 0 } = animation.effect!.getTiming();
-          // Steps light up one after the other, the rest comes in as a quick stagger.
-          const gap = (target as HTMLElement).dataset.reveal === 'step' ? 450 : STAGGER;
-          animation.effect!.updateTiming({ delay: delay + index * gap });
-          animation.play();
-        }
-        done.add(target);
-        armed.delete(target);
-        arm.unobserve(target);
-        enter.unobserve(target);
-      }
-    },
-    { rootMargin: '0px 0px -24px 0px' },
-  );
-
-  for (const el of document.querySelectorAll('[data-reveal]')) {
-    arm.observe(el);
-    enter.observe(el);
-  }
-
-  const release = () => {
-    for (const animations of armed.values()) for (const a of animations) a.cancel();
-    armed.clear();
+  /** Visible for good, as the stylesheet has it. */
+  const release = (el: HTMLElement) => {
+    armed.get(el)?.kill();
+    armed.delete(el);
+    gsap.set(targets(el), { clearProps: PROPS });
   };
-  addEventListener('beforeprint', release, { signal });
+
+  const waiting = gsap.utils
+    .toArray<HTMLElement>('[data-reveal]')
+    // Already on screen: never hide something that is being looked at.
+    .filter((el) => el.getBoundingClientRect().top >= innerHeight);
+
+  const triggers = waiting.map((el) =>
+    ScrollTrigger.create({
+      trigger: el,
+      start: `top bottom+=${ARM}`,
+      onEnter: () => {
+        if (done.has(el) || armed.has(el)) return;
+        armed.set(el, build(el));
+      },
+      // Back up before it came in: visible at rest.
+      onLeaveBack: () => {
+        if (!done.has(el)) release(el);
+      },
+    }),
+  );
+
+  const batches = ScrollTrigger.batch(waiting, {
+    start: 'top bottom-=24',
+    once: true,
+    onEnter: (entered) => {
+      // The rest comes in as a quick stagger, steps one after the other.
+      (entered as HTMLElement[]).forEach((el, index) => {
+        done.add(el);
+        const tl = armed.get(el);
+        if (!tl) return;
+        // Jumped past it: nothing to watch.
+        if (el.getBoundingClientRect().bottom < 0) return release(el);
+        const gap = el.dataset.reveal === 'step' ? STEP_GAP : STAGGER;
+        tl.eventCallback('onComplete', () => release(el));
+        gsap.delayedCall(index * gap, () => tl.play());
+      });
+    },
+  });
+
+  const showAll = () => {
+    for (const el of [...armed.keys()]) release(el);
+  };
+  addEventListener('beforeprint', showAll, { signal });
   signal.addEventListener('abort', () => {
-    arm.disconnect();
-    enter.disconnect();
-    release();
+    for (const trigger of [...triggers, ...batches]) trigger.kill();
+    showAll();
   });
 }

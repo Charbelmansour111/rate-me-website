@@ -1,5 +1,4 @@
 import { startHero } from './hero';
-import { startReveals } from './reveal';
 import { startTactics } from './tactics';
 import { startWalk } from './walk';
 
@@ -28,7 +27,6 @@ function whenStill(start: () => void, signal: AbortSignal) {
 }
 
 export function startMotion(signal: AbortSignal) {
-  startReveals(signal);
   const canvas = document.querySelector<HTMLCanvasElement>('[data-walk]');
   const walk = canvas ? startWalk(canvas, signal) : undefined;
   const hero = document.querySelector<HTMLElement>('[data-hero-drill]');
