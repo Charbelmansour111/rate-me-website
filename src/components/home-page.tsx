@@ -1,4 +1,4 @@
-import { features } from '@/config/features.config';
+import { features, type FeatureId } from '@/config/features.config';
 import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale } from '@/i18n';
 import { publicFile } from '@/lib/public-file';
@@ -7,6 +7,7 @@ import { turnstileSiteKey } from '@/lib/turnstile';
 import { CoachPhotos, MatchRequestCard } from './community-extras';
 import { FaqAccordion } from './faq-accordion';
 import { CtaSplit } from './cta-split';
+import { FeatureCardFace } from './feature-card-face';
 import { FeatureCarousel } from './feature-carousel';
 import { FeatureIcon } from './feature-icon';
 import { HeroDrill } from './hero-drill';
@@ -26,6 +27,15 @@ export function HomePage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   /** What each feature's photo shows, where it has one. */
   const photos: Partial<Record<string, { title: string; photo?: string }>> = t.features.items;
+  const cards = features.map(({ id, released }) => ({
+    id,
+    title: t.features.items[id].title,
+    benefit: t.features.items[id].benefit,
+    bullets: t.features.items[id].bullets,
+    alt: photos[id]?.photo ?? '',
+    src: publicFile('features', id),
+    soon: released ? null : t.features.soon,
+  }));
   return (
     <>
       <SiteHeader locale={locale} path="/" />
@@ -143,16 +153,15 @@ export function HomePage({ locale }: { locale: Locale }) {
                   </p>
                 </div>
                 <FeatureCarousel
-                  cards={features.map(({ id, released }) => ({
-                    id,
-                    title: t.features.items[id].title,
-                    benefit: t.features.items[id].benefit,
-                    bullets: t.features.items[id].bullets,
-                    alt: photos[id]?.photo ?? '',
-                    src: publicFile('features', id),
-                    icon: <FeatureIcon id={id} />,
-                    soon: released ? null : t.features.soon,
-                  }))}
+                  cards={cards}
+                  faces={cards.map((c) => (
+                    <FeatureCardFace
+                      key={c.id}
+                      c={c}
+                      icon={<FeatureIcon id={c.id as FeatureId} />}
+                      more={t.features.controls.more}
+                    />
+                  ))}
                   t={t.features.controls}
                   label={t.features.controls.label}
                   preRegister="#pre-register"

@@ -38,11 +38,6 @@
   :lang(ar) body {
     line-height: 1.8;
   }
-  /* No single word left alone on a paragraph's last line */
-  p,
-  li {
-    text-wrap: pretty;
-  }
   :focus-visible {
     outline: 3px solid var(--accent);
     outline-offset: 3px;

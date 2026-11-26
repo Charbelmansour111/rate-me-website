@@ -357,16 +357,6 @@
     translate 400ms ease-out,
     visibility 0s 400ms;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .scroll-cue svg {
-    animation: cue 1.8s ease-in-out 3;
-  }
-}
-@keyframes cue {
-  50% {
-    translate: 0 3px;
-  }
-}
 /* The language links carry their own padding: line their text up with the links above */
 .footer-language {
   margin-inline-start: -0.5rem;

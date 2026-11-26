@@ -14,8 +14,6 @@ import {
 import type { Dictionary } from '@/i18n';
 import { trapTab } from '@/lib/dialog';
 
-import { BoxCorner } from './pitch-lines';
-
 export type FeatureCard = {
   id: string;
   title: string;
@@ -24,8 +22,6 @@ export type FeatureCard = {
   /** What the photo shows. */
   alt: string;
   src: string | null;
-  /** The feature's line icon, drawn on the server. */
-  icon: ReactNode;
   soon: string | null;
 };
 type Controls = Dictionary['features']['controls'];
@@ -42,11 +38,14 @@ const fill = (text: string, values: Record<string, string | number>) =>
  */
 export function FeatureCarousel({
   cards,
+  faces,
   t,
   label,
   preRegister,
 }: {
   cards: FeatureCard[];
+  /** What each card shows, rendered on the server (src/components/feature-card-face.tsx). */
+  faces: ReactNode[];
   t: Controls;
   label: string;
   preRegister: string;
@@ -199,44 +198,7 @@ export function FeatureCarousel({
             {/* The card is a picture with words; a button over all of it opens it. Over it, not
                 round it: its name is the title, its description the line under it. */}
             <div className="feature-card look-paper">
-              <span className="feature-photo">
-                {card.src && (
-                  <Image
-                    src={card.src}
-                    alt={card.alt}
-                    fill
-                    sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 42vw, 62vw"
-                    className="object-cover"
-                    draggable={false}
-                  />
-                )}
-                <BoxCorner />
-                {card.soon && <span className="feature-soon">{card.soon}</span>}
-              </span>
-              <span className="feature-body">
-                <span className="feature-icon">{card.icon}</span>
-                <span id={`feature-${card.id}-title`} className="display h3 feature-title">
-                  {card.title}
-                </span>
-                <span id={`feature-${card.id}-benefit`} className="feature-benefit">
-                  {card.benefit}
-                </span>
-                <span className="feature-more">
-                  {t.more}
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="size-4 rtl:-scale-x-100"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </span>
-              </span>
+              {faces[i]}
               <button
                 ref={(el) => {
                   buttons.current[i] = el;

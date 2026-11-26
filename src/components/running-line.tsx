@@ -43,10 +43,20 @@ export function RunningLine() {
         nodes,
       });
     };
-    // It reports the first size at once, then every change
+    // Measured once the page is quiet, so it never adds to the load; then on every change. The
+    // observer reports the first size at once.
     const observer = new ResizeObserver(measure);
-    observer.observe(host);
-    return () => observer.disconnect();
+    const start = () => observer.observe(host);
+    // Safari has no idle callback
+    const hasIdle = typeof requestIdleCallback === 'function';
+    const idle = hasIdle
+      ? requestIdleCallback(start, { timeout: 2000 })
+      : window.setTimeout(start, 600);
+    return () => {
+      if (hasIdle) cancelIdleCallback(idle as number);
+      else clearTimeout(idle);
+      observer.disconnect();
+    };
   }, []);
 
   // Tell the motion code the line was measured again (src/motion/chrome.ts)
