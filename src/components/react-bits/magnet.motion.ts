@@ -3,7 +3,7 @@
  * License: ./LICENSE.md (MIT + Commons Clause).
  *
  * Changes for this site: no wrapper element (the tabs stay direct children of their tablist), and
- * GSAP's quickTo with an elastic ease stands in for React Bits' spring. As there: within `PADDING`
+ * GSAP's quickTo with a calm ease-out stands in for React Bits' spring (no bounce: DESIGN.md). As there: within `PADDING`
  * pixels of an element the mouse draws it in, by its distance over `STRENGTH`, at most `MAX` pixels.
  */
 import { gsap } from 'gsap';
@@ -15,7 +15,7 @@ const MAX = 6;
 export function startMagnets(signal: AbortSignal) {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   const magnets = [...document.querySelectorAll<HTMLElement>('[data-magnet]')].map((el) => {
-    const spring = { duration: 0.7, ease: 'elastic.out(1, 0.45)' };
+    const spring = { duration: 0.6, ease: 'power3.out' };
     return { el, x: gsap.quickTo(el, 'x', spring), y: gsap.quickTo(el, 'y', spring), on: false };
   });
   if (!magnets.length) return;

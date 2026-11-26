@@ -23,6 +23,15 @@ colors:
   panel-edge: '#857d70'
   danger-light: '#b3261e'
   danger-dark: '#ffb4ab'
+  phone-black: '#17171a'
+  phone-orange-rim: '#ffa36b'
+  phone-white: '#f3eee6'
+  phone-white-rim: '#d6cfc2'
+  card-from: '#1c1b29'
+  card-to: '#3a1606'
+  card-accent: '#ff7a1a'
+  card-label: '#e6dcd2'
+  position-midfielder: '#22c55e'
 typography:
   display:
     fontFamily: 'Bebas Neue, Barlow, sans-serif'
@@ -46,6 +55,18 @@ typography:
     fontSize: '1.0625rem'
     fontWeight: 400
     lineHeight: 1.8
+  text-sm:
+    fontFamily: 'Barlow, system-ui, sans-serif'
+    fontSize: '0.875rem'
+  text-base:
+    fontFamily: 'Barlow, system-ui, sans-serif'
+    fontSize: '1rem'
+  text-lg:
+    fontFamily: 'Barlow, system-ui, sans-serif'
+    fontSize: '1.125rem'
+  card-small:
+    fontFamily: 'Barlow, system-ui, sans-serif'
+    fontSize: '0.8125rem'
   kicker:
     fontFamily: 'Barlow, system-ui, sans-serif'
     fontSize: '0.9375rem'
@@ -54,6 +75,8 @@ typography:
 rounded:
   sm: '4px'
   button: '0.5rem'
+  art: '0.85rem'
+  inner: '1rem'
   card: '1.25rem'
   phone: '2rem'
   pill: '999px'
@@ -190,6 +213,12 @@ never colour alone.
 A sticky header (theme coloured) with the wordmark, three section links, the theme toggle, the
 language switch and the Pre-register button.
 
+### Inside the app
+
+Three phones a view, about 340px each at 1440: black, orange in the middle (strongest glow),
+white, by place. Each opens a dialog with what its screen does. The player view ends on the
+app's player card (its own colours above), marked as an example.
+
 ### The walk
 
 A canvas fixed behind the page, at the frames' own size and scaled by CSS. One frame shows at a
@@ -205,7 +234,8 @@ behind each group of sections.
   word by word, never letter by letter (Arabic letters join).
 - Hover motion is for mouse users only: the light on cards, the tilt and glare on phones (React
   Bits TiltedCard), the tabs drawn to the mouse (React Bits Magnet).
-- Durations 0.3 to 0.8s, easing `power3.out`; nothing loops off screen.
+- Durations 0.3 to 0.8s, easing `power3.out` or `cubic-bezier(0.2, 0.8, 0.2, 1)`: things settle,
+  they never bounce or overshoot. Nothing loops off screen.
 
 ## Do's and Don'ts
 

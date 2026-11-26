@@ -388,7 +388,8 @@ html:not([data-js]) .tactics-try + p {
       transition: color 300ms;
     }
     .tactics-drift {
-      --spring: cubic-bezier(0.3, 1.5, 0.5, 1);
+      /* Players settle without overshooting: calm, not bouncy */
+      --spring: cubic-bezier(0.2, 0.8, 0.2, 1);
       transition:
         transform 1100ms var(--spring),
         opacity 500ms;
@@ -398,7 +399,7 @@ html:not([data-js]) .tactics-try + p {
       transform-box: fill-box;
       transform-origin: center;
       transition:
-        transform 550ms cubic-bezier(0.34, 1.9, 0.5, 1),
+        transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1),
         opacity 200ms;
     }
     .tactics-cover,
@@ -426,22 +427,6 @@ html:not([data-js]) .tactics-try + p {
   }
   .tactics[data-paused] .tactics-pulse {
     animation-play-state: paused;
-  }
-  @supports (transition-timing-function: linear(0, 1)) {
-    .tactics[data-step] .tactics-drift {
-      --spring: linear(
-        0,
-        0.18 8%,
-        0.62 22%,
-        0.95 34%,
-        1.07 43%,
-        1.08 50%,
-        1.03 62%,
-        0.99 74%,
-        0.99 84%,
-        1
-      );
-    }
   }
   .tactics[data-step='ready'] .tactics-drift {
     transform: translate(var(--dx), var(--dy));

@@ -41,7 +41,7 @@ function build(el: HTMLElement): { tl: gsap.core.Timeline; undo?: () => void } {
       if (el.matches('h2')) return { tl, undo: riseWords(el, tl) };
       tl.from(el, { opacity: 0, y: 20, duration: 0.6, ease: EASE });
       const pops = within('[data-pop]');
-      if (pops.length) tl.from(pops, { scale: 0.4, duration: 0.6, ease: 'back.out(3)' }, 0.12);
+      if (pops.length) tl.from(pops, { scale: 0.4, duration: 0.6, ease: 'power3.out' }, 0.12);
     }
   }
   return { tl };
