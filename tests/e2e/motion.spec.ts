@@ -227,14 +227,18 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   // Every frame in, so the neighbours are the next ones
   await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          performance.getEntriesByType('resource').filter((r) => r.name.includes('/journey/'))
-            .length,
-      ),
-    )
-    .toBeGreaterThanOrEqual(sequence.count);
+    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')))
+    .toBe(sequence.count);
+  // Fetched and decoded in a worker: the page itself fetched no frame after the first paint
+  expect(page.workers().length).toBeGreaterThan(0);
+  expect(
+    await page.evaluate(
+      () =>
+        performance
+          .getEntriesByType('resource')
+          .filter((r) => r.name.includes('/journey/') && r.initiatorType === 'fetch').length,
+    ),
+  ).toBe(0);
   const at = 10.5;
   await page.evaluate(
     ([frame, count]) => {
@@ -266,14 +270,8 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          performance.getEntriesByType('resource').filter((r) => r.name.includes('/journey/'))
-            .length,
-      ),
-    )
-    .toBeGreaterThanOrEqual(sequence.count);
+    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')))
+    .toBe(sequence.count);
   // Each painted frame against the one before: how much of the picture changed (0 to 255)
   await page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-walk]')!;

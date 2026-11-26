@@ -55,23 +55,70 @@ export const damp = (from: number, to: number, ms: number, factor = DAMPING) =>
 /** A frame, decoded. */
 type Frame = { source: CanvasImageSource; width: number; height: number; close?: () => void };
 
-/** Fetches and decodes a frame off the main thread where the browser can: whole, or not at all. */
-async function decode(url: string): Promise<Frame> {
-  if ('createImageBitmap' in window) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const bitmap = await createImageBitmap(await response.blob());
-    return {
-      source: bitmap,
-      width: bitmap.width,
-      height: bitmap.height,
-      close: () => bitmap.close(),
-    };
-  }
+/** Decodes a frame on the page, where there is no worker: the browser still decodes off-thread. */
+async function decodeHere(url: string): Promise<Frame> {
   const image = new Image();
   image.src = url;
   await image.decode();
   return { source: image, width: image.naturalWidth, height: image.naturalHeight };
+}
+
+const fromBitmap = (bitmap: ImageBitmap): Frame => ({
+  source: bitmap,
+  width: bitmap.width,
+  height: bitmap.height,
+  close: () => bitmap.close(),
+});
+
+/**
+ * Fetches and decodes frames in a worker (src/motion/frames.worker.ts): the page only receives
+ * whole bitmaps. Without workers or createImageBitmap, or if the worker cannot start, the frames
+ * are decoded here instead.
+ */
+function frameDecoder() {
+  const waiting = new Map<
+    number,
+    { url: string; resolve: (frame: Frame) => void; reject: () => void }
+  >();
+  let worker: Worker | undefined;
+  let next = 0;
+  try {
+    if ('createImageBitmap' in window && 'Worker' in window) {
+      worker = new Worker(new URL('./frames.worker.ts', import.meta.url), { type: 'module' });
+    }
+  } catch {
+    worker = undefined;
+  }
+  worker?.addEventListener(
+    'message',
+    ({ data }: MessageEvent<{ id: number; bitmap?: ImageBitmap }>) => {
+      const job = waiting.get(data.id);
+      waiting.delete(data.id);
+      if (!job) return data.bitmap?.close();
+      if (data.bitmap) job.resolve(fromBitmap(data.bitmap));
+      else job.reject();
+    },
+  );
+  worker?.addEventListener('error', () => {
+    worker?.terminate();
+    worker = undefined;
+    for (const { url, resolve, reject } of waiting.values()) decodeHere(url).then(resolve, reject);
+    waiting.clear();
+  });
+  return {
+    decode(url: string): Promise<Frame> {
+      if (!worker) return decodeHere(url);
+      const id = next++;
+      return new Promise((resolve, reject) => {
+        waiting.set(id, { url, resolve, reject });
+        worker!.postMessage({ id, url });
+      });
+    },
+    stop() {
+      worker?.terminate();
+      waiting.clear();
+    },
+  };
 }
 
 /** Which sequence a screen gets. */
@@ -105,6 +152,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   let position = 0;
   let raf = 0;
   let last = 0;
+  const decoder = frameDecoder();
 
   const progress = () => Math.min(1, Math.max(0, scrollY / range));
 
@@ -175,12 +223,13 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
     from.waiting.delete(i);
     let frame: Frame;
     try {
-      frame = await decode(frameUrl(from.sequence, i));
+      frame = await decoder.decode(frameUrl(from.sequence, i));
     } catch {
       return; // The frames either side stand in.
     }
     if (signal.aborted) return frame.close?.();
     from.images.set(i, frame);
+    canvas.dataset.loaded = String(from.images.size);
     if (from !== reel) return;
     if (from.images.size === 1) measure();
     // It may be one of the two on show now.
@@ -254,6 +303,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal) {
   signal.addEventListener('abort', () => {
     cancelAnimationFrame(raf);
     resized.disconnect();
+    decoder.stop();
+    delete canvas.dataset.loaded;
     gaps.disconnect();
     delete root.dataset.journey;
     delete root.dataset.scene;
