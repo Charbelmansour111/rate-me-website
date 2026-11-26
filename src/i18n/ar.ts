@@ -264,7 +264,7 @@ export const ar: Dictionary = {
       roleRequired: 'اختر دورك.',
       cityRequired: 'اكتب مدينتك.',
       textInvalid: 'اختصر النص، ومن دون روابط أو علامتَي < >.',
-      consentRequired: 'فعّل هذا الخيار لنتمكّن من التواصل معك.',
+      consentRequired: 'ضع علامة في هذا المربع لنتمكّن من التواصل معك.',
     },
     formErrors: {
       invalid: 'بعض الحقول تحتاج إلى مراجعة.',

@@ -87,6 +87,34 @@ test('shows inline errors, focuses the first one and clears them when fixed', as
   expect(sent).toBe(false);
 });
 
+test('the 18+ consent is a small checkbox: labelled, required, with a visible focus ring', async ({
+  page,
+}) => {
+  await page.goto('/');
+  // Phones show it on the second step
+  await page.locator('#f-name').fill('Rami Haddad');
+  await page.locator('#f-email').fill('rami@club-beirut.com');
+  await page.locator('.role-chip').first().click();
+  await next(page);
+  const box = page.getByRole('checkbox', { name: /18 or older/ });
+  await expect(box).toHaveAttribute('id', 'f-consent');
+  await expect(box).toHaveAttribute('required');
+  await expect(box).not.toBeChecked();
+  const size = (await box.boundingBox())!;
+  expect(Math.round(size.width)).toBe(18);
+  expect(Math.round(size.height)).toBe(18);
+  // The text is its label: clicking it ticks the box, a second click clears it
+  await page.locator('label[for="f-consent"]').click({ position: { x: 4, y: 4 } });
+  await expect(box).toBeChecked();
+  await expect(box).toHaveCSS('background-color', 'rgb(255, 90, 0)');
+  await box.press('Space');
+  await expect(box).not.toBeChecked();
+  // A keyboard user sees where they are
+  await expect(box).toBeFocused();
+  await expect(box).toHaveCSS('outline-style', 'solid');
+  await expect(box).toHaveCSS('outline-width', '3px');
+});
+
 test('phones get two steps, and can go back', async ({ page, isMobile }) => {
   test.skip(!isMobile);
   await page.goto('/');

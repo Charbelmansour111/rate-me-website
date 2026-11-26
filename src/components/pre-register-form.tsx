@@ -386,16 +386,19 @@ export function PreRegisterForm({
         </div>
 
         <div>
-          <div
-            className={`flex items-center gap-4 rounded-lg border-[1.5px] p-4 ${
-              errors.consent
-                ? 'border-danger'
-                : fields.consent
-                  ? 'border-accent bg-tint'
-                  : 'border-edge'
-            }`}
-          >
-            <label htmlFor="f-consent" className="grow">
+          <div className="flex items-start gap-3">
+            <input
+              id="f-consent"
+              name="consent"
+              type="checkbox"
+              className="check"
+              checked={fields.consent}
+              onChange={(event) => set('consent', event.target.checked)}
+              aria-invalid={Boolean(errors.consent)}
+              aria-describedby={describedBy('consent')}
+              required
+            />
+            <label htmlFor="f-consent">
               {t.consentBefore}
               <a className="link" href={localePath(locale, '/privacy')} target="_blank">
                 {t.consentLink}
@@ -403,17 +406,6 @@ export function PreRegisterForm({
               </a>
               {t.consentAfter}
             </label>
-            <input
-              id="f-consent"
-              name="consent"
-              type="checkbox"
-              className="toggle"
-              checked={fields.consent}
-              onChange={(event) => set('consent', event.target.checked)}
-              aria-invalid={Boolean(errors.consent)}
-              aria-describedby={describedBy('consent')}
-              required
-            />
           </div>
           {message('consent')}
         </div>

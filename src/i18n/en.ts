@@ -267,7 +267,7 @@ export const en = {
       roleRequired: 'Choose your role.',
       cityRequired: 'Enter your city.',
       textInvalid: 'Shorten this, and leave out links and the < > signs.',
-      consentRequired: 'Turn this on so we can contact you.',
+      consentRequired: 'Tick this box so we can contact you.',
     },
     formErrors: {
       invalid: 'Some fields need another look.',
