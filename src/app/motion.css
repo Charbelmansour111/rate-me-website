@@ -96,7 +96,6 @@ html.lenis body {
   border: 1px solid var(--line);
   border-radius: 1.25rem;
   background: var(--soft);
-  box-shadow: 0 24px 48px -28px rgb(0 0 0 / 0.6);
 }
 .status-chip {
   display: inline-flex;
