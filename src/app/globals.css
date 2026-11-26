@@ -41,7 +41,6 @@
     border-radius: 4px;
   }
   button,
-  summary,
   select,
   label[for] {
     cursor: pointer;

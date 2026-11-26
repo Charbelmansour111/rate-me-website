@@ -114,6 +114,80 @@ html.lenis body {
   padding: 0.25rem 0.6rem 0.25rem 0.85rem;
 }
 
+/* --- FAQ (src/components/faq-accordion.tsx) --- */
+.faq-item {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+}
+/* The orange line beside the open question */
+.faq-item::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+.faq-item[data-open='true']::before {
+  transform: none;
+}
+.faq-button {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: start;
+}
+.faq-button:hover {
+  color: var(--accent-text);
+}
+.faq-item[data-open='true'] .faq-button,
+.faq-item[data-open='true'] .faq-panel > * {
+  padding-inline-start: 1rem;
+}
+/* A plus whose upright bar folds away: a minus when open */
+.faq-icon {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+.faq-icon::before,
+.faq-icon::after {
+  content: '';
+  position: absolute;
+  top: calc(50% - 1.25px);
+  left: 15%;
+  width: 70%;
+  height: 2.5px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.faq-icon::after {
+  transform: rotate(90deg);
+}
+.faq-item[data-open='true'] .faq-icon::after {
+  transform: rotate(90deg) scaleX(0);
+}
+.faq-item[data-open='true'] .faq-icon::before {
+  transform: rotate(180deg);
+}
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+.faq-item[data-open='true'] .faq-panel,
+html:not([data-js]) .faq-panel {
+  grid-template-rows: 1fr;
+}
+
 /* --- Tactics showcase --- */
 .tactics-pin {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
@@ -382,21 +456,20 @@ html.lenis body {
     }
   }
 
-  /* --- FAQ: animates to its real height where the browser can --- */
-  @supports (interpolate-size: allow-keywords) {
-    .faq {
-      interpolate-size: allow-keywords;
-    }
-    .faq details::details-content {
-      height: 0;
-      overflow: clip;
-      transition:
-        height 260ms ease,
-        content-visibility 260ms allow-discrete;
-    }
-    .faq details[open]::details-content {
-      height: auto;
-    }
+  /* --- FAQ: the answer slides open to its height, the line and the icon follow --- */
+  .faq-panel {
+    transition: grid-template-rows 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .faq-item::before,
+  .faq-icon::before,
+  .faq-icon::after {
+    transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .faq-button,
+  .faq-panel > * {
+    transition:
+      padding 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      color 160ms;
   }
 
   /* --- Form success: the ball bounces in, then the tick draws --- */

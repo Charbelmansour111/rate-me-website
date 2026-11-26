@@ -4,6 +4,7 @@ import { getDictionary, localePath, type Locale } from '@/i18n';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
 import { CoachPhotos, MatchRequestCard } from './community-extras';
+import { FaqAccordion } from './faq-accordion';
 import { FeatureArt } from './feature-art';
 import { HeroDrill } from './hero-drill';
 import { PreRegisterForm } from './pre-register-form';
@@ -250,40 +251,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                     {t.faq.title}
                   </h2>
                 </div>
-                <div className="faq border-t border-line">
-                  {t.faq.items.map((item) => (
-                    <details key={item.q} data-reveal="fade" className="group border-b border-line">
-                      <summary className="flex list-none items-center justify-between gap-6 border-s-3 border-transparent py-5 text-lg font-semibold group-open:border-accent group-open:ps-4 hover:text-accent-text [&::-webkit-details-marker]:hidden">
-                        {item.q}
-                        <svg
-                          viewBox="0 0 24 24"
-                          className="size-6 shrink-0 text-accent transition-transform group-open:rotate-45"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          aria-hidden="true"
-                        >
-                          <path d="M12 4v16M4 12h16" />
-                        </svg>
-                      </summary>
-                      <p className="max-w-2xl pb-6 text-muted group-open:ps-4.75">
-                        {item.a}
-                        {item.privacyLink && (
-                          <>
-                            {' '}
-                            <a
-                              className="link inline-flex min-h-11 items-center"
-                              href={localePath(locale, '/privacy')}
-                            >
-                              {item.privacyLink}
-                            </a>
-                          </>
-                        )}
-                      </p>
-                    </details>
-                  ))}
-                </div>
+                <FaqAccordion items={t.faq.items} privacyHref={localePath(locale, '/privacy')} />
               </div>
             </div>
           </section>

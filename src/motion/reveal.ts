@@ -103,26 +103,3 @@ export function startReveals(signal: AbortSignal) {
     release();
   });
 }
-
-/** Browsers that cannot transition <details> in CSS: open it with a short animation. */
-export function startDetails(signal: AbortSignal) {
-  if (CSS.supports('interpolate-size', 'allow-keywords')) return;
-  for (const details of document.querySelectorAll('details')) {
-    details.addEventListener(
-      'toggle',
-      () => {
-        const body = details.lastElementChild;
-        if (!details.open || !body) return;
-        const height = `${body.getBoundingClientRect().height}px`;
-        body.animate(
-          [
-            { height: '0px', overflow: 'hidden' },
-            { height, overflow: 'hidden' },
-          ],
-          { duration: 250, easing: 'ease-out' },
-        );
-      },
-      { signal },
-    );
-  }
-}

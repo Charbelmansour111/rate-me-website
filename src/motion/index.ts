@@ -1,14 +1,34 @@
 import { startHero } from './hero';
-import { startDetails, startReveals } from './reveal';
+import { startReveals } from './reveal';
 import { startTactics } from './tactics';
 import { startWalk } from './walk';
 
 /** What says someone is using the page: until then nothing needs GSAP or smooth scrolling. */
 const FIRST_USE = ['scroll', 'wheel', 'pointermove', 'pointerdown', 'touchstart', 'keydown'];
+/** How long the page must be still before smooth scrolling takes over the scroll. */
+const QUIET = 200;
+
+/**
+ * Runs `start` once nothing has scrolled for a moment. Taking over in the middle of a scroll would
+ * stop it where it is: a jump to #faq, or a phone's fling.
+ */
+function whenStill(start: () => void, signal: AbortSignal) {
+  const still = new AbortController();
+  signal.addEventListener('abort', () => still.abort());
+  let timer = 0;
+  const wait = () => {
+    clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      still.abort();
+      if (!signal.aborted) start();
+    }, QUIET);
+  };
+  addEventListener('scroll', wait, { passive: true, signal: still.signal });
+  wait();
+}
 
 export function startMotion(signal: AbortSignal) {
   startReveals(signal);
-  startDetails(signal);
   const walk = document.querySelector<HTMLCanvasElement>('[data-walk]');
   if (walk) startWalk(walk, signal);
   const hero = document.querySelector<HTMLElement>('[data-hero-drill]');
@@ -22,9 +42,7 @@ export function startMotion(signal: AbortSignal) {
   const load = () => {
     used.abort();
     import('./rich').then(
-      ({ startRich }) => {
-        if (!signal.aborted) startRich(signal);
-      },
+      ({ startRich }) => whenStill(() => startRich(signal), signal),
       () => {}, // Offline: the page works without it.
     );
   };

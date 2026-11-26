@@ -252,6 +252,18 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
   );
 });
 
+test('smooth scrolling never stops a scroll that is under way', async ({ page }) => {
+  // Opening a link to a section glides there; the takeover must wait until it has arrived
+  await page.goto('/#faq');
+  const top = () => page.locator('#faq').evaluate((el) => el.getBoundingClientRect().top);
+  await expect.poll(top, { timeout: 8000 }).toBeLessThan(120);
+  expect(await top()).toBeGreaterThan(40);
+  await page.mouse.move(5, 5);
+  await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
+  await page.waitForTimeout(500);
+  expect(Math.abs((await top()) - 88)).toBeLessThan(30);
+});
+
 test('the walk: open gaps, with no titles on them', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   const gaps = page.locator('[data-walk-gap]');
@@ -595,7 +607,7 @@ for (const width of [360, 390, 430]) {
       await page.goto(path);
       const found = await page.evaluate(() => {
         const size = (el: Element) => el.getBoundingClientRect();
-        const targets = 'a, button, select, summary, label.role-chip, input[type=text]';
+        const targets = 'a, button, select, label.role-chip, input[type=text]';
         return {
           sideways: document.documentElement.scrollWidth - innerWidth,
           small: [...document.querySelectorAll(targets)]
@@ -627,5 +639,10 @@ test.describe('without JavaScript', () => {
     for (const el of await page.locator('[data-reveal]').all()) {
       await expect(el).toHaveCSS('opacity', '1');
     }
+    // Every answer is open, and its link works
+    for (const answer of await page.locator('.faq-panel p').all()) {
+      await expect(answer).toBeVisible();
+    }
+    await expect(page.locator('.faq-panel[inert]')).toHaveCount(0);
   });
 });

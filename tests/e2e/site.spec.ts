@@ -14,7 +14,7 @@ for (const path of PAGES) {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.addInitScript((value) => localStorage.setItem('theme', value), theme);
       await page.goto(path);
-      for (const summary of await page.locator('summary').all()) await summary.click();
+      for (const question of await page.locator('.faq-button').all()) await question.click();
       if (!path.match(/privacy|terms/)) {
         await page.locator('#pre-register .btn-primary:visible').click();
       }
@@ -148,6 +148,53 @@ test('community: room for four coach photos, and a match request that says what 
   await expect(card).toContainText('Pinewood Academy');
   await expect(card.locator('.status-chip')).toHaveText('Request sent');
   await expect(card).toContainText('Coming soon');
+});
+
+test('faq: an accordion of buttons, by mouse and by keyboard', async ({ page }) => {
+  await page.goto('/');
+  const faq = page.locator('#faq');
+  const questions = faq.getByRole('button');
+  await expect(questions).toHaveCount(7);
+  const first = questions.first();
+  const panel = faq.locator('#faq-a-0');
+  await expect(first).toHaveAttribute('aria-expanded', 'false');
+  await expect(first).toHaveAttribute('aria-controls', 'faq-a-0');
+  await expect(panel).toHaveAttribute('inert');
+  await expect.poll(() => panel.evaluate((el) => el.getBoundingClientRect().height)).toBe(0);
+
+  await first.click();
+  await expect(first).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel).not.toHaveAttribute('inert');
+  await expect
+    .poll(() => panel.evaluate((el) => el.getBoundingClientRect().height))
+    .toBeGreaterThan(40);
+  const item = faq.locator('.faq-item').first();
+  // The orange line beside it, and the plus has turned into a minus
+  await expect
+    .poll(() => item.evaluate((el) => getComputedStyle(el, '::before').transform))
+    .toBe('none');
+  await expect(item.locator('.faq-icon')).toBeVisible();
+
+  // Arrows, Home and End move between questions; Enter and Space open and close
+  await first.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(questions.nth(1)).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(questions.last()).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(first).toBeFocused();
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowUp');
+  await expect(questions.last()).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(questions.last()).toHaveAttribute('aria-expanded', 'true');
+  await page.keyboard.press('Space');
+  await expect(questions.last()).toHaveAttribute('aria-expanded', 'false');
+
+  // The privacy link inside an answer is reachable once it is open
+  const privacy = questions.filter({ hasText: 'data' });
+  await privacy.click();
+  await expect(faq.getByRole('link', { name: 'Read the privacy policy' })).toBeVisible();
 });
 
 test('the main button leads to the form', async ({ page }) => {
