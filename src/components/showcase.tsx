@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { features } from '@/config/features.config';
-import { screens, type Screen, type ScreenId, type ViewId } from '@/config/screens.config';
+import { looks, screens, type Screen, type ScreenId, type ViewId } from '@/config/screens.config';
 import { getDictionary, type Locale } from '@/i18n';
 
 import { ShowcaseTabs, type Slide } from './showcase-tabs';
@@ -53,18 +53,21 @@ export function Showcase({ locale }: { locale: Locale }) {
   const views = (Object.keys(screens) as ViewId[]).map((view) => ({
     id: view,
     label: t.showcase.views[view],
-    slides: screens[view].map((screen): Slide => {
+    slides: screens[view].map((screen, i): Slide => {
       const captions: Partial<Record<ScreenId, { title: string; text: string; alt?: string }>> =
         t.showcase.captions[view];
       const caption = captions[screen.id]!;
-      const src = findScreen(view, screen.id, locale);
+      const details: Partial<Record<ScreenId, readonly string[]>> = t.showcase.details[view];
+      const src = screen.kind === 'card' ? null : findScreen(view, screen.id, locale);
       return {
         id: screen.id,
         ...caption,
         src,
-        sketch: src ? null : SKETCHES[screen.id],
+        sketch: src || screen.kind === 'card' ? null : SKETCHES[screen.id],
         soon: isReleased(screen) ? null : t.features.soon,
-        highlight: Boolean(screen.highlight),
+        look: looks[i % looks.length],
+        card: screen.kind === 'card',
+        details: details[screen.id] ?? null,
       };
     }),
   }));
@@ -79,7 +82,12 @@ export function Showcase({ locale }: { locale: Locale }) {
           <h2 data-reveal id="inside-title" className="display h2">
             {t.showcase.title}
           </h2>
-          <ShowcaseTabs views={views} t={t.showcase.controls} />
+          <ShowcaseTabs
+            views={views}
+            t={t.showcase.controls}
+            card={t.showcase.playerCard}
+            preRegister="#pre-register"
+          />
         </div>
       </div>
     </section>

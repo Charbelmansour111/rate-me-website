@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
+import type { Look } from '@/config/screens.config';
 import type { Dictionary } from '@/i18n';
 
+import { PlayerCard } from './player-card';
 import { TiltedCard } from './react-bits/tilted-card';
 
 export type Slide = {
@@ -16,14 +18,32 @@ export type Slide = {
   src: string | null;
   sketch: string | null;
   soon: string | null;
-  highlight: boolean;
+  /** The phone's frame: black, orange (the middle one) or white. */
+  look: Look;
+  /** Drawn as the app's player card instead of a phone. */
+  card: boolean;
+  /** Three facts, shown when the phone is opened. */
+  details: readonly string[] | null;
 };
 type View = { id: string; label: string; slides: Slide[] };
 type Controls = Dictionary['showcase']['controls'];
+type CardStrings = Dictionary['showcase']['playerCard'];
+type Opened = { view: View; slide: Slide; from: HTMLElement };
 
 /** Coach view | Player view. Without JavaScript both carousels are simply on the page. */
-export function ShowcaseTabs({ views, t }: { views: View[]; t: Controls }) {
+export function ShowcaseTabs({
+  views,
+  t,
+  card,
+  preRegister,
+}: {
+  views: View[];
+  t: Controls;
+  card: CardStrings;
+  preRegister: string;
+}) {
   const [active, setActive] = useState(0);
+  const [opened, setOpened] = useState<Opened | null>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function onKey(event: KeyboardEvent) {
@@ -76,14 +96,66 @@ export function ShowcaseTabs({ views, t }: { views: View[]; t: Controls }) {
           data-active={i === active}
           className="showcase-view"
         >
-          <Carousel view={view} t={t} />
+          <Carousel
+            view={view}
+            t={t}
+            card={card}
+            onOpen={(slide, from) => setOpened({ view, slide, from })}
+          />
         </div>
       ))}
+      <ScreenDialog
+        opened={opened}
+        t={t}
+        preRegister={preRegister}
+        onClose={() => setOpened(null)}
+      />
     </>
   );
 }
 
-function Carousel({ view, t }: { view: View; t: Controls }) {
+/** The screen in its phone: the screenshot, or a sketch until there is one. */
+function PhoneScreen({ slide, large = false }: { slide: Slide; large?: boolean }) {
+  return (
+    <div className="phone" data-look={slide.look}>
+      <div className="phone-screen">
+        {slide.src ? (
+          <Image
+            src={slide.src}
+            alt={slide.alt ?? slide.title}
+            width={large ? 360 : 330}
+            height={large ? 780 : 715}
+            sizes={large ? '360px' : '(min-width: 64rem) 330px, 270px'}
+            className="size-full object-cover"
+          />
+        ) : (
+          <svg
+            viewBox="0 20 220 440"
+            className="size-full bg-soft"
+            fill="none"
+            stroke="var(--edge)"
+            strokeWidth="1.5"
+            aria-hidden="true"
+          >
+            <path d={slide.sketch!} />
+          </svg>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Carousel({
+  view,
+  t,
+  card,
+  onOpen,
+}: {
+  view: View;
+  t: Controls;
+  card: CardStrings;
+  onOpen: (slide: Slide, from: HTMLElement) => void;
+}) {
   const track = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
   const last = view.slides.length - 1;
@@ -114,6 +186,7 @@ function Carousel({ view, t }: { view: View; t: Controls }) {
     });
   }
   function onKey(event: KeyboardEvent) {
+    // Arrows inside an open phone's button belong to the carousel too
     const rtl = document.documentElement.dir === 'rtl';
     const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
     if (!step) return;
@@ -155,43 +228,27 @@ function Carousel({ view, t }: { view: View; t: Controls }) {
         {view.slides.map((slide, i) => (
           <li key={slide.id} className="showcase-slide" data-current={i === current || undefined}>
             <figure data-parallax className="showcase-figure">
-              {/* A soft orange light behind it, so it floats off the panel */}
-              <span
-                className="phone-glow"
-                data-strong={slide.highlight || undefined}
-                aria-hidden="true"
-              />
-              <TiltedCard className="phone-tilt">
-                <div className="phone" data-highlight={slide.highlight || undefined}>
-                  <div className="phone-screen">
-                    {slide.src ? (
-                      <Image
-                        src={slide.src}
-                        alt={slide.alt ?? slide.title}
-                        width={288}
-                        height={624}
-                        sizes="(min-width: 64rem) 288px, 256px"
-                        className="size-full object-cover"
-                      />
-                    ) : (
-                      <svg
-                        viewBox="0 20 220 440"
-                        className="size-full bg-soft"
-                        fill="none"
-                        stroke="var(--edge)"
-                        strokeWidth="1.5"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d={slide.sketch!}
-                          stroke={slide.highlight ? 'var(--accent)' : undefined}
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </TiltedCard>
-              <figcaption className="mx-auto mt-5 max-w-72 text-center">
+              {/* A soft light behind it, so it floats off the panel */}
+              <span className="phone-glow" data-look={slide.look} aria-hidden="true" />
+              {slide.card ? (
+                <TiltedCard className="card-tilt">
+                  <PlayerCard t={card} />
+                </TiltedCard>
+              ) : (
+                // The phone is a button: it opens what the screen does
+                <button
+                  type="button"
+                  className="phone-button"
+                  aria-haspopup="dialog"
+                  aria-label={`${slide.title}: ${t.open}`}
+                  onClick={(event) => onOpen(slide, event.currentTarget)}
+                >
+                  <TiltedCard className="phone-tilt">
+                    <PhoneScreen slide={slide} />
+                  </TiltedCard>
+                </button>
+              )}
+              <figcaption className="mx-auto mt-5 max-w-80 text-center">
                 <span className="text-lg font-semibold">{slide.title}</span>
                 {slide.soon && (
                   <span className="mt-1 block">
@@ -235,5 +292,137 @@ function Carousel({ view, t }: { view: View; t: Controls }) {
         {arrow(1, t.next)}
       </div>
     </div>
+  );
+}
+
+/**
+ * What a screen does: a modal dialog (focus stays inside, Esc closes, focus returns to the phone)
+ * that grows out of the phone with GSAP, at once under reduced motion.
+ */
+function ScreenDialog({
+  opened,
+  t,
+  preRegister,
+  onClose,
+}: {
+  opened: Opened | null;
+  t: Controls;
+  preRegister: string;
+  onClose: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const el = dialog.current!;
+    if (!opened) return;
+    el.showModal();
+    // Focus starts on Close, not on the scrolling panel
+    el.querySelector<HTMLElement>('.screen-dialog-close')?.focus();
+    const panel = el.querySelector<HTMLElement>('.screen-dialog-panel')!;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // From the phone that was opened to the middle of the screen
+    const from = opened.from.getBoundingClientRect();
+    const to = panel.getBoundingClientRect();
+    let cancelled = false;
+    void import('gsap').then(({ gsap }) => {
+      if (cancelled) return;
+      gsap.fromTo(
+        panel,
+        {
+          x: from.left + from.width / 2 - (to.left + to.width / 2),
+          y: from.top + from.height / 2 - (to.top + to.height / 2),
+          scale: Math.min(1, from.width / to.width),
+          opacity: 0.4,
+        },
+        { x: 0, y: 0, scale: 1, opacity: 1, duration: 0.45, ease: 'power3.out', clearProps: 'all' },
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [opened]);
+
+  useEffect(() => {
+    const el = dialog.current!;
+    // Esc, the close button or the link: back to the phone it came from
+    const closed = () => {
+      const from = opened?.from;
+      onClose();
+      from?.focus({ preventScroll: true });
+    };
+    el.addEventListener('close', closed);
+    return () => el.removeEventListener('close', closed);
+  }, [opened, onClose]);
+
+  const slide = opened?.slide;
+  return (
+    <dialog
+      ref={dialog}
+      className="screen-dialog"
+      aria-labelledby="screen-dialog-title"
+      // A click on the dim ground outside the panel closes it, as Esc does
+      onClick={(event) => {
+        if (event.target === event.currentTarget) dialog.current!.close();
+      }}
+      // Tab goes round inside it, never out to the page or the browser
+      onKeyDown={(event) => {
+        if (event.key !== 'Tab') return;
+        const stops = [...dialog.current!.querySelectorAll<HTMLElement>('button, a[href]')];
+        const first = stops[0];
+        const last = stops[stops.length - 1];
+        const at = document.activeElement;
+        if (event.shiftKey && (at === first || !dialog.current!.contains(at))) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && (at === last || !dialog.current!.contains(at))) {
+          event.preventDefault();
+          first.focus();
+        }
+      }}
+    >
+      {slide && (
+        <div className="screen-dialog-panel panel">
+          <button
+            type="button"
+            className="screen-dialog-close"
+            aria-label={t.close}
+            onClick={() => dialog.current!.close()}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5">
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+          <div className="screen-dialog-phone">
+            <PhoneScreen slide={slide} large />
+          </div>
+          <div className="screen-dialog-text">
+            <p className="kicker">{opened.view.label}</p>
+            <h3 id="screen-dialog-title" className="display h3 mt-3">
+              {slide.title}
+            </h3>
+            <p className="mt-3 text-muted">{slide.text}</p>
+            {slide.details && (
+              <ul className="screen-dialog-facts mt-6">
+                {slide.details.map((fact) => (
+                  <li key={fact}>{fact}</li>
+                ))}
+              </ul>
+            )}
+            <a
+              href={preRegister}
+              className="btn btn-primary mt-8"
+              onClick={() => dialog.current!.close()}
+            >
+              {t.preRegister}
+            </a>
+          </div>
+        </div>
+      )}
+    </dialog>
   );
 }

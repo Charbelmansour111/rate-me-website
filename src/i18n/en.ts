@@ -99,6 +99,59 @@ export const en = {
       slides: 'Screens, scroll sideways',
       previous: 'Previous screen',
       next: 'Next screen',
+      open: 'See what this screen does',
+      close: 'Close',
+      preRegister: 'Pre-register',
+    },
+    // Three facts per screen, shown when a phone is opened. Only what the app does today.
+    details: {
+      coach: {
+        calendar: [
+          'Trainings, matches and team days, month by month.',
+          'Each event has its day, time and place.',
+          'Mark who came. Attendance goes into the parents’ monthly report.',
+        ],
+        'whiteboard-roles': [
+          'Give each player a role: Smart, Press, Cover, Mark or Intercept.',
+          'Play the drill and the defenders move with the ball.',
+          'Leave a player on Smart and the app picks the move.',
+        ],
+        channel: [
+          'One channel for the coaches of every club on Rate Me.',
+          'Each message shows the coach’s club and team.',
+          'Match requests between coaches are coming soon.',
+        ],
+      },
+      player: {
+        home: [
+          'The next training or match, with its day, time and place.',
+          'Notes from your coach.',
+          'Shortcuts to the calendar, your team and your card.',
+        ],
+        event: [
+          'When and where, and whether it has finished.',
+          'Tell your coach how it went with one tap.',
+          'Your coach’s notes and your evaluation.',
+        ],
+      },
+    },
+    // The player card as the app draws it, with a stock photo: an example, not a real player.
+    playerCard: {
+      example: 'Example',
+      name: 'Your player',
+      position: 'Midfielder',
+      positionLetter: 'M',
+      tier: 'Regular',
+      outOf: '/100',
+      label: 'Example player card: a midfielder, number 8, rated 72 out of 100.',
+      stats: {
+        pace: 'Speed',
+        shooting: 'Finishing',
+        passing: 'Vision',
+        dribbling: 'Ball control',
+        defending: 'Tackling',
+        physical: 'Strength',
+      },
     },
     captions: {
       coach: {
@@ -118,7 +171,10 @@ export const en = {
       player: {
         home: { title: 'Home', text: 'The next training or match.' },
         event: { title: 'Event', text: 'When, where and what to know.' },
-        card: { title: 'Player card', text: 'Shown when your coach publishes it.' },
+        card: {
+          title: 'Player card',
+          text: 'Shown when your coach publishes it. Ask for a shirt number and your coach approves it.',
+        },
       },
     },
   },

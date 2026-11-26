@@ -149,14 +149,15 @@
     gap: 1.25rem;
   }
 }
-/* Three side by side, the middle one in front. */
+/* Three side by side, the middle one in front: about 340px each at 1440, out to the panel's
+   edges so three fit. */
 @media (min-width: 64rem) {
   .showcase-track {
-    --phone: clamp(15.5rem, 20.5vw, 18.75rem);
+    --phone: clamp(15.5rem, 23.5vw, 21.25rem);
     --slide: var(--phone);
     justify-content: center;
-    gap: clamp(1.5rem, 4vw, 3.5rem);
-    margin-inline: 0;
+    gap: clamp(1rem, 2.5vw, 2.5rem);
+    margin-inline: calc(-1 * clamp(1.5rem, 4vw, 3.5rem) + 0.5rem);
     padding-block: 3rem 1rem;
     padding-inline: 0;
     overflow: visible;
@@ -182,7 +183,7 @@
   );
   pointer-events: none;
 }
-.phone-glow[data-strong] {
+.phone-glow[data-look='orange'] {
   background: radial-gradient(
     closest-side,
     rgb(255 90 0 / 0.65),
@@ -227,6 +228,15 @@
   background: var(--bezel);
   box-shadow: inset 0 0 0 1px var(--bezel-rim);
 }
+/* Three frames, by place, for contrast on the charcoal: black, orange in the middle, white. */
+.phone[data-look='orange'] {
+  background: #ff5a00;
+  box-shadow: inset 0 0 0 1px #ffa36b;
+}
+.phone[data-look='white'] {
+  background: #f3eee6;
+  box-shadow: inset 0 0 0 1px #d6cfc2;
+}
 .phone::before {
   content: '';
   position: absolute;
@@ -247,9 +257,242 @@
 .phone {
   transform: scale(0.93);
 }
-[data-current] > * > * > .phone,
+[data-current] .phone,
 html:not([data-js]) .phone {
   transform: none;
+}
+/* Each phone is a button that opens what its screen does. */
+.phone-button {
+  display: block;
+  margin-inline: auto;
+  border-radius: 2rem;
+  cursor: pointer;
+}
+.phone-button:focus-visible {
+  outline-offset: 6px;
+  border-radius: 2.2rem;
+}
+
+/* --- The player card (src/components/player-card.tsx), as the app draws it --- */
+.card-tilt {
+  border-radius: 1rem;
+}
+.player-card {
+  position: relative;
+  width: min(var(--phone, 18rem), 20rem);
+  color: #fff;
+  font-family: var(--font-sans);
+}
+.player-card-ground {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.player-card-body {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.4rem 1.4rem 1.7rem;
+}
+.player-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.player-card-tier {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+.player-card-chip {
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.player-card-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.player-card-ring svg {
+  position: absolute;
+  inset: 0;
+}
+.player-card-overall {
+  position: relative;
+  font-size: 1.9rem;
+  font-weight: 800;
+}
+.player-card-overall small {
+  color: var(--card-label);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.player-card-photo {
+  width: 7rem;
+  height: 7rem;
+  border: 3px solid var(--card-position);
+  border-radius: 50%;
+  object-fit: cover;
+}
+.player-card-perforation {
+  border-top: 1.5px dashed rgb(255 255 255 / 0.28);
+}
+.player-card-identity {
+  display: grid;
+  gap: 0.15rem;
+}
+.player-card-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+.player-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--card-label);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.player-card-position {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--card-position);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+.player-card-bars {
+  display: grid;
+  gap: 0.7rem;
+}
+.player-card-bars li {
+  display: grid;
+  grid-template-columns: 6.2rem 1fr 1.8rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+}
+.player-card-stat {
+  color: var(--card-label);
+  font-weight: 600;
+}
+.player-card-track {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  background: rgb(255 255 255 / 0.16);
+}
+.player-card-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--card-accent);
+}
+.player-card-value {
+  font-weight: 800;
+  text-align: end;
+}
+.player-card-example {
+  justify-self: center;
+  color: var(--card-label);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:lang(ar) .player-card-example {
+  letter-spacing: 0;
+}
+
+/* --- What a screen does: a dialog grown out of its phone --- */
+.screen-dialog {
+  width: min(56rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+.screen-dialog::backdrop {
+  background: rgb(8 7 6 / 0.72);
+}
+.screen-dialog-panel {
+  position: relative;
+  display: grid;
+  max-height: calc(100dvh - 2rem);
+  align-items: center;
+  gap: 2rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+@media (min-width: 48rem) {
+  .screen-dialog-panel {
+    grid-template-columns: auto 1fr;
+    gap: 3rem;
+  }
+}
+.screen-dialog-phone .phone {
+  --phone: min(17rem, 62vw);
+  transform: none;
+}
+/* On a phone: what it does first, then a smaller phone under it. */
+@media (max-width: 47.99rem) {
+  .screen-dialog-phone {
+    display: grid;
+    order: 1;
+    justify-items: center;
+  }
+  .screen-dialog-phone .phone {
+    --phone: min(13rem, 56vw);
+  }
+  .screen-dialog-text {
+    padding-top: 2.5rem;
+  }
+}
+.screen-dialog-text {
+  font-size: 1.125rem;
+}
+.screen-dialog-facts {
+  display: grid;
+  gap: 0.75rem;
+}
+.screen-dialog-facts li {
+  position: relative;
+  padding-inline-start: 1.5rem;
+}
+.screen-dialog-facts li::before {
+  content: '';
+  position: absolute;
+  top: 0.7em;
+  inset-inline-start: 0;
+  width: 0.6rem;
+  height: 2px;
+  background: var(--accent);
+}
+.screen-dialog-close {
+  position: absolute;
+  z-index: 1;
+  top: 0.75rem;
+  inset-inline-end: 0.75rem;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1.5px solid var(--edge);
+  border-radius: 50%;
+}
+.screen-dialog-close:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
 }
 @media (prefers-reduced-motion: no-preference) {
   .phone {
