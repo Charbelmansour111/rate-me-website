@@ -7,7 +7,8 @@ import Lenis from 'lenis';
  * real, so the walk (which reads scrollY) and the sticky whiteboard work as before.
  */
 export function startSmooth(signal: AbortSignal) {
-  const lenis = new Lenis({ lerp: 0.12 });
+  // A tenth of the way each frame, and wheel notches a little shorter: a glide, not a lurch.
+  const lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 0.9, smoothWheel: true });
   lenis.on('scroll', ScrollTrigger.update);
   const tick = (seconds: number) => lenis.raf(seconds * 1000);
   gsap.ticker.add(tick);

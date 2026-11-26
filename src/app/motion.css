@@ -10,6 +10,11 @@ html.lenis,
 html.lenis body {
   height: auto;
 }
+/* Lenis glides the page itself: a CSS glide on top would fight it. Before it starts, the CSS one
+   carries jumps to a section (src/app/globals.css). */
+html.lenis {
+  scroll-behavior: auto;
+}
 .lenis.lenis-stopped {
   overflow: clip;
 }
