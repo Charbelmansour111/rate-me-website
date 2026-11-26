@@ -115,7 +115,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                 <h2 data-reveal id="why-title" className="display h2">
                   {t.why.title}
                 </h2>
-                <ul className="mt-14 grid gap-5 md:grid-cols-3" style={spotlightStops}>
+                <ul className="mt-14 grid items-start gap-5 md:grid-cols-3" style={spotlightStops}>
                   <WhyCards t={t.why} />
                 </ul>
               </div>

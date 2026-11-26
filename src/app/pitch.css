@@ -224,3 +224,13 @@
 [dir='rtl'] .why-corner {
   scale: 1 -1;
 }
+/* On a phone the panel's padding is small: a smaller centre mark, and room under it */
+@media (max-width: 39.99rem) {
+  .pitch-centre {
+    width: 4.5rem;
+    height: 2.25rem;
+  }
+  .panel {
+    padding-top: max(clamp(1.5rem, 4vw, 3.5rem), 2.75rem);
+  }
+}

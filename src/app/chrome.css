@@ -367,3 +367,7 @@
     translate: 0 3px;
   }
 }
+/* The language links carry their own padding: line their text up with the links above */
+.footer-language {
+  margin-inline-start: -0.5rem;
+}
