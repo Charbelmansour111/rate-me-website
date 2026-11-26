@@ -1,4 +1,13 @@
-import { along, ATTACKERS, DEFENDERS, mirror, PASSES, translate } from './tactics-data';
+import {
+  along,
+  ARROW_AT,
+  ATTACKERS,
+  DEFENDERS,
+  mirror,
+  PASSES,
+  translate,
+  type Point,
+} from './tactics-data';
 
 /**
  * Plays the tactics illustration. Without this file the section shows its finished frame; here
@@ -13,6 +22,18 @@ const TOTAL = END + 1.2;
 const at = (seconds: number) => Math.min(1, seconds / TOTAL);
 /** How long steps 1 and 2 last where nothing is pinned. */
 const STEP_TIME = [2.4, 3.4];
+/** A run speeds up, then settles: the two halves of one easing, either side of the bend. */
+const SPEED_UP = 'cubic-bezier(0.5, 0, 0.9, 0.5)';
+const SETTLE = 'cubic-bezier(0.1, 0.5, 0.5, 1)';
+/** How far a run bows off the straight line, as a share of its length. */
+const BOW = 0.12;
+
+/** The middle of a run, pushed to one side so players arc instead of sliding. */
+function bowed(a: Point, b: Point, side: number): Point {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  return [(a[0] + b[0]) / 2 - dy * BOW * side, (a[1] + b[1]) / 2 + dx * BOW * side];
+}
 
 function playLoop(root: HTMLElement, rtl: boolean): Animation[] {
   const timing = { duration: TOTAL * SECOND, iterations: Infinity };
@@ -65,22 +86,48 @@ function playLoop(root: HTMLElement, rtl: boolean): Animation[] {
     );
   });
 
-  // Defenders react a beat after the ball leaves, slowly enough to read.
+  // The arrowheads draw once the ball has nearly arrived, and fade with their line.
+  all('[data-arrow]').forEach((el, i) => {
+    const from = START + i * EVERY + PASS * ARROW_AT;
+    const frame = (seconds: number, strokeDashoffset: number, opacity: number) => ({
+      offset: at(seconds),
+      strokeDasharray: '1',
+      strokeDashoffset,
+      opacity,
+    });
+    animations.push(
+      el.animate(
+        [
+          frame(0, 1, 0),
+          frame(from, 1, 0),
+          { ...frame(from + 0.01, 1, 1), easing: 'ease-out' },
+          frame(from + 0.3, 0, 1),
+          frame(from + 0.3 + 1.6 - PASS * (1 - ARROW_AT), 0, 0),
+          frame(TOTAL, 0, 0),
+        ],
+        timing,
+      ),
+    );
+  });
+
+  // Defenders react a beat after the ball leaves, slowly enough to read, on a curve.
   all('[data-defender]').forEach((el, i) => {
     const { at: home, moves } = DEFENDERS[i];
     const frames: Keyframe[] = [];
-    const stop = (seconds: number, point: readonly [number, number], opacity = 1) =>
+    const stop = (seconds: number, point: Point, opacity = 1, easing = 'ease-in-out') =>
       frames.push({
         offset: at(seconds),
         transform: translate(mirror(point, rtl)),
         opacity,
-        easing: 'ease-in-out',
+        easing,
       });
     stop(0, home);
     stop(START, moves[0]);
     for (let move = 1; move < moves.length; move++) {
       const leaves = START + (move - 1) * EVERY + 0.2 + i * 0.1;
-      stop(leaves, moves[move - 1]);
+      const side = (move + i) % 2 ? 1 : -1;
+      stop(leaves, moves[move - 1], 1, SPEED_UP);
+      stop(leaves + 0.75, bowed(moves[move - 1], moves[move], side), 1, SETTLE);
       stop(leaves + 1.5, moves[move]);
     }
     // Fade back to the start: gliding there would drag the labels across each other.
@@ -98,17 +145,18 @@ function playLoop(root: HTMLElement, rtl: boolean): Animation[] {
     const { at: home, run } = ATTACKERS[i];
     if (!run) return;
     const leaves = START + run.after * EVERY + 0.6;
-    const frame = (seconds: number, point: readonly [number, number], opacity = 1) => ({
+    const frame = (seconds: number, point: Point, opacity = 1, easing = 'ease-in-out') => ({
       offset: at(seconds),
       transform: translate(mirror(point, rtl)),
       opacity,
-      easing: 'ease-in-out',
+      easing,
     });
     animations.push(
       el.animate(
         [
           frame(0, home),
-          frame(leaves, home),
+          frame(leaves, home, 1, SPEED_UP),
+          frame(leaves + 0.75, bowed(home, run.to, -1), 1, SETTLE),
           frame(leaves + 1.5, run.to),
           frame(END, run.to),
           frame(END + 0.4, run.to, 0),

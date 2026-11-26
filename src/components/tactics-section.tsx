@@ -3,7 +3,15 @@ import type { CSSProperties } from 'react';
 import { features } from '@/config/features.config';
 import { roleLetters, type RoleId } from '@/config/roles.config';
 import { getDictionary, type Locale } from '@/i18n';
-import { ATTACKERS, DEFENDERS, mirror, PASSES, translate, type Point } from '@/motion/tactics-data';
+import {
+  arrowHead,
+  ATTACKERS,
+  DEFENDERS,
+  mirror,
+  PASSES,
+  translate,
+  type Point,
+} from '@/motion/tactics-data';
 
 /**
  * "Tactics that move". The server renders the finished frame with every label; src/motion plays it.
@@ -72,6 +80,12 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                 fill="none"
                 aria-hidden="true"
               >
+                {/* Mowing stripes, barely there */}
+                <g fill="var(--soft)">
+                  {[0, 2, 4, 6].map((i) => (
+                    <rect key={i} x="14" y={30 + i * 47} width="452" height="47" />
+                  ))}
+                </g>
                 <g stroke="var(--chalk)" strokeWidth="2">
                   <path d="M14 30H466V406H14Z M120 30V126H360V30 M184 30V66H296V30" />
                   <path d="M14 44A14 14 0 0 0 28 30 M452 30A14 14 0 0 0 466 44" />
@@ -101,10 +115,24 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                     strokeWidth="3"
                   />
                 ))}
+                {PASSES.map((pass) => (
+                  <path
+                    key={xy(pass.to)}
+                    data-arrow
+                    className="tactics-arrow"
+                    d={arrowHead(pass, rtl)}
+                    pathLength={1}
+                    stroke="var(--accent)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))}
 
                 {DEFENDERS.map((player, i) => (
                   <g key={player.role} data-defender style={{ transform: place(player.at) }}>
                     <g className="tactics-drift" style={drift(player.from, i)}>
+                      <Shadow />
                       <circle
                         className="tactics-ring"
                         r="17"
@@ -122,6 +150,7 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                 {ATTACKERS.map((player, i) => (
                   <g key={player.label} data-attacker style={{ transform: place(player.at) }}>
                     <g className="tactics-drift" style={drift(player.from, i + 3)}>
+                      <Shadow />
                       <circle r="17" fill="var(--text)" />
                       <text
                         y="5.5"
@@ -141,6 +170,12 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                   <g data-ball style={{ transform: place(ATTACKERS[0].at) }}>
                     {/* At the player's feet, not on the number */}
                     <g transform={`translate(${rtl ? -16 : 16} 14)`}>
+                      <circle
+                        className="tactics-pulse"
+                        r="9"
+                        stroke="var(--accent)"
+                        strokeWidth="2"
+                      />
                       <circle
                         r="9"
                         fill="var(--brand-orange)"
@@ -175,6 +210,11 @@ export function TacticsSection({ locale }: { locale: Locale }) {
       </div>
     </section>
   );
+}
+
+/** A soft shadow under a player, so the board reads as a pitch and not a chart. */
+function Shadow() {
+  return <ellipse cy="16" rx="15" ry="4.5" fill="var(--brand-black)" opacity="0.12" />;
 }
 
 /** The role's first letter at the corner of its player, as on the app's board. */

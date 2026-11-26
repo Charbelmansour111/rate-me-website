@@ -41,6 +41,8 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
     await expect(section.locator('.sr-only')).not.toBeEmpty();
     await expect(section.locator('.tactics-badge')).toHaveText(['P', 'C', 'M', 'O', 'R']);
     await expect(section.locator('.tactics-role b')).toHaveText(['P', 'C', 'M', 'O', 'R', 'I']);
+    // An arrowhead for each pass, drawn in the finished frame too
+    await expect(section.locator('[data-arrow]')).toHaveCount(3);
   });
 
   test(`${path}: nothing is hidden after scrolling, and nothing shifted`, async ({ page }) => {
@@ -68,6 +70,9 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
     expect(violations.map((v) => v.id)).toEqual([]);
   });
 }
+
+/** The play's endless animations: ball, 3 lines, 3 arrowheads, 3 defenders, 2 runs, the pulse. */
+const LOOPS = 13;
 
 test('the steps follow the scroll (pinned) or play by themselves (phone)', async ({
   page,
@@ -101,13 +106,13 @@ test('the steps follow the scroll (pinned) or play by themselves (phone)', async
           .filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity)
           .length,
     );
-  await expect.poll(running).toBe(9);
+  await expect.poll(running).toBe(LOOPS);
 
   // Paused on request, and whenever it is off screen
   await section.getByRole('button', { name: 'Pause' }).click();
   await expect.poll(running).toBe(0);
   await section.getByRole('button', { name: 'Pause' }).click();
-  await expect.poll(running).toBe(9);
+  await expect.poll(running).toBe(LOOPS);
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await expect.poll(running).toBe(0);
 });

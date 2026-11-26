@@ -87,6 +87,26 @@ export const PASSES = BENDS.map((bend, i) => ({
 export const mirror = ([x, y]: Point, rtl: boolean): Point => [rtl ? WIDTH - x : x, y];
 export const translate = ([x, y]: Point) => `translate(${x}px, ${y}px)`;
 
+/** Where along a pass its arrowhead sits: short of the receiver, who would cover it. */
+export const ARROW_AT = 0.8;
+
+/** The arrowhead of a pass: two short wings either side of the line, pointing along it. */
+export function arrowHead(pass: (typeof PASSES)[number], rtl: boolean): string {
+  const { from, bend, to } = pass;
+  const t = ARROW_AT;
+  const [x, y] = along(pass, t);
+  // The direction of the curve there
+  const dx = 2 * (1 - t) * (bend[0] - from[0]) + 2 * t * (to[0] - bend[0]);
+  const dy = 2 * (1 - t) * (bend[1] - from[1]) + 2 * t * (to[1] - bend[1]);
+  const angle = Math.atan2(dy, dx);
+  const wing = (turn: number): Point => [
+    Math.round((x - 11 * Math.cos(angle + turn)) * 10) / 10,
+    Math.round((y - 11 * Math.sin(angle + turn)) * 10) / 10,
+  ];
+  const p = (point: Point) => mirror(point, rtl).join(' ');
+  return `M${p(wing(0.55))}L${p([x, y])}L${p(wing(-0.55))}`;
+}
+
 /** A point of a pass, 0 to 1. */
 export function along({ from, bend, to }: (typeof PASSES)[number], t: number): Point {
   const mix = (i: 0 | 1) => (1 - t) ** 2 * from[i] + 2 * (1 - t) * t * bend[i] + t ** 2 * to[i];
