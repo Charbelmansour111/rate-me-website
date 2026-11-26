@@ -6,9 +6,12 @@ import { useEffect, useState } from 'react';
 export function NavLinks({
   home,
   links,
+  stacked = false,
 }: {
   home: string;
   links: { id: string; label: string }[];
+  /** One under the other, large: the phone's menu. */
+  stacked?: boolean;
 }) {
   const [active, setActive] = useState('');
 
@@ -33,17 +36,15 @@ export function NavLinks({
   }, [links]);
 
   return (
-    <ul className="flex gap-8">
+    <ul className={stacked ? 'menu-links' : 'bar-links'}>
       {links.map(({ id, label }) => (
         <li key={id}>
           <a
             href={`${home}#${id}`}
             aria-current={id === active ? 'location' : undefined}
-            className="group block min-w-11 py-2.5 text-center font-medium hover:text-accent-text"
+            className="nav-link"
           >
-            <span className="border-b-2 border-transparent pb-0.5 group-aria-current:border-accent">
-              {label}
-            </span>
+            <span>{label}</span>
           </a>
         </li>
       ))}
