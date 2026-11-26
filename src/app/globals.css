@@ -18,6 +18,7 @@
   --color-danger: var(--danger);
   --color-tint: var(--tint);
   --color-brand-black: var(--brand-black);
+  --color-brand-orange: var(--brand-orange);
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-display: var(--font-title), var(--font-body), sans-serif;
 }
@@ -36,6 +37,11 @@
   }
   :lang(ar) body {
     line-height: 1.8;
+  }
+  /* No single word left alone on a paragraph's last line */
+  p,
+  li {
+    text-wrap: pretty;
   }
   :focus-visible {
     outline: 3px solid var(--accent);

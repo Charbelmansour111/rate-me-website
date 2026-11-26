@@ -229,7 +229,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                         <span
                           data-number
                           aria-hidden="true"
-                          className="display grid size-14 shrink-0 place-items-center rounded-full bg-accent text-3xl text-brand-black"
+                          className="display grid size-14 shrink-0 place-items-center rounded-full bg-brand-orange text-3xl text-brand-black"
                         >
                           {i + 1}
                         </span>

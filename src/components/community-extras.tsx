@@ -76,7 +76,7 @@ export function MatchRequestCard({ t, soon }: { t: Community; soon: string }) {
 
       <div className="mt-5 grid gap-2">
         {[
-          [m.from, 'bg-accent text-brand-black'],
+          [m.from, 'bg-brand-orange text-brand-black'],
           [m.to, 'bg-text text-page'],
         ].map(([club, tone], i) => (
           <div key={club} className="flex items-center gap-3">
