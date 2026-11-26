@@ -1,15 +1,20 @@
 import { features } from '@/config/features.config';
 import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale } from '@/i18n';
+import { publicFile } from '@/lib/public-file';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
 import { CoachPhotos, MatchRequestCard } from './community-extras';
 import { FaqAccordion } from './faq-accordion';
-import { FeatureArt } from './feature-art';
+import { CtaSplit } from './cta-split';
+import { FeatureCarousel } from './feature-carousel';
+import { FeatureIcon } from './feature-icon';
 import { HeroDrill } from './hero-drill';
+import { PanelLines } from './pitch-lines';
 import { PreRegisterForm } from './pre-register-form';
-import { SpotlightCard, spotlightStops } from './react-bits/spotlight-card';
-import { WalkCanvas, WalkGap, WalkGroup } from './journey-walk';
+import { RunningLine } from './running-line';
+import { spotlightStops } from './react-bits/spotlight-card';
+import { WalkCanvas, WalkDim, WalkGap, WalkGroup } from './journey-walk';
 import { WhyCards } from './why-cards';
 import { Showcase } from './showcase';
 import { SiteFooter } from './site-footer';
@@ -24,12 +29,28 @@ export function HomePage({ locale }: { locale: Locale }) {
   return (
     <>
       <SiteHeader locale={locale} path="/" />
-      <main id="main" className="overflow-x-clip">
+      <main id="main" className="relative overflow-x-clip">
         <WalkCanvas />
+        <WalkDim />
+        <RunningLine />
+        <p className="scroll-cue" aria-hidden="true">
+          {t.hero.scroll}
+          <svg viewBox="0 0 24 24" className="size-4">
+            <path
+              d="M6 9l6 6 6-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </p>
         <WalkGroup scene="locker">
           <section className="walk-hero">
             <div className="wrap">
               <div className="panel grid items-center gap-x-12 gap-y-14 lg:grid-cols-[1.5fr_1fr]">
+                <PanelLines />
                 <div>
                   <h1 className="display h1">
                     {t.hero.title[0]}{' '}
@@ -86,16 +107,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           <section className="section" aria-labelledby="why-title">
             <div className="wrap">
               <div className="panel relative overflow-clip">
-                {/* Corner markings, kept clear of the text */}
-                <svg
-                  className="chalk top-0 right-0 hidden h-[40%] max-h-32 md:block rtl:right-auto rtl:left-0 rtl:-scale-x-100"
-                  viewBox="0 0 320 320"
-                  aria-hidden="true"
-                >
-                  <circle cx="320" cy="0" r="290" />
-                  <path className="hint" d="M320 0L115 205" />
-                  <circle className="hint" cx="320" cy="0" r="60" />
-                </svg>
+                <PanelLines />
 
                 <p data-reveal className="kicker">
                   {t.why.kicker}
@@ -116,6 +128,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           <section id="features" className="section" aria-labelledby="features-title">
             <div className="wrap">
               <div className="panel">
+                <PanelLines />
                 <div className="grid items-end gap-6 lg:grid-cols-2">
                   <div>
                     <p data-reveal className="kicker">
@@ -129,29 +142,31 @@ export function HomePage({ locale }: { locale: Locale }) {
                     {t.features.note}
                   </p>
                 </div>
-                <ul
-                  className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-                  style={spotlightStops}
-                >
-                  {features.map(({ id, released }) => (
-                    <SpotlightCard key={id} as="li" className="flex flex-col p-3">
-                      <div className="relative">
-                        <FeatureArt id={id} alt={photos[id]?.photo} />
-                        {!released && (
-                          <span className="absolute end-3 top-3 rounded-full border-[1.5px] border-accent bg-page px-3 py-0.5 text-sm font-semibold text-accent-text">
-                            {t.features.soon}
-                          </span>
-                        )}
-                      </div>
-                      <div className="px-4 pt-6 pb-5">
-                        <h3 className="display h3">
-                          <span className="card-title">{t.features.items[id].title}</span>
-                        </h3>
-                        <p className="mt-3 text-muted">{t.features.items[id].text}</p>
-                      </div>
-                    </SpotlightCard>
-                  ))}
-                </ul>
+                <FeatureCarousel
+                  cards={features.map(({ id, released }) => ({
+                    id,
+                    title: t.features.items[id].title,
+                    benefit: t.features.items[id].benefit,
+                    bullets: t.features.items[id].bullets,
+                    alt: photos[id]?.photo ?? '',
+                    src: publicFile('features', id),
+                    icon: <FeatureIcon id={id} />,
+                    soon: released ? null : t.features.soon,
+                  }))}
+                  t={t.features.controls}
+                  label={t.features.title}
+                  preRegister="#pre-register"
+                />
+                <CtaSplit
+                  className="mt-12"
+                  title={t.features.cta.title}
+                  text={t.features.cta.text}
+                  action={
+                    <a className="btn btn-dark" href="#pre-register">
+                      {t.nav.preRegister}
+                    </a>
+                  }
+                />
               </div>
             </div>
           </section>
@@ -167,15 +182,8 @@ export function HomePage({ locale }: { locale: Locale }) {
         <WalkGroup scene="pitch">
           <section id="community" className="section" aria-labelledby="community-title">
             <div className="wrap">
-              <div className="panel inverse relative grid gap-16 overflow-clip lg:grid-cols-2">
-                {/* Corner arcs */}
-                <svg
-                  className="chalk top-0 right-0 hidden w-40 md:block rtl:right-auto rtl:left-0 rtl:-scale-x-100"
-                  viewBox="0 0 100 100"
-                  aria-hidden="true"
-                >
-                  <path className="hint" d="M20 0A80 80 0 0 0 100 80" />
-                </svg>
+              <div className="panel relative grid gap-16 overflow-clip lg:grid-cols-2">
+                <PanelLines />
 
                 <div>
                   <p data-reveal className="kicker">
@@ -188,9 +196,16 @@ export function HomePage({ locale }: { locale: Locale }) {
                     {t.community.text}
                   </p>
                   <CoachPhotos t={t.community} />
-                  <a data-reveal className="btn btn-primary mt-9" href="#pre-register">
-                    {t.nav.preRegister}
-                  </a>
+                  <CtaSplit
+                    className="mt-9"
+                    title={t.community.cta.title}
+                    text={t.community.cta.text}
+                    action={
+                      <a className="btn btn-dark" href="#pre-register">
+                        {t.nav.preRegister}
+                      </a>
+                    }
+                  />
                 </div>
                 <div>
                   <MatchRequestCard t={t.community} soon={t.features.soon} />
@@ -233,6 +248,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           <section id="faq" className="section" aria-labelledby="faq-title">
             <div className="wrap">
               <div className="panel grid gap-12 lg:grid-cols-[1fr_1.6fr]">
+                <PanelLines />
                 <div>
                   <p data-reveal className="kicker">
                     {t.faq.kicker}
@@ -250,6 +266,7 @@ export function HomePage({ locale }: { locale: Locale }) {
           <section id="pre-register" className="section" aria-labelledby="form-title">
             <div className="wrap">
               <div data-reveal className="form-card panel mx-auto max-w-3xl">
+                <PanelLines />
                 <div className="mb-6">
                   <p data-reveal className="kicker">
                     {t.form.kicker}

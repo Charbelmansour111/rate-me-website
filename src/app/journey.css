@@ -229,41 +229,149 @@
   pointer-events: none;
 }
 
-/* A phone: a thin dark rim, camera in the top of the bezel (the screenshots reach the very top).
-   No blurred shadow: it would be repainted over the walk as the phones move. */
+/* A phone: a thin bezel in its colour (black, orange in the middle, white), side buttons, a status
+   bar with the dynamic island, the screen, a soft reflection on the glass. No blurred shadow: it
+   would be repainted over the walk as the phones move; the shadow on the ground is a gradient. */
 .phone {
+  --bezel-face: #17171a;
+  --bezel-edge: #3d3d44;
+  --bezel-key: #2a2a30;
   position: relative;
   width: var(--phone, 13.25rem);
-  padding: 0.9rem 0.3rem 0.35rem;
-  border-radius: 2rem;
-  background: var(--bezel);
-  box-shadow: inset 0 0 0 1px var(--bezel-rim);
+  padding: 0.42rem;
+  border-radius: 2.6rem;
+  background: var(--bezel-face);
+  box-shadow:
+    inset 0 0 0 1px var(--bezel-edge),
+    inset 0 0 0 3px rgb(0 0 0 / 0.35);
 }
-/* Three frames, by place, for contrast on the charcoal: black, orange in the middle, white. */
 .phone[data-look='orange'] {
-  background: #ff5a00;
-  box-shadow: inset 0 0 0 1px #ffa36b;
+  --bezel-face: #ff5a00;
+  --bezel-edge: #ffa36b;
+  --bezel-key: #e04f00;
 }
 .phone[data-look='white'] {
-  background: #f3eee6;
-  box-shadow: inset 0 0 0 1px #d6cfc2;
+  --bezel-face: #f3eee6;
+  --bezel-edge: #d6cfc2;
+  --bezel-key: #cfc7b9;
 }
-.phone::before {
+/* Power on one side, the two volume keys on the other */
+.phone::before,
+.phone-keys {
   content: '';
   position: absolute;
-  top: 0.3rem;
-  left: 50%;
-  width: 2.75rem;
-  height: 0.4375rem;
-  border-radius: 1rem;
-  background: radial-gradient(circle at 85% 50%, var(--bezel-rim) 2px, #000 2.5px);
-  transform: translateX(-50%);
+  width: 3px;
+  border-radius: 2px;
+  background: var(--bezel-key);
+}
+.phone::before {
+  top: 24%;
+  right: -2px;
+  height: 13%;
+}
+.phone-keys {
+  top: 19%;
+  left: -2px;
+  height: 7%;
+  box-shadow: 0 calc(var(--phone, 13.25rem) * 0.2) 0 var(--bezel-key);
 }
 .phone-screen {
-  aspect-ratio: 9 / 19.5;
+  position: relative;
   overflow: hidden;
-  border-radius: 1.4rem 1.4rem 1.7rem 1.7rem;
-  background: var(--soft);
+  container-type: inline-size;
+  border-radius: 2.2rem;
+  background: #fff;
+}
+.phone-status {
+  display: flex;
+  height: 12.5cqw;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5cqw 7cqw 0;
+  background: #fff;
+  color: #0b0b0c;
+  font-size: 4cqw;
+  font-weight: 600;
+  direction: ltr;
+}
+.phone-screen[data-dark] .phone-status {
+  background: #0d1812;
+  color: #fff;
+}
+.phone-island {
+  width: 30cqw;
+  height: 8.6cqw;
+  border-radius: 999px;
+  background: #000;
+}
+.phone-icons {
+  width: 11cqw;
+}
+.phone-shot {
+  position: relative;
+}
+.phone-sketch {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 18;
+}
+.phone-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    118deg,
+    rgb(255 255 255 / 0.16) 0%,
+    rgb(255 255 255 / 0.05) 30%,
+    rgb(255 255 255 / 0) 42%
+  );
+  pointer-events: none;
+}
+/* The ground under the phone */
+.phone-ground {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  width: calc(var(--phone, 13.25rem) * 0.9);
+  height: 1.6rem;
+  margin-top: -0.7rem;
+  translate: -50% 0;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0));
+  pointer-events: none;
+}
+.showcase-figure > .phone-ground {
+  top: calc(var(--phone) * 2.2 + 2.5rem);
+}
+
+/* The app's tab bar (src/components/app-tab-bar.tsx), over the screenshot's own: 56pt of a 390pt
+   wide screen, white with a hairline on top, the chosen tab in the accent text colour. */
+.app-tabs {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  height: 14.36cqw;
+  justify-content: space-around;
+  padding-top: 1.3cqw;
+  border-top: max(0.5px, 0.13cqw) solid #dbdbdb;
+  background: #fff;
+  color: #5a5a66;
+  font-size: 3.08cqw;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.app-tab {
+  display: grid;
+  flex: 1;
+  justify-items: center;
+  gap: 0.6cqw;
+}
+.app-tab svg {
+  width: 6.15cqw;
+  height: 6.15cqw;
+}
+.app-tab[data-on] {
+  color: #b33f00;
 }
 .phone {
   transform: scale(0.93);
@@ -343,12 +451,38 @@ html:not([data-js]) .phone {
   font-size: 0.75rem;
   font-weight: 700;
 }
+.player-card-portrait {
+  position: relative;
+  display: block;
+}
 .player-card-photo {
   width: 7rem;
   height: 7rem;
-  border: 3px solid var(--card-position);
+  border: 3px solid var(--card-accent);
   border-radius: 50%;
   object-fit: cover;
+}
+/* The position badge, in layers: a shadow under it, a white rim, the position colour as its face
+   (shaded at the bottom), a soft shine at the top. */
+.player-card-badge {
+  position: absolute;
+  inset-inline-end: -0.35rem;
+  bottom: -0.2rem;
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border: 2.5px solid #fff;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.55) 0 14%, rgb(255 255 255 / 0) 46%),
+    radial-gradient(circle at 50% 120%, rgb(0 0 0 / 0.22), rgb(0 0 0 / 0) 60%), var(--card-position);
+  box-shadow:
+    0 4px 0 -1px rgb(0 0 0 / 0.28),
+    0 6px 10px rgb(0 0 0 / 0.35),
+    inset 0 -2px 0 rgb(0 0 0 / 0.18);
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 .player-card-perforation {
   border-top: 1.5px dashed rgb(255 255 255 / 0.28);
@@ -368,16 +502,6 @@ html:not([data-js]) .phone {
   color: var(--card-label);
   font-size: 0.9375rem;
   font-weight: 600;
-}
-.player-card-position {
-  display: grid;
-  width: 1.5rem;
-  height: 1.5rem;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--card-position);
-  font-size: 0.8125rem;
-  font-weight: 800;
 }
 .player-card-bars {
   display: grid;
@@ -515,4 +639,248 @@ html:not([data-js]) .phone {
   [data-js] .showcase-slide:not([data-current]) figcaption {
     visibility: hidden;
   }
+}
+
+/* --- What you get (src/components/feature-carousel.tsx): a carousel of paper cards --- */
+.feature-track {
+  --gap: 1.25rem;
+  --card: 62%;
+  display: flex;
+  gap: var(--gap);
+  margin-top: 3rem;
+  /* Out to the panel's edges on a phone, so the next card peeks in */
+  margin-inline: calc(-1 * clamp(1.5rem, 4vw, 3.5rem));
+  padding: 0.5rem clamp(1.5rem, 4vw, 3.5rem) 1rem;
+  overflow-x: auto;
+  scroll-padding-inline: clamp(1.5rem, 4vw, 3.5rem);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.feature-track::-webkit-scrollbar {
+  display: none;
+}
+.feature-track[data-dragging] {
+  scroll-snap-type: none;
+  cursor: grabbing;
+  user-select: none;
+}
+.feature-slide {
+  display: flex;
+  width: var(--card);
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+@media (min-width: 40rem) {
+  .feature-track {
+    --card: calc((100% - 2 * var(--gap)) / 2.2);
+  }
+}
+@media (min-width: 64rem) {
+  .feature-track {
+    --card: calc((100% - 2 * var(--gap)) / 3);
+  }
+}
+/* A card: one photo shape for all, the icon, the title, one line of what it gives you, More */
+.feature-card {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  text-align: start;
+  transition:
+    translate 200ms ease-out,
+    border-color 200ms ease-out;
+}
+.feature-card:hover {
+  border-color: var(--brand-orange);
+  translate: 0 -2px;
+}
+.feature-card:focus-visible {
+  border-radius: 1.25rem;
+  outline-offset: 3px;
+}
+.feature-photo {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--softer);
+}
+.feature-photo img {
+  transition: scale 400ms ease-out;
+}
+.feature-card:hover .feature-photo img {
+  scale: 1.03;
+}
+/* The assistant's portrait is square: keep the face in the frame */
+.feature-photo img[src*='assistant'] {
+  object-position: 50% 30%;
+}
+.feature-photo .pitch-box {
+  --st-pitch-line: #fff;
+  opacity: 0.85;
+}
+.feature-soon {
+  position: absolute;
+  top: 0.75rem;
+  inset-inline-end: 0.75rem;
+  padding: 0.15rem 0.75rem;
+  border: 1.5px solid #ff5a00;
+  border-radius: 999px;
+  background: #fffcf7;
+  color: #a33a00;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.feature-soon.static {
+  position: static;
+  display: inline-block;
+  background: transparent;
+  color: var(--accent-text);
+}
+.feature-body {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 0.6rem;
+  padding: 1.25rem 1.35rem 1.4rem;
+}
+.feature-icon {
+  display: block;
+  margin-top: -2.9rem;
+}
+.feature-icon > span {
+  border: 1px solid #0b0b0c;
+  background: #fffcf7;
+}
+.feature-title {
+  display: block;
+}
+.feature-benefit {
+  color: var(--muted);
+  font-size: 1.0625rem;
+}
+.feature-more {
+  display: inline-flex;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--accent-text);
+  font-weight: 700;
+}
+.feature-card:hover .feature-more svg {
+  translate: 3px 0;
+}
+[dir='rtl'] .feature-card:hover .feature-more svg {
+  translate: -3px 0;
+}
+.feature-more svg {
+  transition: translate 200ms ease-out;
+}
+.carousel-controls {
+  display: flex;
+  margin-top: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.carousel-arrow {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1.5px solid var(--text);
+  border-radius: 50%;
+}
+.carousel-arrow:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.carousel-arrow:disabled {
+  border-color: var(--line);
+  color: var(--edge);
+  cursor: default;
+}
+.carousel-dots {
+  display: flex;
+  align-items: center;
+}
+.carousel-dots[data-small] {
+  gap: 0.5rem;
+}
+.carousel-dots[data-small] span,
+.carousel-dots button span {
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--edge);
+}
+.carousel-dots [data-on],
+.carousel-dots [aria-current] span {
+  width: 1.5rem;
+  border-radius: 999px;
+  background: var(--brand-orange);
+}
+.carousel-dots button {
+  display: grid;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+}
+.carousel-dots[data-large] {
+  display: none;
+}
+@media (min-width: 40rem) {
+  .carousel-dots[data-small] {
+    display: none;
+  }
+  .carousel-dots[data-large] {
+    display: flex;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .carousel-dots span {
+    transition:
+      width 250ms ease-out,
+      background-color 250ms ease-out;
+  }
+}
+
+/* The feature dialog: the photo beside the facts */
+.feature-dialog-panel {
+  position: relative;
+  display: grid;
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  border-radius: 1.25rem;
+  overscroll-behavior: contain;
+}
+.feature-dialog-photo {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--softer);
+}
+.feature-dialog-text {
+  padding: 1.75rem clamp(1.5rem, 4vw, 2.5rem) 2rem;
+  font-size: 1.125rem;
+}
+@media (min-width: 48rem) {
+  .feature-dialog-panel {
+    grid-template-columns: 1fr 1.1fr;
+    align-items: center;
+  }
+  .feature-dialog-photo {
+    height: 100%;
+    min-height: 26rem;
+    aspect-ratio: auto;
+  }
+}
+.feature-dialog .screen-dialog-close {
+  background: #0b0b0c;
+  color: #f6f1e8;
 }

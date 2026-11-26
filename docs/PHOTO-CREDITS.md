@@ -27,6 +27,7 @@ photo's page.
 | `public/features/parentReport.webp`  | Nygi                 | https://unsplash.com/photos/8IWsvdk2Plw | 16:10, the people at the fence, 1200 px     |
 | `public/features/matchRequests.webp` | Markus Spiske        | https://unsplash.com/photos/KWQ2kQtxiKE | 16:10, the ball and the far goal, 1200 px   |
 | `public/features/tournaments.webp`   | Jerome               | https://unsplash.com/photos/nDHp2Z4rCHw | 16:10, the net against the sky, 1200 px     |
+| `public/features/assistant.jpg`      | Beatriz Cattel       | https://unsplash.com/photos/az3QxXQ7Fqc | Square on the face, 640 px, black and white |
 
 Every file is under 120 KB and loads lazily. Portraits are black and white, the rest in colour.
 
@@ -37,6 +38,9 @@ Every file is under 120 KB and loads lazily. Portraits are black and white, the 
 - The cones photo stands for trainings on the "Calendar and events" card: there is no feature called
   training.
 - The player card's photo is an example on a sample card, not a player.
+- The Coach assistant card's portrait stands for the person asking the assistant; its alt text
+  describes the photo only, and nothing says he is a coach. The square crop leaves out the small
+  maker's logo on the shirt.
 
 ## All 43 photos supplied
 
@@ -53,7 +57,7 @@ Every file is under 120 KB and loads lazily. Portraits are black and white, the 
 | 7   | Alyona Grishina, BBmi4nJjKk8            | no                            | usable portrait; eight portraits are enough        |
 | 8   | Artem Kryzhanivskyi, sEll8Ivzx1w        | community, coach-4            |                                                    |
 | 9   | Arthur Debons, Mrql2Og2GU8              | community, coach-6            |                                                    |
-| 10  | Beatriz Cattel, az3QxXQ7Fqc             | no                            | usable portrait; eight portraits are enough        |
+| 10  | Beatriz Cattel, az3QxXQ7Fqc             | feature card: assistant       |                                                    |
 | 11  | Centre for Ageing Better, 5c5GDBThnoo   | no                            | off topic (a community sports hall)                |
 | 12  | Chris Kursikowski, mkiMSN-beYg          | no                            | a professional stadium: club and venue marks       |
 | 13  | Christian Buehner, 5YpZpFy8zzU          | community, coach-7            |                                                    |
