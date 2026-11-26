@@ -1,0 +1,226 @@
+/* --- Pitch lines (src/components/pitch-lines.tsx): thin lines in the stage's line colour --- */
+.pitch-mark {
+  overflow: visible;
+  fill: none;
+  stroke: var(--st-pitch-line);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.pitch-mark * {
+  vector-effect: non-scaling-stroke;
+}
+.pitch-spot {
+  fill: var(--st-pitch-line);
+  stroke: none;
+}
+.pitch-faint {
+  opacity: 0.45;
+}
+.pitch-dash {
+  stroke-dasharray: 6 7;
+}
+
+/* Every panel is a pitch: the halfway line and centre circle on its top edge, arcs in its corners */
+.panel {
+  position: relative;
+}
+.pitch-centre {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 7.5rem;
+  height: 3.75rem;
+  opacity: 0.6;
+  translate: -50% 0;
+}
+.pitch-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.pitch-corners svg {
+  position: absolute;
+  width: 1.1rem;
+  height: 1.1rem;
+  opacity: 0.7;
+}
+.pitch-corners [data-corner='ts'] {
+  top: 0.55rem;
+  left: 0.55rem;
+}
+.pitch-corners [data-corner='te'] {
+  top: 0.55rem;
+  right: 0.55rem;
+  scale: -1 1;
+}
+.pitch-corners [data-corner='bs'] {
+  bottom: 0.55rem;
+  left: 0.55rem;
+  scale: 1 -1;
+}
+.pitch-corners [data-corner='be'] {
+  right: 0.55rem;
+  bottom: 0.55rem;
+  scale: -1 -1;
+}
+/* The penalty-box corner in a card's corner */
+.pitch-box {
+  position: absolute;
+  z-index: 1;
+  top: 0.6rem;
+  inset-inline-start: 0.6rem;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+[dir='rtl'] .pitch-box {
+  scale: -1 1;
+}
+
+/*
+ * Three looks for panels and cards, chosen by what they hold, the same in every stage:
+ * ink (black, orange edge) for what you act on, paper (white, black edge) for what you read and
+ * keep, split (half black, half orange) for the one key call to action of a section.
+ */
+.look-ink {
+  --page: #0b0b0c;
+  --soft: #161513;
+  --softer: #1f1d1a;
+  --text: #f6f1e8;
+  --muted: #bdb5a8;
+  --line: #34302a;
+  --edge: #857d70;
+  --chalk: #3a362f;
+  --accent-text: #ff8a3d;
+  --st-pitch-line: #ff5a00;
+  border: 1px solid rgb(255 90 0 / 0.6);
+  background: var(--page);
+  color: var(--text);
+}
+.look-paper {
+  --page: #fffcf7;
+  --soft: #f5f1ea;
+  --softer: #ebe5da;
+  --text: #0b0b0c;
+  --muted: #5c554c;
+  --line: #e6e0d4;
+  --edge: #857e72;
+  --chalk: #dcd5c8;
+  --accent-text: #a33a00;
+  --tint: rgb(255 90 0 / 0.12);
+  --st-pitch-line: #0b0b0c;
+  border: 1px solid #0b0b0c;
+  background: var(--page);
+  color: var(--text);
+}
+.split-host {
+  container-type: inline-size;
+}
+.look-split {
+  --text: #f6f1e8;
+  --muted: #bdb5a8;
+  --st-pitch-line: #ff5a00;
+  display: grid;
+  overflow: hidden;
+  align-items: stretch;
+  border-radius: 1.25rem;
+  background: #0b0b0c;
+  color: var(--text);
+}
+.look-split-words {
+  padding: 1.5rem 1.75rem;
+  align-self: center;
+}
+.look-split-pass {
+  display: none;
+}
+.look-split-action {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 1.75rem 1.5rem;
+  background: #ff5a00;
+}
+/* The diagonal: the orange half's leading edge, so words never sit on the orange */
+.look-split-action::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% - 1px);
+  left: 0;
+  width: 100%;
+  height: 1.5rem;
+  background: inherit;
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+}
+[dir='rtl'] .look-split-action::before {
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+.look-split-action :focus-visible {
+  outline-color: #0b0b0c;
+}
+@container (min-width: 34rem) {
+  .look-split {
+    grid-template-columns: 1fr auto auto;
+  }
+  .look-split-words {
+    padding: 1.75rem 0 1.75rem 2.25rem;
+  }
+  [dir='rtl'] .look-split-words {
+    padding: 1.75rem 2.25rem 1.75rem 0;
+  }
+  .look-split-pass {
+    display: block;
+    width: 7rem;
+    height: 2rem;
+    align-self: center;
+    margin-inline: 1.25rem 3rem;
+  }
+  [dir='rtl'] .look-split-pass {
+    scale: -1 1;
+  }
+  .look-split-action {
+    padding: 1.5rem 2rem 1.5rem 1rem;
+  }
+  [dir='rtl'] .look-split-action {
+    padding: 1.5rem 1rem 1.5rem 2rem;
+  }
+  .look-split-action::before {
+    top: 0;
+    bottom: 0;
+    left: auto;
+    right: calc(100% - 1px);
+    width: 2.75rem;
+    height: auto;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  }
+  [dir='rtl'] .look-split-action::before {
+    right: auto;
+    left: calc(100% - 1px);
+    clip-path: polygon(0 0, 100% 100%, 0 100%);
+  }
+}
+/* Black on the orange half: the orange button would vanish there */
+.btn-dark {
+  background: #0b0b0c;
+  color: #ffffff;
+}
+.btn-dark:hover {
+  background: #2a2621;
+}
+/* The ink look on a card with a spotlight keeps its own black ground */
+.spotlight.look-ink {
+  border-color: rgb(255 90 0 / 0.6);
+  background: var(--page);
+}
+.why-corner {
+  top: auto;
+  bottom: 0.6rem;
+  inset-inline-start: auto;
+  inset-inline-end: 0.6rem;
+  scale: -1 -1;
+}
+[dir='rtl'] .why-corner {
+  scale: 1 -1;
+}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import type { Dictionary } from '@/i18n';
 
+import { BoxCorner } from './pitch-lines';
 import { SpotlightCard } from './react-bits/spotlight-card';
 
 type Why = Dictionary['why'];
@@ -58,7 +59,8 @@ export function WhyCards({ t }: { t: Why }) {
   return t.items.map((item, i) => {
     const expanded = open.has(i);
     return (
-      <SpotlightCard key={item.title} as="li" className="why-card p-7">
+      <SpotlightCard key={item.title} as="li" className="why-card look-ink p-7">
+        <BoxCorner className="why-corner" />
         <div data-open={expanded} className="why-item">
           <span aria-hidden="true" className="display block text-2xl text-accent-text tabular-nums">
             {String(i + 1).padStart(2, '0')}

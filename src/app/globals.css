@@ -2,6 +2,8 @@
 @import './palette.css';
 @import './motion.css';
 @import './journey.css';
+@import './pitch.css';
+@import './chrome.css';
 
 @theme inline {
   --color-page: var(--page);

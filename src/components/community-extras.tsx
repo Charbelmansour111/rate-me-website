@@ -63,7 +63,7 @@ export function MatchRequestCard({ t, soon }: { t: Community; soon: string }) {
     </span>
   );
   return (
-    <figure data-reveal className="match-card">
+    <figure data-reveal className="match-card look-paper">
       <figcaption className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-semibold">{m.label}</span>
         {!released && (

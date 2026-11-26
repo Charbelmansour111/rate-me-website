@@ -16,6 +16,7 @@ import {
   type Point,
 } from '@/motion/tactics-data';
 
+import { PanelLines } from './pitch-lines';
 import { TacticsRoles } from './tactics-roles';
 
 /**
@@ -44,6 +45,7 @@ export function TacticsSection({ locale }: { locale: Locale }) {
       <div className="tactics-pin">
         <div className="wrap">
           <div className="panel grid items-center gap-x-14 gap-y-10 lg:grid-cols-[1fr_1.25fr]">
+            <PanelLines />
             <div>
               <p data-reveal className="kicker">
                 {t.tactics.kicker}
