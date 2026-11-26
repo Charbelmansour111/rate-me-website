@@ -38,8 +38,8 @@ export function startSpotlights(signal: AbortSignal) {
 
     const move = (event: PointerEvent) => {
       if (event.pointerType !== 'mouse') return;
-      // The browser sends moves as the page scrolls under a still mouse: the light waits.
-      if (root.classList.contains('lenis-scrolling')) return;
+      // The browser sends moves as the page glides under a still mouse: the light waits.
+      if (root.classList.contains('lenis-smooth')) return;
       const box = card.getBoundingClientRect();
       const px = event.clientX - box.left;
       const py = event.clientY - box.top;
