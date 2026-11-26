@@ -1,23 +1,16 @@
 'use client';
 
-import { useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 
 type Item = { q: string; a: string; privacyLink?: string };
 
-const never = () => () => {};
-
 /**
  * Questions that open in place. Each question is a button with aria-expanded; arrows, Home and End
- * move between them. Without JavaScript every answer is simply open (see .faq-panel).
+ * move between them. A closed answer is hidden by CSS (.faq-panel), out of sight and out of reach
+ * of the keyboard and screen readers; without JavaScript every answer is simply open.
  */
 export function FaqAccordion({ items, privacyHref }: { items: Item[]; privacyHref: string }) {
   const [open, setOpen] = useState<ReadonlySet<number>>(new Set());
-  // Until the page runs, nothing is locked away: the answers may be all a visitor gets.
-  const ready = useSyncExternalStore(
-    never,
-    () => true,
-    () => false,
-  );
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   function toggle(i: number) {
@@ -58,7 +51,7 @@ export function FaqAccordion({ items, privacyHref }: { items: Item[]; privacyHre
                 <span className="faq-icon" aria-hidden="true" />
               </button>
             </h3>
-            <div id={`faq-a-${i}`} className="faq-panel" inert={ready && !expanded}>
+            <div id={`faq-a-${i}`} className="faq-panel">
               <div className="overflow-hidden">
                 <p className="max-w-2xl pb-6 text-muted">
                   {item.a}

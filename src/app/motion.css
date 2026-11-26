@@ -183,9 +183,17 @@ html.lenis body {
   display: grid;
   grid-template-rows: 0fr;
 }
+/* Closed: hidden from everyone, once it has finished closing */
+.faq-panel > * {
+  visibility: hidden;
+}
 .faq-item[data-open='true'] .faq-panel,
 html:not([data-js]) .faq-panel {
   grid-template-rows: 1fr;
+}
+.faq-item[data-open='true'] .faq-panel > *,
+html:not([data-js]) .faq-panel > * {
+  visibility: visible;
 }
 
 /* --- Tactics showcase --- */
@@ -465,11 +473,20 @@ html:not([data-js]) .faq-panel {
   .faq-icon::after {
     transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
   }
-  .faq-button,
-  .faq-panel > * {
+  .faq-button {
     transition:
       padding 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
       color 160ms;
+  }
+  .faq-panel > * {
+    transition:
+      padding 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      visibility 0s 320ms;
+  }
+  .faq-item[data-open='true'] .faq-panel > * {
+    transition:
+      padding 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      visibility 0s;
   }
 
   /* --- Form success: the ball bounces in, then the tick draws --- */

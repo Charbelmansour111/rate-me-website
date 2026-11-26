@@ -11,6 +11,21 @@ const TILT = 4;
 export function startSpotlights(signal: AbortSignal) {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   for (const card of document.querySelectorAll<HTMLElement>('[data-spotlight]')) {
+    // The light under the content, and the rim over it (src/components/react-bits)
+    const layer = (name: string) => {
+      const span = document.createElement('span');
+      span.className = name;
+      span.setAttribute('aria-hidden', 'true');
+      return span;
+    };
+    const light = layer('spotlight-light');
+    const rim = layer('spotlight-rim');
+    card.prepend(light);
+    card.append(rim);
+    signal.addEventListener('abort', () => {
+      light.remove();
+      rim.remove();
+    });
     gsap.set(card, { transformPerspective: 900 });
     const follow = { duration: 0.35, ease: 'power3.out' };
     const x = gsap.quickTo(card, '--spot-x', follow);

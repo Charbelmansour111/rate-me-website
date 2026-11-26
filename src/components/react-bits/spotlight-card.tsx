@@ -2,9 +2,10 @@
  * Adapted from React Bits "SpotlightCard" (TS + Tailwind), https://reactbits.dev, by David Haz.
  * License: ./LICENSE.md (MIT + Commons Clause).
  *
- * Changes for this site: rendered on the server with no client JavaScript; the light's position
- * and strength are CSS variables (--spot-x, --spot-y, --spot-on) that src/motion/cards.ts moves
- * with GSAP. The light is the accent colour. Without a mouse, or without motion, it stays off.
+ * Changes for this site: rendered on the server with no client JavaScript. Its two layers (the
+ * light, and the 1px rim it lights up) are added by src/motion/cards.ts for mouse users only, so
+ * nobody else pays for them; GSAP moves them through CSS variables (--spot-x, --spot-y,
+ * --spot-on). The light is the accent colour.
  */
 import type { CSSProperties, ReactNode } from 'react';
 
@@ -42,9 +43,7 @@ type Props = {
 export function SpotlightCard({ as: Tag = 'div', className = '', children }: Props) {
   return (
     <Tag data-spotlight data-card-reveal className={`spotlight ${className}`}>
-      <span className="spotlight-light" aria-hidden="true" />
       {children}
-      <span className="spotlight-rim" aria-hidden="true" />
     </Tag>
   );
 }

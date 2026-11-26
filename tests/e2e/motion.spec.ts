@@ -643,6 +643,5 @@ test.describe('without JavaScript', () => {
     for (const answer of await page.locator('.faq-panel p').all()) {
       await expect(answer).toBeVisible();
     }
-    await expect(page.locator('.faq-panel[inert]')).toHaveCount(0);
   });
 });

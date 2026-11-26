@@ -159,12 +159,12 @@ test('faq: an accordion of buttons, by mouse and by keyboard', async ({ page }) 
   const panel = faq.locator('#faq-a-0');
   await expect(first).toHaveAttribute('aria-expanded', 'false');
   await expect(first).toHaveAttribute('aria-controls', 'faq-a-0');
-  await expect(panel).toHaveAttribute('inert');
+  await expect(panel.locator('p')).toBeHidden();
   await expect.poll(() => panel.evaluate((el) => el.getBoundingClientRect().height)).toBe(0);
 
   await first.click();
   await expect(first).toHaveAttribute('aria-expanded', 'true');
-  await expect(panel).not.toHaveAttribute('inert');
+  await expect(panel.locator('p')).toBeVisible();
   await expect
     .poll(() => panel.evaluate((el) => el.getBoundingClientRect().height))
     .toBeGreaterThan(40);
