@@ -9,6 +9,9 @@
   height: 100vh;
   height: 100lvh;
   background: var(--wide) center / cover no-repeat;
+  /* The canvas is the frames' own size (src/motion/walk.ts): scaled up here, as its background is */
+  object-fit: cover;
+  image-rendering: auto;
   pointer-events: none;
 }
 /* Otherwise: one still picture behind each part of the page. */

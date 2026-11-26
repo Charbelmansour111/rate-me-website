@@ -8,7 +8,6 @@ import {
 } from '@/config/journey.config';
 
 const BATCH = 4;
-const MAX_DPR = 2;
 
 const idle = (run: () => void) => {
   if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 1000 });
@@ -159,48 +158,53 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   let position = Math.min(1, Math.max(0, scrollY / end()));
   const decoder = frameDecoder();
 
-  /** A frame over the whole canvas, as `background-size: cover` would place it. */
+  /** What is on the canvas: the two frames and the fade, in 255ths (the finest a screen shows). */
+  let drawn = '';
+
+  /** A frame over the whole canvas. The canvas is the frames' own size: CSS scales it. */
   function paint(frame: Frame, alpha: number) {
-    const { width, height } = canvas;
-    const scale = Math.max(width / frame.width, height / frame.height);
-    const w = frame.width * scale;
-    const h = frame.height * scale;
     context!.globalAlpha = alpha;
-    context!.drawImage(frame.source, (width - w) / 2, (height - h) / 2, w, h);
+    context!.drawImage(frame.source, 0, 0, canvas.width, canvas.height);
   }
 
-  /** The two frames around the position, the next one fading in by how far along it is. */
+  /** Sets an attribute only when it changes: a write to <html> would restyle the page. */
+  function mark(el: HTMLElement, key: string, value: string) {
+    if (el.dataset[key] !== value) el.dataset[key] = value;
+  }
+
+  /**
+   * The two frames around the position, the next one fading in by how far along it is. Nothing is
+   * drawn when the picture would be the same, and one frame alone is one draw.
+   */
   function draw() {
     if (reel.images.size) shown = reel;
     const { sequence, images } = shown;
-    const at = position * (sequence.count - 1);
-    const mix = blend(images.keys(), at);
+    const mix = blend(images.keys(), position * (sequence.count - 1));
     if (!mix) return;
-    paint(images.get(mix.from)!, 1);
-    if (mix.alpha > 0) paint(images.get(mix.to)!, mix.alpha);
-    context!.globalAlpha = 1;
-    // The frame mostly on show, and the blend: the tests read these.
-    canvas.dataset.frame = String(nearest(images.keys(), frameAt(sequence, position)));
-    canvas.dataset.blend = `${mix.from} ${mix.to} ${mix.alpha.toFixed(3)}`;
-    canvas.dataset.shape = sequence === journey.portrait ? 'portrait' : 'landscape';
-    root.dataset.scene = sceneAt(position);
-  }
-
-  function measure() {
-    // The screen's pixel density, up to 2, but no finer than the frames themselves: past that
-    // every scroll would fill more pixels with no more detail. A sharper set raises it by itself.
-    const [first] = (reel.images.size ? reel : shown).images.values();
-    const enough = first
-      ? 1.25 * Math.min(first.height / canvas.clientHeight, first.width / canvas.clientWidth)
-      : 1;
-    const ratio = Math.min(devicePixelRatio || 1, MAX_DPR, enough);
-    const width = Math.round(canvas.clientWidth * ratio);
-    const height = Math.round(canvas.clientHeight * ratio);
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-      draw();
+    const below = images.get(mix.from)!;
+    // Sized to the frames, not the screen: a turn or a resize redraws nothing.
+    if (canvas.width !== below.width || canvas.height !== below.height) {
+      canvas.width = below.width;
+      canvas.height = below.height;
+      drawn = '';
     }
+    const fade = Math.round(mix.alpha * 255);
+    const key = `${mix.from} ${mix.to} ${fade}`;
+    if (key !== drawn) {
+      drawn = key;
+      if (fade === 255) paint(images.get(mix.to)!, 1);
+      else {
+        paint(below, 1);
+        if (fade > 0) paint(images.get(mix.to)!, fade / 255);
+      }
+      context!.globalAlpha = 1;
+      // The blend: the tests read it.
+      canvas.dataset.blend = `${mix.from} ${mix.to} ${mix.alpha.toFixed(3)}`;
+    }
+    // The frame mostly on show, the set, and the part of the walk.
+    mark(canvas, 'frame', String(nearest(images.keys(), frameAt(sequence, position))));
+    mark(canvas, 'shape', sequence === journey.portrait ? 'portrait' : 'landscape');
+    mark(root, 'scene', sceneAt(position));
   }
 
   async function load(from: Reel, i: number) {
@@ -215,7 +219,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     from.images.set(i, frame);
     canvas.dataset.loaded = String(from.images.size);
     if (from !== reel) return;
-    if (from.images.size === 1) measure();
     // It may be one of the two on show now.
     draw();
   }
@@ -252,7 +255,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     if (next === reel) return;
     reel = next;
     shown ??= next;
-    measure();
     draw();
     void loadBatch(next);
   }
@@ -264,7 +266,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     // A keyboard that opens makes the screen wide, but not wider: that is no turn.
     if (innerWidth !== width) pick();
     width = innerWidth;
-    measure();
   }
   addEventListener('resize', onResize, { signal });
 
