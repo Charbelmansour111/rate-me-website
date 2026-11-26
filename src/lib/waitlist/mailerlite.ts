@@ -49,7 +49,8 @@ export class MailerLiteProvider implements WaitlistProvider {
           club: entry.club,
           locale: entry.locale,
           consent_at: entry.consentAt,
-          source: entry.source,
+          // MailerLite reserves "source".
+          signup_source: entry.source,
         },
       },
     });

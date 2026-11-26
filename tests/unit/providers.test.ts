@@ -105,7 +105,7 @@ describe('MailerLite', () => {
         club: 'FC Test',
         locale: 'en',
         consent_at: '2026-11-25T10:00:00.000Z',
-        source: 'website-pre-register',
+        signup_source: 'website-pre-register',
       },
     });
   });

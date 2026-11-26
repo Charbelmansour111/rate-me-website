@@ -30,7 +30,8 @@ and sets no cookie: the language is the URL.
 ### Or MailerLite
 
 Create the group **Rate Me pre-register** (its ID is `MAILERLITE_GROUP_ID`), create the text fields
-`role`, `club`, `locale`, `consent_at`, `source` (`name`, `phone` and `city` exist already), create
+`role`, `club`, `locale`, `consent_at`, `signup_source` (`name`, `phone` and `city` exist already;
+MailerLite reserves `source`), create
 an API token (`MAILERLITE_API_KEY`) and set `WAITLIST_PROVIDER=mailerlite`.
 
 ## 2. Environment variables
