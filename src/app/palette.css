@@ -49,26 +49,88 @@
 }
 
 /*
- * The panels over the walk (src/app/journey.css), in both themes: the walk's charcoal, warm white
- * text, orange accents. One system for every section, so nothing cream floats on the dark photo.
+ * The panels over the walk (src/app/journey.css) take their colours from the part of the walk
+ * behind them: warm light in the locker room, charcoal in the tunnel, pitch green on the field.
+ * The values come from src/config/stages.ts (the block below is a copy, checked by
+ * tests/unit/stages.test.ts); src/motion/stages.ts blends them as the walk is scrubbed.
  */
+:root {
+  --st-surface: #0f0e0d;
+  --st-soft: #1a1815;
+  --st-softer: #23201c;
+  --st-text: #f6f1e8;
+  --st-muted: #bdb5a8;
+  --st-accent-text: #ff8a3d;
+  --st-line: #34302a;
+  --st-edge: #857d70;
+  --st-chalk: #3a362f;
+  --st-pitch-line: #ff5a00;
+  --st-panel-edge: #ff5a004d;
+  --st-glow: #ff5a0080;
+  --st-danger: #ffb4ab;
+}
+html:not([data-stages='live']) [data-stage='locker'] {
+  --st-surface: #f3ece1;
+  --st-soft: #eae1d2;
+  --st-softer: #e0d5c3;
+  --st-text: #0b0b0c;
+  --st-muted: #544c42;
+  --st-accent-text: #9e3400;
+  --st-line: #d3c7b3;
+  --st-edge: #7a6f61;
+  --st-chalk: #c7baa4;
+  --st-pitch-line: #0b0b0c;
+  --st-panel-edge: #0b0b0c;
+  --st-glow: #ff5a0066;
+  --st-danger: #a3221b;
+}
+html:not([data-stages='live']) [data-stage='tunnel'] {
+  --st-surface: #0f0e0d;
+  --st-soft: #1a1815;
+  --st-softer: #23201c;
+  --st-text: #f6f1e8;
+  --st-muted: #bdb5a8;
+  --st-accent-text: #ff8a3d;
+  --st-line: #34302a;
+  --st-edge: #857d70;
+  --st-chalk: #3a362f;
+  --st-pitch-line: #ff5a00;
+  --st-panel-edge: #ff5a004d;
+  --st-glow: #ff5a0080;
+  --st-danger: #ffb4ab;
+}
+html:not([data-stages='live']) [data-stage='field'] {
+  --st-surface: #0b2a1c;
+  --st-soft: #103424;
+  --st-softer: #163f2d;
+  --st-text: #ffffff;
+  --st-muted: #bdd4c6;
+  --st-accent-text: #ffb07a;
+  --st-line: #24503c;
+  --st-edge: #7ea892;
+  --st-chalk: #2c5c46;
+  --st-pitch-line: #ffffff;
+  --st-panel-edge: #ffffff59;
+  --st-glow: #ff5a0066;
+  --st-danger: #ffb4ab;
+}
+
 .panel {
-  --page: #0f0e0d;
-  --soft: #1a1815;
-  --softer: #23201c;
-  --text: #f6f1e8; /* warm white */
-  --muted: #bdb5a8;
-  --line: #34302a;
-  --edge: #857d70;
-  --chalk: #3a362f;
-  --accent-text: #ff8a3d;
-  --danger: #ffb4ab;
+  --page: var(--st-surface);
+  --soft: var(--st-soft);
+  --softer: var(--st-softer);
+  --text: var(--st-text);
+  --muted: var(--st-muted);
+  --line: var(--st-line);
+  --edge: var(--st-edge);
+  --chalk: var(--st-chalk);
+  --accent-text: var(--st-accent-text);
+  --danger: var(--st-danger);
   --tint: rgb(255 90 0 / 0.14);
   --bezel: #232327;
   --bezel-rim: #5c5c66;
-  --panel-edge: rgb(255 90 0 / 0.3); /* the thin orange line round a panel */
+  --panel-edge: var(--st-panel-edge); /* the thin line round a panel */
   color: var(--text);
-  color-scheme: dark;
 }
 
 /* The black footer. */

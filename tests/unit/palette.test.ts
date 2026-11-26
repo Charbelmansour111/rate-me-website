@@ -21,9 +21,7 @@ const themes = {
   dark,
   'black block': { ...light, ...inverse },
   'black block in dark': { ...dark, ...inverse },
-  // The panels over the walk are the same in both themes
-  panel: { ...light, ...block('\n.panel') },
-  'panel in dark': { ...dark, ...block('\n.panel') },
+  // The panels over the walk take their colours from the walk: tests/unit/stages.test.ts
 };
 
 function luminance(hex: string) {
@@ -84,8 +82,10 @@ it('the browser bar matches the pages', () => {
   expect(THEME_COLORS).toEqual({ light: light.page, dark: dark.page });
 });
 
-it('the panels over the walk are charcoal with warm white text, in both themes', () => {
-  expect(block('\n.panel')).toMatchObject({ page: '#0f0e0d', text: '#f6f1e8' });
+it('the panels read the stage colours, in both themes', () => {
+  const panel = css.slice(css.indexOf('\n.panel {'));
+  expect(panel).toContain('--page: var(--st-surface)');
+  expect(panel).toContain('--text: var(--st-text)');
 });
 
 // The player card in "Inside the app" (src/components/player-card.tsx), as the app draws it

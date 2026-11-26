@@ -12,7 +12,19 @@ const CATCH_UP = 0.4;
  * ticker, the loop Lenis runs in, so the picture and the page move in the same frame. No easing of
  * its own: Lenis already smooths the wheel, and a finger is followed exactly.
  */
-export function scrubWalk(walk: Walk, signal: AbortSignal) {
+export function scrubWalk(
+  picture: Walk,
+  signal: AbortSignal,
+  /** What else follows the walk in the same frame: the panels' colours, the end of the page. */
+  followers: ((progress: number) => void)[] = [],
+) {
+  const walk = {
+    ...picture,
+    seek: (progress: number) => {
+      picture.seek(progress);
+      for (const follow of followers) follow(progress);
+    },
+  };
   let catchUp: gsap.core.Tween | undefined;
   const trigger = ScrollTrigger.create({
     start: 0,
