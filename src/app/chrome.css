@@ -1,0 +1,368 @@
+/* --- The header (src/components/site-header.tsx, header-bar.tsx) --- */
+.bar-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 2.5rem;
+  pointer-events: none;
+}
+.site-bar {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  height: 4.5rem;
+  padding: 0.5rem clamp(0.5rem, 2vw, 1rem) 0;
+}
+.site-bar-inner {
+  position: relative;
+  display: flex;
+  max-width: 76rem;
+  height: 3.5rem;
+  margin-inline: auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--page);
+  color: var(--text);
+}
+/* On the home page: the colours of the stage of the walk behind it. See-through at the top (as
+   much as AA allows: src/config/stages.ts, BAR_CLEAR), solid once the page moves. */
+.site-bar[data-home] {
+  --bar-fill: 1;
+  --text: var(--st-text);
+  --muted: var(--st-muted);
+  --soft: var(--st-soft);
+  --line: var(--st-line);
+  --accent-text: var(--st-accent-text);
+}
+.site-bar[data-home][data-top] {
+  --bar-fill: 0.62;
+}
+.site-bar[data-home] .site-bar-inner {
+  border-color: var(--st-panel-edge);
+  background: color-mix(in srgb, var(--st-surface) calc(var(--bar-fill) * 100%), transparent);
+  transition: background-color 300ms ease-out;
+}
+/* The logo: dark on a light stage, light on a dark one */
+.wm-dark,
+:root:not([data-stages='live']) .site-bar:is([data-stage='tunnel'], [data-stage='field']) .wm-light,
+:root[data-tone='dark'] .site-bar .wm-light {
+  display: none;
+}
+:root:not([data-stages='live']) .site-bar:is([data-stage='tunnel'], [data-stage='field']) .wm-dark,
+:root[data-tone='dark'] .site-bar .wm-dark {
+  display: block;
+}
+.bar-logo {
+  display: flex;
+  min-height: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  padding-inline: 0.6rem;
+  border-radius: 0.6rem;
+}
+.bar-nav {
+  display: none;
+  margin-inline: auto;
+}
+.bar-links {
+  display: flex;
+  gap: 0.25rem;
+}
+.nav-link {
+  display: grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  padding-inline: 0.85rem;
+  border-radius: 0.6rem;
+  font-weight: 500;
+}
+.nav-link:hover {
+  color: var(--accent-text);
+}
+/* The section being read: a light orange ground and an orange line under its name */
+.nav-link[aria-current] {
+  background: rgb(255 90 0 / 0.12);
+  font-weight: 600;
+}
+.nav-link[aria-current] span {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.bar-end {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-inline-start: auto;
+}
+.bar-wide {
+  display: none;
+}
+/* Language and theme, side by side in one small box */
+.bar-tools {
+  display: flex;
+  align-items: center;
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+.bar-tools-rule {
+  width: 1px;
+  height: 1.5rem;
+  background: var(--line);
+}
+.btn.bar-cta {
+  min-height: 2.75rem;
+  padding: 0.25rem 1.1rem;
+  font-size: 1rem;
+}
+.bar-menu-button {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border-radius: 0.6rem;
+}
+.bar-menu-button:hover {
+  background: var(--soft);
+}
+@media (min-width: 64rem) {
+  .bar-nav,
+  .bar-wide {
+    display: block;
+  }
+  .bar-end {
+    margin-inline-start: 0;
+  }
+  .bar-menu-button {
+    display: none;
+  }
+}
+/* How far down the page: a thin orange line along the bar's bottom edge */
+.site-bar-progress {
+  position: absolute;
+  bottom: -1px;
+  inset-inline: 1rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-orange);
+  transform: scaleX(var(--page-progress, 0));
+  transform-origin: left;
+}
+[dir='rtl'] .site-bar-progress {
+  transform-origin: right;
+}
+/* Without the motion code (reduced motion): CSS follows the scroll, where it can */
+@supports (animation-timeline: scroll()) {
+  :root:not([data-motion]) .site-bar-progress {
+    animation: page-progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+@keyframes page-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The phone's menu: a dialog under the bar */
+.menu-dialog.panel {
+  position: fixed;
+  width: min(24rem, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  margin: 0.75rem 0.75rem auto auto;
+  padding: 1.25rem;
+  overflow: auto;
+  border: 1px solid var(--st-panel-edge);
+}
+[dir='rtl'] .menu-dialog.panel {
+  margin: 0.75rem auto auto 0.75rem;
+}
+.menu-dialog::backdrop {
+  background: rgb(8 7 6 / 0.6);
+}
+.menu-close {
+  position: absolute;
+  top: 0.75rem;
+  inset-inline-end: 0.75rem;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1.5px solid var(--edge);
+  border-radius: 50%;
+}
+.menu-links {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 3rem;
+}
+.menu-links .nav-link {
+  min-height: 3rem;
+  justify-items: start;
+  font-size: 1.25rem;
+}
+.menu-tools {
+  display: flex;
+  margin-block: 1.25rem;
+}
+
+/* --- The end of the page (src/components/site-footer.tsx; motion in src/motion/chrome.ts) --- */
+/* A black layer over the walk, darkened over the last part of the scroll: the canvas itself is
+   never filtered, which would repaint it every frame. */
+.walk-dim {
+  display: none;
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+[data-motion] .walk-dim {
+  display: block;
+}
+.site-footer {
+  --page: var(--st-surface);
+  --soft: var(--st-soft);
+  --text: var(--st-text);
+  --muted: var(--st-muted);
+  --line: var(--st-line);
+  --edge: var(--st-edge);
+  --accent-text: var(--st-accent-text);
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--st-panel-edge);
+  background: var(--page);
+  color: var(--text);
+}
+.footer-pitch {
+  display: block;
+  width: min(76rem, 100%);
+  height: auto;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  opacity: 0.5;
+}
+.footer-grid {
+  display: grid;
+  gap: 2rem 3rem;
+  padding-block: 2.5rem 3rem;
+}
+@media (min-width: 48rem) {
+  .footer-grid {
+    grid-template-columns: 1fr auto auto;
+    align-items: start;
+  }
+  .footer-contact {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --- The running line (src/components/running-line.tsx) --- */
+.run-line {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 2px;
+  width: 16px;
+  pointer-events: none;
+}
+@media (min-width: 48rem) {
+  .run-line {
+    inset-inline-start: max(0.5rem, calc((100% - 76rem) / 2 - 2.25rem));
+  }
+}
+.run-line svg {
+  display: block;
+  overflow: visible;
+}
+.run-track {
+  stroke: rgb(255 90 0 / 0.28);
+  stroke-width: 2px;
+}
+.run-fill {
+  stroke: var(--brand-orange);
+  stroke-width: 2.5px;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.run-node {
+  fill: var(--brand-orange);
+  stroke: var(--brand-orange);
+  stroke-width: 2px;
+}
+.run-ball {
+  display: none;
+}
+/* Drawn with the scroll where motion is on; otherwise a still line, every node filled */
+[data-live] .run-fill {
+  stroke-dashoffset: 1;
+}
+[data-live] .run-node {
+  fill: #0b0b0c;
+  transition: fill 200ms ease-out;
+}
+[data-live] .run-node.run-on {
+  fill: var(--brand-orange);
+}
+[data-live] .run-ball {
+  display: block;
+}
+.run-ball circle {
+  fill: #fff;
+  stroke: #0b0b0c;
+  stroke-width: 1.5px;
+}
+.run-ball path {
+  fill: #0b0b0c;
+}
+
+/* --- "Scroll", at the bottom of the first screen; gone after the first scroll --- */
+.scroll-cue {
+  position: fixed;
+  z-index: 5;
+  bottom: 1.25rem;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--st-panel-edge);
+  border-radius: 999px;
+  background: var(--st-surface);
+  color: var(--st-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  pointer-events: none;
+  translate: -50% 0;
+  transition:
+    opacity 400ms ease-out,
+    translate 400ms ease-out;
+}
+.site-bar:not([data-top]) ~ main .scroll-cue {
+  opacity: 0;
+  translate: -50% 0.75rem;
+  visibility: hidden;
+  transition:
+    opacity 400ms ease-out,
+    translate 400ms ease-out,
+    visibility 0s 400ms;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-cue svg {
+    animation: cue 1.8s ease-in-out 3;
+  }
+}
+@keyframes cue {
+  50% {
+    translate: 0 3px;
+  }
+}

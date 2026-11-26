@@ -5,17 +5,20 @@ import { startMagnets } from '@/components/react-bits/magnet.motion';
 import { startTilts } from '@/components/react-bits/tilted-card.motion';
 
 import { startCardReveals, startParallax, startSpotlights } from './cards';
+import { startChrome } from './chrome';
 import { startReveals } from './reveal';
 import { startSmooth } from './smooth';
 import { startTabGlide } from './tabs';
 import type { Walk } from './walk';
+import { followStages } from './stages';
 import { scrubWalk } from './walk-scroll';
 
 gsap.registerPlugin(ScrollTrigger);
 
 /** What follows the scroll: started as soon as GSAP is in, even in the middle of a scroll. */
 export function startScroll(signal: AbortSignal, walk: Walk | undefined) {
-  if (walk) scrubWalk(walk, signal);
+  if (walk) scrubWalk(walk, signal, [followStages(signal)]);
+  startChrome(signal);
   startReveals(signal);
 }
 

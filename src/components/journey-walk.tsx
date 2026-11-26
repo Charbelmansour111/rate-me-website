@@ -8,6 +8,7 @@ import {
   stillAt,
   type SceneId,
   type Sequence,
+  type StageId,
 } from '@/config/journey.config';
 import { hasFrames } from '@/lib/journey-files';
 
@@ -44,10 +45,21 @@ export function WalkCanvas() {
   );
 }
 
-/** A part of the page. Without scrubbing, one still picture stands behind it. */
+/** Dims the walk over the end of the page, under the footer (src/motion/chrome.ts). */
+export function WalkDim() {
+  return <div className="walk-dim" data-walk-dim aria-hidden="true" />;
+}
+
+/** The panels' colours for each part (src/config/stages.ts). */
+const STAGE: Record<SceneId, StageId> = { locker: 'locker', tunnel: 'tunnel', pitch: 'field' };
+
+/**
+ * A part of the page. Without scrubbing, one still picture stands behind it and its panels keep
+ * their stage's colours.
+ */
 export function WalkGroup({ scene, children }: { scene: SceneId; children: ReactNode }) {
   return (
-    <div className="walk-group">
+    <div className="walk-group" data-stage={STAGE[scene]}>
       <div className="walk-still" aria-hidden="true" style={still(scene)} />
       <div className="walk-content">{children}</div>
     </div>
