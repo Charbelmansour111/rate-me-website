@@ -71,6 +71,10 @@ export const en = {
         title: 'Squad and player cards',
         text: 'Kit numbers, positions and a card for each player, shared only when the coach decides.',
       },
+      parentReport: {
+        title: 'Monthly report for parents',
+        text: 'At the end of each month, parents of youth players receive a PDF of their child’s progress: attendance, the coach’s ratings and the coach’s notes.',
+      },
       matchRequests: {
         title: 'Match requests',
         text: 'Find a friendly by sending a request to other clubs, and answer the ones you receive.',
@@ -184,6 +188,10 @@ export const en = {
       {
         q: 'Is it free for players?',
         a: 'Yes. Players are always free. They join through their coach’s team, so there is nothing for them to sign up for here.',
+      },
+      {
+        q: 'Do parents see their child’s progress?',
+        a: 'Yes, in a monthly report. At the end of each month, parents of youth players receive a PDF with their child’s attendance, the coach’s ratings and the coach’s notes.',
       },
       {
         q: 'When does it launch?',

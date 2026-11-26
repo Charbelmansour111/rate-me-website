@@ -164,7 +164,7 @@ test('community: room for four coach photos, and a match request that says what 
 test('feature cards: photos where there are some, drawings for the rest', async ({ page }) => {
   await page.goto('/');
   const cards = page.locator('#features [data-spotlight]');
-  for (const [i, photo] of [true, true, false, false, false, false].entries()) {
+  for (const [i, photo] of [true, true, false, false, false, false, false].entries()) {
     const art = cards.nth(i).locator('.feature-art');
     await art.scrollIntoViewIfNeeded();
     if (photo) {
@@ -181,11 +181,33 @@ test('feature cards: photos where there are some, drawings for the rest', async 
   }
 });
 
+for (const [path, title, question] of [
+  ['/', 'Monthly report for parents', 'Do parents see their child’s progress?'],
+  ['/ar', 'تقرير شهري للأهل', 'هل يرى الأهل تقدّم أولادهم؟'],
+]) {
+  test(`${path}: the parents' monthly report has its card and its answer`, async ({ page }) => {
+    test.skip(path === '/ar' && !ARABIC_ENABLED);
+    await page.goto(path);
+    const card = page.locator('#features [data-spotlight]').filter({ hasText: title });
+    await expect(card).toHaveCount(1);
+    // Released: no Coming soon tag; a picture slot like the others
+    await expect(card).not.toContainText(/Coming soon|قريبًا/);
+    await expect(card.locator('.feature-art')).toHaveCount(1);
+    await expect(card).toContainText('PDF');
+    const button = page.locator('#faq').getByRole('button', { name: question });
+    await button.click();
+    const answer = page.locator(`#${await button.getAttribute('aria-controls')}`);
+    await expect(answer).toContainText('PDF');
+    // Says what is in it, promises no date
+    await expect(answer).not.toContainText(/\d{4}|(by|from) (january|june|september)/i);
+  });
+}
+
 test('faq: an accordion of buttons, by mouse and by keyboard', async ({ page }) => {
   await page.goto('/');
   const faq = page.locator('#faq');
   const questions = faq.getByRole('button');
-  await expect(questions).toHaveCount(7);
+  await expect(questions).toHaveCount(8);
   const first = questions.first();
   const panel = faq.locator('#faq-a-0');
   await expect(first).toHaveAttribute('aria-expanded', 'false');

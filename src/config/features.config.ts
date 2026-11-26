@@ -6,6 +6,7 @@ export const features = [
   { id: 'calendar', released: true },
   { id: 'whiteboard', released: true },
   { id: 'squad', released: true },
+  { id: 'parentReport', released: true },
   { id: 'matchRequests', released: false },
   { id: 'tournaments', released: false },
   { id: 'assistant', released: false },

@@ -6,6 +6,8 @@ const paths: Record<FeatureId, string> = {
   whiteboard:
     'M6 9h36v24H6Z M18 41l6-8 6 8 M13 27c4-9 9-9 13-5 M22 22h4v-4 M32 15l5 5 M37 15l-5 5 M11 15h.01',
   squad: 'M12 6h24v36H12Z M24 13a5 5 0 1 1 0 10a5 5 0 0 1 0-10 M17 33c1-6 13-6 14 0 M18 38h12',
+  // A page with a rising line: the month's report
+  parentReport: 'M11 6h19l8 8v28H11Z M30 6v8h8 M17 34l6-7 5 4 6-9 M17 18h8 M17 40h16',
   matchRequests:
     'M6 14l9-5 4 5-1 22H8L7 21Z M42 14l-9-5-4 5 1 22h10l1-15Z M21 22h6l-2-2 M27 28h-6l2 2',
   tournaments:

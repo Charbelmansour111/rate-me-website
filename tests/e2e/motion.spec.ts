@@ -501,7 +501,7 @@ test('cards: a light and a lean follow the mouse; touch screens only get the rev
   const why = page.locator('#why-title + ul [data-spotlight]');
   const features = page.locator('#features [data-spotlight]');
   await expect(why).toHaveCount(3);
-  await expect(features).toHaveCount(6);
+  await expect(features).toHaveCount(7);
   // Each feature has a picture slot, the same shape whether it holds a picture or not
   for (const art of await page.locator('#features .feature-art').all()) {
     const box = (await art.boundingBox())!;
