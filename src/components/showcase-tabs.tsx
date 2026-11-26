@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import type { Look } from '@/config/screens.config';
 import type { Dictionary } from '@/i18n';
 
+import { AppTabBar, type AppRole, type AppTab } from './app-tab-bar';
 import { TiltedCard } from './react-bits/tilted-card';
 
 export type Slide = {
@@ -23,6 +24,10 @@ export type Slide = {
   card: boolean;
   /** Three facts, shown when the phone is opened. */
   details: readonly string[] | null;
+  /** The app's tab bar over the screenshot, where the app shows one. */
+  tab: { role: AppRole; active: AppTab; lang: 'en' | 'ar' } | null;
+  /** A dark status bar above the screen. */
+  dark: boolean;
 };
 type View = { id: string; label: string; slides: Slide[] };
 type Controls = Dictionary['showcase']['controls'];
@@ -113,24 +118,49 @@ export function ShowcaseTabs({
   );
 }
 
-/** The screen in its phone: the screenshot, or a sketch until there is one. */
+/**
+ * The screen in its phone: a thin bezel in the phone's colour, side buttons, a status bar with the
+ * dynamic island above the screenshot (or a sketch until there is one), the app's tab bar where the
+ * app shows it, and a soft reflection on the glass.
+ */
 function PhoneScreen({ slide, large = false }: { slide: Slide; large?: boolean }) {
   return (
     <div className="phone" data-look={slide.look}>
-      <div className="phone-screen">
+      <span className="phone-keys" aria-hidden="true" />
+      <div className="phone-screen" data-dark={slide.dark || undefined}>
+        <div className="phone-status" aria-hidden="true">
+          <span>9:41</span>
+          <span className="phone-island" />
+          <svg viewBox="0 0 34 12" className="phone-icons">
+            <path d="M1 11h2V8H1zM5 11h2V6H5zM9 11h2V4H9zM13 11h2V2h-2z" fill="currentColor" />
+            <rect
+              x="19.5"
+              y="1.5"
+              width="12"
+              height="9"
+              rx="2.5"
+              fill="none"
+              stroke="currentColor"
+            />
+            <rect x="21" y="3" width="8" height="6" rx="1.2" fill="currentColor" />
+          </svg>
+        </div>
         {slide.src ? (
-          <Image
-            src={slide.src}
-            alt={slide.alt ?? slide.title}
-            width={large ? 360 : 330}
-            height={large ? 780 : 715}
-            sizes={large ? '360px' : '(min-width: 64rem) 330px, 270px'}
-            className="size-full object-cover"
-          />
+          <div className="phone-shot">
+            <Image
+              src={slide.src}
+              alt={slide.alt ?? slide.title}
+              width={large ? 360 : 330}
+              height={large ? 780 : 715}
+              sizes={large ? '360px' : '(min-width: 64rem) 330px, 270px'}
+              className="block h-auto w-full"
+            />
+            {slide.tab && <AppTabBar {...slide.tab} />}
+          </div>
         ) : (
           <svg
             viewBox="0 20 220 440"
-            className="size-full bg-soft"
+            className="phone-sketch bg-soft"
             fill="none"
             stroke="var(--edge)"
             strokeWidth="1.5"
@@ -139,6 +169,7 @@ function PhoneScreen({ slide, large = false }: { slide: Slide; large?: boolean }
             <path d={slide.sketch!} />
           </svg>
         )}
+        <span className="phone-glass" aria-hidden="true" />
       </div>
     </div>
   );
@@ -229,6 +260,8 @@ function Carousel({
             <figure data-parallax className="showcase-figure">
               {/* A soft light behind it, so it floats off the panel */}
               <span className="phone-glow" data-look={slide.look} aria-hidden="true" />
+              {/* Its shadow on the ground under it: a gradient, nothing to repaint */}
+              <span className="phone-ground" aria-hidden="true" />
               {slide.card ? (
                 <TiltedCard className="card-tilt">{card}</TiltedCard>
               ) : (

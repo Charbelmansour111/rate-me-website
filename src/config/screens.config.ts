@@ -1,3 +1,5 @@
+import type { AppTab } from '@/components/app-tab-bar';
+
 import type { FeatureId } from './features.config';
 
 /**
@@ -9,6 +11,11 @@ import type { FeatureId } from './features.config';
  * `feature`: shows "Coming soon" while that feature is not released (features.config.ts).
  * `kind: 'card'`: drawn as the app's player card (src/components/player-card.tsx), not a phone.
  * Each phone opens a panel with three facts about the screen (src/i18n: showcase.details).
+ *
+ * `tab`: the app's bottom tab bar is drawn over the screenshot's own, with this tab chosen
+ * (src/components/app-tab-bar.tsx). Only on screens where the app shows the bar: the whiteboard,
+ * the Coaches Channel and an event open on top of the tabs, without it.
+ * `dark`: the status bar above the screen is dark (the screen's own top is dark).
  *
  * The three phones of a view each have their own frame, by place: black, orange in the middle
  * (with the strongest glow), white. Picked for contrast on the charcoal panel.
@@ -31,17 +38,19 @@ export type Screen = {
   id: ScreenId;
   feature?: FeatureId;
   kind?: 'card';
+  tab?: AppTab;
+  dark?: true;
 };
 
 export const screens: Record<ViewId, Screen[]> = {
   coach: [
-    { id: 'calendar', feature: 'calendar' },
-    { id: 'whiteboard-roles', feature: 'whiteboard' },
+    { id: 'calendar', feature: 'calendar', tab: 'calendar' },
+    { id: 'whiteboard-roles', feature: 'whiteboard', dark: true },
     // The Coaches Channel: one space for the coaches of every club.
     { id: 'channel' },
   ],
   player: [
-    { id: 'home' },
+    { id: 'home', tab: 'home' },
     { id: 'event', feature: 'calendar' },
     { id: 'card', feature: 'squad', kind: 'card' },
   ],

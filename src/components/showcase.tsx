@@ -5,6 +5,7 @@ import { features } from '@/config/features.config';
 import { looks, screens, type Screen, type ScreenId, type ViewId } from '@/config/screens.config';
 import { getDictionary, type Locale } from '@/i18n';
 
+import { PanelLines } from './pitch-lines';
 import { PlayerCard } from './player-card';
 import { ShowcaseTabs, type Slide } from './showcase-tabs';
 
@@ -67,6 +68,11 @@ export function Showcase({ locale }: { locale: Locale }) {
         sketch: src || screen.kind === 'card' ? null : SKETCHES[screen.id],
         soon: isReleased(screen) ? null : t.features.soon,
         look: looks[i % looks.length],
+        tab:
+          src && screen.tab
+            ? { role: view, active: screen.tab, lang: src.includes('.ar.') ? 'ar' : 'en' }
+            : null,
+        dark: !!screen.dark,
         card: screen.kind === 'card',
         details: details[screen.id] ?? null,
       };
@@ -77,6 +83,7 @@ export function Showcase({ locale }: { locale: Locale }) {
     <section id="inside" className="section" aria-labelledby="inside-title">
       <div className="wrap">
         <div className="panel">
+          <PanelLines />
           <p data-reveal className="kicker">
             {t.showcase.kicker}
           </p>

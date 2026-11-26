@@ -110,23 +110,29 @@ export function PlayerCard({ t }: { t: Strings }) {
               </span>
             </span>
           </div>
-          {/* A stock photo, black and white (docs/PHOTO-CREDITS.md) */}
-          <Image
-            className="player-card-photo"
-            src="/cards/player.jpg"
-            alt=""
-            width={112}
-            height={112}
-            sizes="112px"
-          />
+          <span className="player-card-portrait" data-depth="1">
+            {/* A stock photo, black and white (docs/PHOTO-CREDITS.md); its ring is the tier's
+                colour, as in the app */}
+            <Image
+              className="player-card-photo"
+              src="/cards/player.jpg"
+              alt=""
+              width={112}
+              height={112}
+              sizes="112px"
+            />
+            {/* The position, raised: a shadow, a white rim (the app's position tokens), the
+                position colour as its face, a soft shine. It moves a little more than the card
+                when it tilts (src/components/react-bits/tilted-card.motion.ts). */}
+            <span className="player-card-badge" data-depth="2" style={{ color: LOOK.onPosition }}>
+              {t.positionLetter}
+            </span>
+          </span>
         </div>
         <div className="player-card-perforation" />
         <div className="player-card-identity">
           <span className="player-card-name">{t.name}</span>
           <span className="player-card-meta">
-            <span className="player-card-position" style={{ color: LOOK.onPosition }}>
-              {t.positionLetter}
-            </span>
             {t.position} · #{NUMBER}
           </span>
         </div>

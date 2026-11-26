@@ -4,6 +4,8 @@
  *
  * As in React Bits: the card turns towards the mouse by up to `AMPLITUDE` degrees, rises a little,
  * and a glare sits where the light would catch it. GSAP's quickTo stands in for React Bits' springs.
+ * Added here: parts marked `data-depth` (1, 2...) shift towards the mouse by `DEPTH` px per step,
+ * so they seem to stand off the card (the player card's photo and its position badge).
  */
 import { gsap } from 'gsap';
 
@@ -11,6 +13,8 @@ const AMPLITUDE = 7;
 const SCALE = 1.03;
 /** How bright the glare gets, 0 to 1. */
 const GLARE = 0.5;
+/** How far a raised part moves per step of depth, at the card's edge, in px. */
+const DEPTH = 3;
 
 export function startTilts(signal: AbortSignal) {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
@@ -24,6 +28,11 @@ export function startTilts(signal: AbortSignal) {
     const glareX = gsap.quickTo(card, '--tc-gx', follow);
     const glareY = gsap.quickTo(card, '--tc-gy', follow);
     const glare = gsap.quickTo(card, '--tc-glare', { duration: 0.4, ease: 'power2.out' });
+    const raised = [...card.querySelectorAll<HTMLElement>('[data-depth]')].map((el) => ({
+      depth: Number(el.dataset.depth) * DEPTH,
+      x: gsap.quickTo(el, 'x', follow),
+      y: gsap.quickTo(el, 'y', follow),
+    }));
 
     const move = (event: PointerEvent) => {
       if (event.pointerType !== 'mouse') return;
@@ -38,18 +47,30 @@ export function startTilts(signal: AbortSignal) {
       glareX(50 + x * 46);
       glareY(50 + y * 46);
       glare(GLARE);
+      for (const part of raised) {
+        part.x(x * part.depth);
+        part.y(y * part.depth);
+      }
     };
     const leave = () => {
       turnX(0);
       turnY(0);
       lift(1);
       glare(0);
+      for (const part of raised) {
+        part.x(0);
+        part.y(0);
+      }
     };
     card.addEventListener('pointermove', move, { signal });
     card.addEventListener('pointerleave', leave, { signal });
     signal.addEventListener('abort', () => {
       gsap.killTweensOf(card);
       gsap.set(card, { clearProps: 'all' });
+      for (const el of card.querySelectorAll('[data-depth]')) {
+        gsap.killTweensOf(el);
+        gsap.set(el, { clearProps: 'all' });
+      }
     });
   }
 }
