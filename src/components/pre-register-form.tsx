@@ -400,7 +400,11 @@ export function PreRegisterForm({
             />
             <label htmlFor="f-consent">
               {t.consentBefore}
-              <a className="link" href={localePath(locale, '/privacy')} target="_blank">
+              <a
+                className="link inline-flex min-h-11 items-center"
+                href={localePath(locale, '/privacy')}
+                target="_blank"
+              >
                 {t.consentLink}
                 <span className="sr-only"> {newTab}</span>
               </a>

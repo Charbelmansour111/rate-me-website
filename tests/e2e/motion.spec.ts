@@ -1012,8 +1012,8 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
   await expect.poll(transform).toBe('none');
 });
 
-for (const width of [360, 390, 430]) {
-  test(`phones at ${width}px: nothing sideways, 44px targets, readable text`, async ({ page }) => {
+for (const width of [360, 390, 430, 1440]) {
+  test(`at ${width}px: nothing sideways, 44px targets, readable text`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     for (const path of [...(ARABIC_ENABLED ? ['/', '/ar'] : ['/']), '/privacy']) {

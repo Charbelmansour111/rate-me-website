@@ -39,7 +39,7 @@ export function NavLinks({
           <a
             href={`${home}#${id}`}
             aria-current={id === active ? 'location' : undefined}
-            className="group block py-2.5 font-medium hover:text-accent-text"
+            className="group block min-w-11 py-2.5 text-center font-medium hover:text-accent-text"
           >
             <span className="border-b-2 border-transparent pb-0.5 group-aria-current:border-accent">
               {label}

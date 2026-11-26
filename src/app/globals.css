@@ -202,8 +202,8 @@
     outline-offset: 2px;
   }
   .city-chip {
-    min-height: 2.25rem;
-    padding: 0.15rem 0.8rem;
+    min-height: 2.75rem;
+    padding: 0.2rem 0.95rem;
     border: 1px solid var(--edge);
     border-radius: 999px;
     font-size: 0.9375rem;
