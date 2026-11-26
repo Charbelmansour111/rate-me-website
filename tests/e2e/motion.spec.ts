@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-import { fadeWindow, frameAt, journey } from '../../src/config/journey.config';
+import { fadeWindow, frameAt, journey, type Sequence } from '../../src/config/journey.config';
+import { frameList, nearest, wanted } from '../../src/motion/walk-frames';
 import { ROLE_SHAPES } from '../../src/motion/tactics-data';
 import { ARABIC_ENABLED } from '../../src/config/site';
 import { hasFrames } from '../../src/lib/journey-files';
@@ -9,6 +10,20 @@ import { hasFrames } from '../../src/lib/journey-files';
 /** The sequence the page in hand is served. */
 const sequenceFor = (isMobile: boolean) =>
   isMobile && hasFrames(journey.portrait) ? journey.portrait : journey.landscape;
+
+/** The frames a phone or a computer uses (every second one of a dense set on a phone). */
+const strideOf = async (page: Page) =>
+  Number(await page.locator('[data-walk]').getAttribute('data-stride'));
+/** The frame shown for a share of the walk: the nearest one at that stride. */
+const shownAt = (sequence: Sequence, part: number, stride: number) =>
+  String(nearest(frameList(sequence, stride), frameAt(sequence, part)));
+/** The frames round the walk's position are in: what is asked for is what is drawn. */
+const ready = (page: Page) =>
+  expect(page.locator('[data-walk]')).toHaveAttribute('data-ready', 'true', { timeout: 30_000 });
+
+/** The frames asked for at the top (the first one aside: it is the CSS background). */
+const atTop = (sequence: Sequence, stride: number) =>
+  wanted(frameList(sequence, stride), 0).filter((i) => i !== 0).length;
 
 /** Scrolls like a person does, so the observers see every part of the page. */
 async function scrollThrough(page: Page) {
@@ -211,10 +226,10 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   await expect(walk).toHaveAttribute('data-frame', '0');
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'locker');
-  // Every frame in, so the one asked for is the one shown
-  await expect
-    .poll(async () => Number(await walk.getAttribute('data-loaded')), { timeout: 30_000 })
-    .toBe(sequence.count);
+  // The frames round the start in, so the one asked for is the one shown
+  await ready(page);
+  const stride = await strideOf(page);
+  expect(stride).toBe(isMobile && sequence.count >= 150 ? 2 : 1);
 
   const to = (part: number) =>
     page.evaluate((p) => {
@@ -224,16 +239,19 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
     }, part);
   // Clear of a half frame, where a rounded scroll position could fall either side
   await to(0.44);
-  await expect(walk).toHaveAttribute('data-frame', String(frameAt(sequence, 0.44)));
+  await ready(page);
+  await expect(walk).toHaveAttribute('data-frame', shownAt(sequence, 0.44, stride));
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'tunnel');
   const pixels = () => walk.evaluate((el) => (el as HTMLCanvasElement).toDataURL('image/png'));
   await to(0.3);
-  await expect(walk).toHaveAttribute('data-frame', String(frameAt(sequence, 0.3)));
+  await ready(page);
+  await expect(walk).toHaveAttribute('data-frame', shownAt(sequence, 0.3, stride));
   await page.waitForTimeout(800);
   const before = await pixels();
   await page.evaluate(() => scrollBy({ top: 40, behavior: 'instant' }));
   await expect.poll(pixels).not.toBe(before);
   await to(1);
+  await ready(page);
   await expect(walk).toHaveAttribute('data-frame', last);
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'pitch');
   // The canvas fills the screen and holds the frames at their own size, whatever the screen
@@ -253,13 +271,9 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
-  // Every frame in, so the neighbours are the next ones
-  await expect
-    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')), {
-      // Loaded 12 at a time in quiet moments: a long set takes a while
-      timeout: 30_000,
-    })
-    .toBe(sequence.count);
+  // The frames round the start in, so the neighbours are the next ones at this stride
+  await ready(page);
+  const s = await strideOf(page);
   // Fetched and decoded in a worker: the page itself fetched no frame after the first paint
   expect(page.workers().length).toBeGreaterThan(0);
   expect(
@@ -274,7 +288,7 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
           ).length,
     ),
   ).toBe(0);
-  const at = 10.5;
+  const at = 10 + s / 2;
   await page.evaluate(
     ([frame, count]) => {
       const main = document.querySelector('main')!;
@@ -285,13 +299,13 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
   );
   // Half way between 10 and 11 (to the scroll's whole pixels): both drawn, faded by the config's
   // window round the midpoint
-  await expect(walk).toHaveAttribute('data-blend', /^10 11 0\.\d{3}$/);
+  await expect(walk).toHaveAttribute('data-blend', new RegExp(`^10 ${10 + s} 0\\.\\d{3}$`));
   const { exact, alpha } = await walk.evaluate((el) => ({
     exact: Number((el as HTMLElement).dataset.at),
     alpha: Number((el as HTMLElement).dataset.blend!.split(' ')[2]),
   }));
   const w = fadeWindow(sequence.count);
-  const expected = Math.min(1, Math.max(0, (exact - 10 - (0.5 - w)) / (2 * w)));
+  const expected = Math.min(1, Math.max(0, ((exact - 10) / s - (0.5 - w)) / (2 * w)));
   expect(alpha).toBeCloseTo(expected, 2);
   expect(alpha).toBeGreaterThan(0.2);
   expect(alpha).toBeLessThan(0.8);
@@ -304,13 +318,16 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
     },
     [20, sequence.count],
   );
-  await expect(walk).toHaveAttribute('data-blend', /^20 (20 0\.000|21 0\.00\d)$/);
+  await expect(walk).toHaveAttribute(
+    'data-blend',
+    new RegExp(`^20 (20 0\\.000|${20 + s} 0\\.00\\d)$`),
+  );
   // A quarter of the way either side of the midpoint: one frame alone, never a double image
   const window = fadeWindow(sequence.count);
   if (window < 0.25) {
     for (const [at, alpha] of [
-      [10.25, '0.000'],
-      [10.75, '1.000'],
+      [10 + s * 0.25, '0.000'],
+      [10 + s * 0.75, '1.000'],
     ] as const) {
       await page.evaluate(
         ([frame, count]) => {
@@ -320,7 +337,7 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
         },
         [at, sequence.count],
       );
-      await expect(walk).toHaveAttribute('data-blend', `10 11 ${alpha}`);
+      await expect(walk).toHaveAttribute('data-blend', `10 ${10 + s} ${alpha}`);
     }
   }
 });
@@ -363,11 +380,7 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   const sequence = sequenceFor(isMobile);
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
-  await expect
-    .poll(async () => Number(await page.locator('[data-walk]').getAttribute('data-loaded')), {
-      timeout: 30_000,
-    })
-    .toBe(sequence.count);
+  await ready(page);
   if (!isMobile) {
     await page.mouse.move(600, 400);
     await page.mouse.move(610, 410);
@@ -494,6 +507,7 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
     return scrollY / (main.offsetTop + main.offsetHeight - innerHeight);
   });
   expect(progress).toBeGreaterThan(0.1);
+  await ready(page);
   await expect(page.locator('[data-walk]')).toHaveAttribute(
     'data-frame',
     String(frameAt(sequence, progress)),
@@ -549,7 +563,49 @@ test('the walk: saving data loads every second frame', async ({ page, isMobile }
     if (request.url().includes('/journey/')) frames.add(request.url());
   });
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect.poll(() => frames.size).toBe(Math.ceil(sequence.count / 2));
+  await ready(page);
+  expect(await strideOf(page)).toBe(2);
+  // Only every second frame is asked for (and the last)
+  const asked = [...frames].map((url) => Number(url.match(/f(\d+)\./)![1]));
+  expect(asked.length).toBeGreaterThan(5);
+  expect(asked.every((i) => i % 2 === 0 || i === sequence.count - 1)).toBe(true);
+});
+
+test('the walk: frames wait for the first paint, then only a window of them (every second on a phone)', async ({
+  page,
+  isMobile,
+}) => {
+  const sequence = sequenceFor(isMobile);
+  const asked: { frame: number; at: number }[] = [];
+  page.on('request', (request) => {
+    const match = request.url().match(/\/journey\/seq\/f(\d+)\./);
+    if (match) asked.push({ frame: Number(match[1]), at: Date.now() });
+  });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await ready(page);
+  const stride = await strideOf(page);
+  expect(stride).toBe(isMobile ? 2 : 1);
+  // The first paint came before any frame but the first (the canvas' CSS background)
+  const painted = await page.evaluate(
+    () =>
+      performance.timeOrigin + performance.getEntriesByName('first-contentful-paint')[0].startTime,
+  );
+  const later = asked.filter(({ frame }) => frame !== 0);
+  expect(later.length).toBeGreaterThan(0);
+  expect(Math.min(...later.map(({ at }) => at))).toBeGreaterThan(painted);
+  // At the top: the frames round frame 0 and the anchors, not the whole set
+  const window = wanted(frameList(sequence, stride), 0);
+  expect(new Set(later.map(({ frame }) => frame)).size).toBeLessThanOrEqual(window.length);
+  expect(later.every(({ frame }) => window.includes(frame))).toBe(true);
+  // Further down, the window moves with it and the frames it left are let go
+  await page.evaluate(() =>
+    scrollTo({ top: document.documentElement.scrollHeight / 2, behavior: 'instant' }),
+  );
+  await ready(page);
+  const kept = Number(await page.locator('[data-walk]').getAttribute('data-loaded'));
+  expect(kept).toBeLessThanOrEqual(
+    wanted(frameList(sequence, stride), sequence.count / 2).length + 2,
+  );
 });
 
 /** Serves the page as it is built with a portrait set, whether or not there is one yet. */
@@ -585,7 +641,8 @@ test('the walk: tall screens load only the portrait set, and turning loads the o
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
   await expect(walk).toHaveAttribute('data-shape', 'portrait');
-  await expect.poll(() => asked('portrait'), { timeout: 20_000 }).toBe(journey.portrait.count - 1);
+  // The frames round the top, not the whole set
+  await expect.poll(() => asked('portrait'), { timeout: 20_000 }).toBe(atTop(journey.portrait, 1));
   expect(asked('landscape')).toBe(0);
 
   // A keyboard: shorter, not wider
@@ -596,14 +653,14 @@ test('the walk: tall screens load only the portrait set, and turning loads the o
 
   await page.setViewportSize({ width: 839, height: 412 });
   await expect(walk).toHaveAttribute('data-shape', 'landscape');
+  // Turned: a wide screen, so every frame round the top (no stride)
   await expect
-    // 191 frames come in at quiet moments: allow for a busy machine
     .poll(() => asked('landscape'), { timeout: 40_000 })
-    .toBe(journey.landscape.count - 1);
+    .toBe(atTop(journey.landscape, 1));
   // And back, without loading anything again
   await page.setViewportSize({ width: 412, height: 839 });
   await expect(walk).toHaveAttribute('data-shape', 'portrait');
-  expect(asked('portrait')).toBe(journey.portrait.count - 1);
+  expect(asked('portrait')).toBe(atTop(journey.portrait, 1));
 });
 
 test('the walk: wide screens load only the landscape set', async ({ page }) => {
@@ -613,7 +670,7 @@ test('the walk: wide screens load only the landscape set', async ({ page }) => {
   await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
   await expect
     .poll(() => asked('landscape'), { timeout: 20_000 })
-    .toBe(journey.landscape.count - 1);
+    .toBe(atTop(journey.landscape, 1));
   expect(asked('portrait')).toBe(0);
 });
 
@@ -622,9 +679,10 @@ test('the walk: falls back to landscape when the portrait set fails', async ({ p
   await page.setViewportSize({ width: 412, height: 839 });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
+  // A phone's width: every second frame of the dense landscape set
   await expect
     .poll(() => asked('landscape'), { timeout: 20_000 })
-    .toBe(journey.landscape.count - 1);
+    .toBe(atTop(journey.landscape, 2));
 });
 
 test('the walk: without a portrait folder nothing asks for it', async ({ page }) => {

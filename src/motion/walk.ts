@@ -3,10 +3,15 @@ import {
   frameAt,
   frameUrl,
   journey,
+  loading,
   sceneAt,
   type Sequence,
   type Shape,
 } from '@/config/journey.config';
+
+import { blend, frameList, nearest, strideFor, wanted } from './walk-frames';
+
+export { blend, frameList, nearest, strideFor, wanted };
 
 /** Frames asked for at a time: a dense set must not take a minute to come in. */
 const BATCH = 12;
@@ -15,40 +20,6 @@ const idle = (run: () => void) => {
   if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 1000 });
   else setTimeout(run, 100);
 };
-
-/** The frames to fetch: all of them, or every second one to save data. */
-export const frameList = ({ count }: Sequence, saveData: boolean) =>
-  Array.from({ length: count }, (_, i) => i).filter((i) => !saveData || i % 2 === 0);
-
-/** The one closest to `frame`; the earlier one when two are as close. */
-export const nearest = (frames: Iterable<number>, frame: number) => {
-  let best: number | undefined;
-  for (const i of frames) {
-    if (best === undefined || Math.abs(i - frame) < Math.abs(best - frame)) best = i;
-  }
-  return best;
-};
-
-/**
- * The two loaded frames either side of `at` (a frame number with a fraction, 0 to count - 1) and
- * how much of the upper one shows. One frame alone when `at` is on it or past the loaded ones.
- * The upper one fades in only within `window` of the midpoint between them (0.5: all the way).
- */
-export function blend(frames: Iterable<number>, at: number, window = 0.5) {
-  let below: number | undefined;
-  let above: number | undefined;
-  for (const i of frames) {
-    if (i <= at && (below === undefined || i > below)) below = i;
-    if (i >= at && (above === undefined || i < above)) above = i;
-  }
-  if (below === undefined || above === undefined || below === above) {
-    const only = below ?? above;
-    return only === undefined ? undefined : { from: only, to: only, alpha: 0 };
-  }
-  const along = (at - below) / (above - below);
-  const alpha = Math.min(1, Math.max(0, (along - (0.5 - window)) / (2 * window)));
-  return { from: below, to: above, alpha };
-}
 
 /** A frame, decoded. */
 type Frame = { source: CanvasImageSource; width: number; height: number; close?: () => void };
@@ -123,8 +94,18 @@ function frameDecoder() {
 export const shapeFor = (width: number, height: number, hasPortrait: boolean): Shape =>
   hasPortrait && height > width ? 'portrait' : 'landscape';
 
-/** A sequence, what is loaded of it and what is still to come. */
-type Reel = { sequence: Sequence; images: Map<number, Frame>; waiting: Set<number> };
+/**
+ * A sequence: the frames it can show at its stride, those decoded, those on their way, and whether
+ * a run of batches is going.
+ */
+type Reel = {
+  sequence: Sequence;
+  stride: number;
+  all: number[];
+  images: Map<number, Frame>;
+  pending: Set<number>;
+  busy: boolean;
+};
 
 /** The walk, for the scroll to drive: src/motion/rich.ts ties it to ScrollTrigger and Lenis. */
 export type Walk = {
@@ -151,6 +132,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   }
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   const saveData = Boolean(connection?.saveData);
+  /** Nothing is fetched until the page has loaded and painted (see `afterPaint` below). */
+  let started = false;
+  /** The frame the kept window was last centred on. */
+  let centre = -Infinity;
   /** Both are kept, so turning the phone back loads nothing twice. */
   const reels = new Map<Shape, Reel>();
   let hasPortrait = canvas.dataset.portrait !== undefined;
@@ -214,42 +199,95 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     mark(root, 'scene', sceneAt(position));
   }
 
+  /** Where the walk is on a reel, in frames. */
+  const frameOf = (from: Reel) => position * (from.sequence.count - 1);
+
+  /** Says, for the tests, whether every frame around the walk's position is in. */
+  function markReady(from: Reel) {
+    const missing = wanted(from.all, frameOf(from)).some((i) => !from.images.has(i));
+    mark(canvas, 'ready', missing ? 'false' : 'true');
+    canvas.dataset.loaded = String(from.images.size);
+  }
+
   async function load(from: Reel, i: number) {
-    from.waiting.delete(i);
+    from.pending.add(i);
     let frame: Frame;
     try {
       frame = await decoder.decode(frameUrl(from.sequence, i));
     } catch {
       return; // The frames either side stand in.
+    } finally {
+      from.pending.delete(i);
     }
     if (signal.aborted) return frame.close?.();
+    // Left behind while it was on its way: not needed now
+    if (!wanted(from.all, frameOf(from)).includes(i)) return frame.close?.();
     from.images.set(i, frame);
-    canvas.dataset.loaded = String(from.images.size);
     if (from !== reel) return;
     // Drawn only if it is one of the two on show, or the first: the rest wait for the scroll.
-    const at = position * (from.sequence.count - 1);
-    if (from.images.size === 1 || Math.abs(i - at) < 2) draw();
+    if (from.images.size === 1 || Math.abs(i - frameOf(from)) <= from.stride) draw();
+  }
+
+  /** The frames still to come around the position: the nearest first, the anchors after. */
+  function toLoad(from: Reel) {
+    const at = frameOf(from);
+    const close = (i: number) => Math.abs(i - at) <= loading.window;
+    return wanted(from.all, at)
+      .filter((i) => !from.images.has(i) && !from.pending.has(i))
+      .sort((a, b) => Number(close(b)) - Number(close(a)) || Math.abs(a - at) - Math.abs(b - at));
   }
 
   async function loadBatch(from: Reel) {
     // Turned away from: the rest waits until the screen turns back.
-    if (signal.aborted || from !== reel) return;
-    const frame = position * (from.sequence.count - 1);
-    const batch: Promise<void>[] = [];
-    while (batch.length < BATCH && from.waiting.size) {
-      batch.push(load(from, nearest(from.waiting, frame)!));
+    if (signal.aborted || from !== reel) {
+      from.busy = false;
+      return;
     }
-    await Promise.all(batch);
-    if (signal.aborted || from !== reel) return;
+    from.busy = true;
+    await Promise.all(
+      toLoad(from)
+        .slice(0, BATCH)
+        .map((i) => load(from, i)),
+    );
+    if (signal.aborted || from !== reel) {
+      from.busy = false;
+      return;
+    }
+    markReady(from);
     if (!from.images.size) {
+      from.busy = false;
       if (from.sequence !== journey.portrait) {
         root.dataset.journey = 'off';
         return;
       }
       hasPortrait = false;
       pick();
-    } else if (from.waiting.size) {
+    } else if (toLoad(from).length) {
       // The next batch in a quiet moment, so loading never holds up the page
+      idle(() => void loadBatch(from));
+    } else from.busy = false;
+  }
+
+  /**
+   * Keeps the window round the position: lets go of the frames it has left (their bitmaps
+   * closed) and loads those it has come to. Run as the walk moves, every few frames.
+   */
+  function follow() {
+    if (!started) return;
+    const from = reel;
+    const at = frameOf(from);
+    if (Math.abs(at - centre) < 4) return;
+    centre = at;
+    const keep = new Set(wanted(from.all, at));
+    for (const [i, frame] of from.images) {
+      if (!keep.has(i)) {
+        frame.close?.();
+        from.images.delete(i);
+      }
+    }
+    markReady(from);
+    if (!from.busy && toLoad(from).length) {
+      from.busy = true;
       idle(() => void loadBatch(from));
     }
   }
@@ -260,17 +298,42 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     let next = reels.get(shape);
     if (!next) {
       const sequence = journey[shape];
-      next = { sequence, images: new Map(), waiting: new Set(frameList(sequence, saveData)) };
+      const stride = strideFor(sequence, { phone: innerWidth < loading.phoneWidth, saveData });
+      next = {
+        sequence,
+        stride,
+        all: frameList(sequence, stride),
+        images: new Map(),
+        pending: new Set(),
+        busy: false,
+      };
       reels.set(shape, next);
     }
     if (next === reel) return;
     reel = next;
     shown ??= next;
     draw();
-    void loadBatch(next);
+    centre = -Infinity;
+    if (started && !next.busy) void loadBatch(next);
   }
 
   pick();
+  // The first frame is the canvas' CSS background: the rest waits until the page has loaded,
+  // painted and gone quiet, so decoding never competes with the first paint.
+  const afterPaint = () => {
+    if (signal.aborted) return;
+    requestAnimationFrame(() =>
+      idle(() => {
+        if (signal.aborted) return;
+        started = true;
+        centre = frameOf(reel);
+        mark(canvas, 'stride', String(reel.stride));
+        if (!reel.busy) void loadBatch(reel);
+      }),
+    );
+  };
+  if (document.readyState === 'complete') afterPaint();
+  else addEventListener('load', afterPaint, { once: true, signal });
 
   let width = innerWidth;
   function onResize() {
@@ -294,6 +357,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   signal.addEventListener('abort', () => {
     decoder.stop();
     delete canvas.dataset.loaded;
+    delete canvas.dataset.ready;
+    delete canvas.dataset.stride;
     gaps.disconnect();
     delete root.dataset.journey;
     delete root.dataset.scene;
@@ -308,6 +373,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     seek(progress) {
       position = progress;
       draw();
+      follow();
     },
     progress: () => position,
     end,

@@ -19,6 +19,15 @@ export const journey: Record<Shape, Sequence> = {
  */
 export const crossfade = { denseFrom: 150, window: 0.15 };
 
+/**
+ * How the frames are loaded (src/motion/walk.ts). Only the frames within `window` of where the walk
+ * is are kept decoded; the others are let go and fetched again (from the browser's cache) when the
+ * walk comes back to them. Every `anchorEvery`-th frame stays, so a jump always has a frame close
+ * by. On phones (screens under `phoneWidth` px) a dense set uses every `phoneStride`-th frame.
+ * Nothing is fetched before the page has loaded and painted.
+ */
+export const loading = { window: 24, anchorEvery: 16, phoneStride: 2, phoneWidth: 768 };
+
 /** The fade window for a set of `count` frames. */
 export const fadeWindow = (count: number) =>
   count >= crossfade.denseFrom ? crossfade.window : 0.5;
