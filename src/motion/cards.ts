@@ -10,6 +10,7 @@ const TILT = 4;
  */
 export function startSpotlights(signal: AbortSignal) {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const root = document.documentElement;
   for (const card of document.querySelectorAll<HTMLElement>('[data-spotlight]')) {
     // The light under the content, and the rim over it (src/components/react-bits)
     const layer = (name: string) => {
@@ -37,6 +38,8 @@ export function startSpotlights(signal: AbortSignal) {
 
     const move = (event: PointerEvent) => {
       if (event.pointerType !== 'mouse') return;
+      // The browser sends moves as the page scrolls under a still mouse: the light waits.
+      if (root.classList.contains('lenis-scrolling')) return;
       const box = card.getBoundingClientRect();
       const px = event.clientX - box.left;
       const py = event.clientY - box.top;

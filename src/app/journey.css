@@ -13,6 +13,8 @@
   object-fit: cover;
   image-rendering: auto;
   pointer-events: none;
+  /* Its own layer: the page scrolls over it without repainting it */
+  will-change: transform;
 }
 /* Otherwise: one still picture behind each part of the page. */
 .walk-still {
