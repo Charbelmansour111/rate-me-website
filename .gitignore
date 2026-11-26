@@ -46,3 +46,7 @@ next-env.d.ts
 # tests
 /test-results/
 /playwright-report/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+# Agent skills (installed per project with `npx skills`; skills-lock.json records them)
+.claude/skills/
