@@ -911,11 +911,8 @@ for (const reduced of [false, true]) {
     await press.click();
     await expect(press).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-tactics]')).toHaveAttribute('data-role', 'press');
-    if (reduced) {
-      expect(await where()).toEqual(ROLE_SHAPES.press);
-    } else {
-      await expect.poll(where).toEqual(ROLE_SHAPES.press);
-    }
+    // With reduced motion there and then, as soon as the click lands; otherwise after the glide
+    await expect.poll(where, { timeout: reduced ? 1000 : 5000 }).toEqual(ROLE_SHAPES.press);
     await expect(page.locator('.tactics-try + p')).toContainText('Press');
     // Arrow keys move along and choose
     await press.focus();

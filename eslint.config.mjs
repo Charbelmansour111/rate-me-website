@@ -9,6 +9,10 @@ export default defineConfig([
   prettier,
   globalIgnores([
     '.next/**',
+    // Agent skills and browser-tool output: installed per machine, not our code
+    '.claude/**',
+    '.playwright-cli/**',
+    'review/**',
     'out/**',
     'build/**',
     'next-env.d.ts',
