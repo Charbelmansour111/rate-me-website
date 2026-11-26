@@ -1,6 +1,8 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import { riseWords } from '@/components/react-bits/split-text.motion';
+
 /**
  * Scroll reveals, on ScrollTrigger. Content is visible at rest: an element is only hidden
  * ("armed") during the last bit of scrolling before it enters, and is shown again if the page goes
@@ -15,7 +17,8 @@ const EASE = 'power3.out';
 /** What a reveal touches, given back to the stylesheet when it is done. */
 const PROPS = 'opacity,transform,backgroundColor,color';
 
-function build(el: HTMLElement) {
+/** The reveal for `el`, paused, and what undoes anything it changed in the page. */
+function build(el: HTMLElement): { tl: gsap.core.Timeline; undo?: () => void } {
   const tl = gsap.timeline({ paused: true });
   const within = (selector: string) => gsap.utils.toArray<Element>(selector, el);
   switch (el.dataset.reveal) {
@@ -34,16 +37,18 @@ function build(el: HTMLElement) {
       tl.from(el, { opacity: 0, y: 8, duration: 0.3, ease: EASE });
       break;
     default: {
+      // Section headings come in word by word (React Bits SplitText).
+      if (el.matches('h2')) return { tl, undo: riseWords(el, tl) };
       tl.from(el, { opacity: 0, y: 20, duration: 0.6, ease: EASE });
       const pops = within('[data-pop]');
       if (pops.length) tl.from(pops, { scale: 0.4, duration: 0.6, ease: 'back.out(3)' }, 0.12);
     }
   }
-  return tl;
+  return { tl };
 }
 
 export function startReveals(signal: AbortSignal) {
-  const armed = new Map<HTMLElement, gsap.core.Timeline>();
+  const armed = new Map<HTMLElement, ReturnType<typeof build>>();
   const done = new WeakSet<Element>();
   const targets = (el: HTMLElement) => [
     el,
@@ -52,7 +57,9 @@ export function startReveals(signal: AbortSignal) {
 
   /** Visible for good, as the stylesheet has it. */
   const release = (el: HTMLElement) => {
-    armed.get(el)?.kill();
+    const reveal = armed.get(el);
+    reveal?.tl.kill();
+    reveal?.undo?.();
     armed.delete(el);
     gsap.set(targets(el), { clearProps: PROPS });
   };
@@ -84,7 +91,7 @@ export function startReveals(signal: AbortSignal) {
       // The rest comes in as a quick stagger, steps one after the other.
       (entered as HTMLElement[]).forEach((el, index) => {
         done.add(el);
-        const tl = armed.get(el);
+        const tl = armed.get(el)?.tl;
         if (!tl) return;
         // Jumped past it: nothing to watch.
         if (el.getBoundingClientRect().bottom < 0) return release(el);
