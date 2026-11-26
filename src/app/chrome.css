@@ -63,7 +63,7 @@
   flex-shrink: 0;
   align-items: center;
   padding-inline: 0.6rem;
-  border-radius: 0.6rem;
+  border-radius: 0.5rem;
 }
 .bar-nav {
   display: none;
@@ -79,7 +79,7 @@
   min-height: 2.75rem;
   place-items: center;
   padding-inline: 0.85rem;
-  border-radius: 0.6rem;
+  border-radius: 0.5rem;
   font-weight: 500;
 }
 .nav-link:hover {
@@ -108,7 +108,7 @@
   align-items: center;
   padding: 1px;
   border: 1px solid var(--line);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
 }
 .bar-tools-rule {
   width: 1px;
@@ -125,7 +125,7 @@
   width: 2.75rem;
   height: 2.75rem;
   place-items: center;
-  border-radius: 0.6rem;
+  border-radius: 0.5rem;
 }
 .bar-menu-button:hover {
   background: var(--soft);
