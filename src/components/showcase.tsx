@@ -5,6 +5,7 @@ import { features } from '@/config/features.config';
 import { looks, screens, type Screen, type ScreenId, type ViewId } from '@/config/screens.config';
 import { getDictionary, type Locale } from '@/i18n';
 
+import { PlayerCard } from './player-card';
 import { ShowcaseTabs, type Slide } from './showcase-tabs';
 
 const EXTENSIONS = ['webp', 'png', 'jpg'];
@@ -85,7 +86,7 @@ export function Showcase({ locale }: { locale: Locale }) {
           <ShowcaseTabs
             views={views}
             t={t.showcase.controls}
-            card={t.showcase.playerCard}
+            card={<PlayerCard t={t.showcase.playerCard} />}
             preRegister="#pre-register"
           />
         </div>

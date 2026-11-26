@@ -8,7 +8,8 @@ import {
   type Shape,
 } from '@/config/journey.config';
 
-const BATCH = 4;
+/** Frames asked for at a time: a dense set must not take a minute to come in. */
+const BATCH = 12;
 
 const idle = (run: () => void) => {
   if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 1000 });
@@ -103,10 +104,6 @@ function frameDecoder() {
     waiting.clear();
   });
   return {
-    /** Whether the work happens away from the page: then the next batch need not wait. */
-    get offPage() {
-      return worker !== undefined;
-    },
     decode(url: string): Promise<Frame> {
       if (!worker) return decodeHere(url);
       const id = next++;
@@ -229,8 +226,9 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     from.images.set(i, frame);
     canvas.dataset.loaded = String(from.images.size);
     if (from !== reel) return;
-    // It may be one of the two on show now.
-    draw();
+    // Drawn only if it is one of the two on show, or the first: the rest wait for the scroll.
+    const at = position * (from.sequence.count - 1);
+    if (from.images.size === 1 || Math.abs(i - at) < 2) draw();
   }
 
   async function loadBatch(from: Reel) {
@@ -251,11 +249,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       hasPortrait = false;
       pick();
     } else if (from.waiting.size) {
-      // In a worker the page only receives finished bitmaps: straight on. Otherwise the decoding
-      // is on the page, so it waits for a quiet moment.
-      const next = () => void loadBatch(from);
-      if (decoder.offPage) setTimeout(next, 0);
-      else idle(next);
+      // The next batch in a quiet moment, so loading never holds up the page
+      idle(() => void loadBatch(from));
     }
   }
 

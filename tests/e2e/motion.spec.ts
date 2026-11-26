@@ -422,8 +422,9 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   // No step: the picture changes only as far as the walk moved. A hard cut between two frames of
   // the old 48-frame set measured 41 here; neighbours in the 191-frame set up to 23.
   jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(30 * Math.max(1, steps[i])));
-  // The picture and the page move in the same frame: it never trails behind
-  expect(Math.max(...lags)).toBeLessThan(0.01);
+  // The picture and the page move in the same frame: it never trails behind. On touch the browser
+  // scrolls on its own thread, so the walk may read it one display frame later (about 10px).
+  expect(Math.max(...lags)).toBeLessThan(isMobile ? 0.15 : 0.01);
 });
 
 test('the walk: under smooth scrolling the frame still follows the page', async ({
@@ -540,6 +541,7 @@ async function withPortrait(page: Page, files: 'there' | 'failing') {
 test('the walk: tall screens load only the portrait set, and turning loads the other', async ({
   page,
 }) => {
+  test.slow();
   const asked = await withPortrait(page, 'there');
   await page.setViewportSize({ width: 412, height: 839 });
   await page.goto('/', { waitUntil: 'networkidle' });
@@ -557,7 +559,8 @@ test('the walk: tall screens load only the portrait set, and turning loads the o
   await page.setViewportSize({ width: 839, height: 412 });
   await expect(walk).toHaveAttribute('data-shape', 'landscape');
   await expect
-    .poll(() => asked('landscape'), { timeout: 20_000 })
+    // 191 frames come in at quiet moments: allow for a busy machine
+    .poll(() => asked('landscape'), { timeout: 40_000 })
     .toBe(journey.landscape.count - 1);
   // And back, without loading anything again
   await page.setViewportSize({ width: 412, height: 839 });

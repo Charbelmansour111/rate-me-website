@@ -1,12 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 import type { Look } from '@/config/screens.config';
 import type { Dictionary } from '@/i18n';
 
-import { PlayerCard } from './player-card';
 import { TiltedCard } from './react-bits/tilted-card';
 
 export type Slide = {
@@ -27,7 +26,6 @@ export type Slide = {
 };
 type View = { id: string; label: string; slides: Slide[] };
 type Controls = Dictionary['showcase']['controls'];
-type CardStrings = Dictionary['showcase']['playerCard'];
 type Opened = { view: View; slide: Slide; from: HTMLElement };
 
 /** Coach view | Player view. Without JavaScript both carousels are simply on the page. */
@@ -39,7 +37,8 @@ export function ShowcaseTabs({
 }: {
   views: View[];
   t: Controls;
-  card: CardStrings;
+  /** The player card, rendered on the server: nothing of it runs here. */
+  card: ReactNode;
   preRegister: string;
 }) {
   const [active, setActive] = useState(0);
@@ -153,7 +152,7 @@ function Carousel({
 }: {
   view: View;
   t: Controls;
-  card: CardStrings;
+  card: ReactNode;
   onOpen: (slide: Slide, from: HTMLElement) => void;
 }) {
   const track = useRef<HTMLUListElement>(null);
@@ -231,9 +230,7 @@ function Carousel({
               {/* A soft light behind it, so it floats off the panel */}
               <span className="phone-glow" data-look={slide.look} aria-hidden="true" />
               {slide.card ? (
-                <TiltedCard className="card-tilt">
-                  <PlayerCard t={card} />
-                </TiltedCard>
+                <TiltedCard className="card-tilt">{card}</TiltedCard>
               ) : (
                 // The phone is a button: it opens what the screen does
                 <button
