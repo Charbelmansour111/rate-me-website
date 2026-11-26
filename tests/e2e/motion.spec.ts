@@ -431,37 +431,41 @@ test('cards below the screen rise in, one after the other, when they come into v
   await expect.poll(() => opacity(2)).toBe('1');
 });
 
-test('inside the app: views, arrows, dots and keys', async ({ page, isMobile }) => {
+test('inside the app: three screens a view, arrows, dots and keys on phones', async ({
+  page,
+  isMobile,
+}) => {
   await page.goto('/');
   const coach = page.getByRole('tabpanel', { name: 'Coach view' });
   const player = page.getByRole('tabpanel', { name: 'Player view' });
-  await expect(coach.getByRole('listitem')).toHaveCount(8);
+  await expect(coach.getByRole('listitem')).toHaveCount(3);
   await expect(player).toBeHidden();
 
   const current = coach.locator('[data-current]');
   await coach.scrollIntoViewIfNeeded();
+  const next = coach.getByRole('button', { name: 'Next screen' });
   if (isMobile) {
-    await expect(current).toContainText('Home');
-    await coach.getByRole('button', { name: 'Next screen' }).click();
-  }
-  // Three fit on desktop, so it starts on the second
-  await expect(current).toContainText('Calendar');
-  const list = coach.getByRole('list');
-  if (isMobile) {
-    for (let i = 2; i < 8; i++) {
-      await list.focus();
-      await page.keyboard.press('ArrowRight');
-      await expect(current).toHaveCount(1);
-      await expect(coach.getByRole('listitem').nth(i)).toHaveAttribute('data-current');
-    }
+    await expect(current).toContainText('Calendar');
+    await next.click();
+    await expect(current).toContainText('Roles');
+    const list = coach.getByRole('list');
+    await list.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(current).toContainText('Coaches Channel');
+    await expect(next).toBeDisabled();
+    await page.keyboard.press('ArrowLeft');
+    await expect(current).toContainText('Roles');
   } else {
-    await coach.getByRole('button', { name: 'Coaches Channel', exact: true }).click();
+    // All three side by side, the middle one in front: nothing to turn
+    await expect(current).toContainText('Roles');
+    await expect(next).toBeHidden();
+    const width = page.viewportSize()!.width;
+    for (const phone of await coach.locator('.phone').all()) {
+      const box = (await phone.boundingBox())!;
+      expect(box.x).toBeGreaterThan(0);
+      expect(box.x + box.width).toBeLessThan(width);
+    }
   }
-  await expect(current).toContainText('Coaches Channel');
-  await expect(coach.getByRole('button', { name: 'Next screen' })).toBeDisabled();
-  await list.focus();
-  await page.keyboard.press('ArrowLeft');
-  await expect(current).toContainText('Player card');
 
   await page.getByRole('tab', { name: 'Coach view' }).focus();
   await page.keyboard.press('ArrowRight');
@@ -473,9 +477,7 @@ test('inside the app: views, arrows, dots and keys', async ({ page, isMobile }) 
 });
 
 for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
-  test(`${path}: the roles, calendar, formation and card screens are real, and load`, async ({
-    page,
-  }) => {
+  test(`${path}: every screen is real, and loads`, async ({ page }) => {
     await page.goto(path);
     // No sketch is left: every slide has its picture
     for (const view of ['coach', 'player']) {
@@ -488,11 +490,11 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       await expect(roles).toHaveAttribute('alt', new RegExp(role));
     }
     for (const name of [
-      'coach-whiteboard-roles',
       'coach-calendar',
-      'coach-formation',
-      'coach-card',
-      'coach-whiteboard',
+      'coach-whiteboard-roles',
+      'coach-channel',
+      'player-home',
+      'player-event',
       'player-card',
     ]) {
       const image = page.locator(`.phone img[src*="${name}.png"]`);
@@ -504,6 +506,38 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
     }
   });
 }
+
+test('inside the app: the phones beside the middle one float with the scroll', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'one phone at a time on a phone: nothing to float against');
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  await page.mouse.move(5, 5);
+  await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
+  const figures = page.locator('#view-coach figure[data-parallax]');
+  const y = (i: number) =>
+    figures.nth(i).evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m42);
+  const section = page.locator('#inside');
+  const at = async (part: number) => {
+    await section.evaluate((el, p) => {
+      const { top, height } = el.getBoundingClientRect();
+      scrollTo({
+        top: top + scrollY - innerHeight + (height + innerHeight) * p,
+        behavior: 'instant',
+      });
+    }, part);
+    await page.waitForTimeout(900);
+    return [await y(0), await y(1), await y(2)];
+  };
+  const early = await at(0.3);
+  const late = await at(0.7);
+  expect(early[1]).toBe(0);
+  expect(late[1]).toBe(0);
+  expect(early[0]).toBeGreaterThan(late[0] + 5);
+  expect(early[2]).toBeGreaterThan(late[2] + 5);
+});
 
 test('inside the app: undistorted phones, the one in front larger, tilting to the mouse', async ({
   page,
@@ -526,12 +560,14 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
       .locator('.phone')
       .evaluate((el) => el.getBoundingClientRect().width);
   expect(await width(at)).toBeGreaterThan(await width(at + 1));
-  // Part of the next screen shows
-  const next = (await slides
-    .nth(at + 1)
-    .locator('.phone')
-    .boundingBox())!;
-  expect(page.viewportSize()!.width - 20 - next.x).toBeGreaterThan(16);
+  if (isMobile) {
+    // Part of the next screen shows
+    const next = (await slides
+      .nth(at + 1)
+      .locator('.phone')
+      .boundingBox())!;
+    expect(page.viewportSize()!.width - 20 - next.x).toBeGreaterThan(16);
+  }
 
   const transform = () =>
     slides

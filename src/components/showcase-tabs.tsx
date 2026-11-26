@@ -66,14 +66,14 @@ export function ShowcaseTabs({ views, t }: { views: View[]; t: Controls }) {
           data-active={i === active}
           className="showcase-view"
         >
-          <Carousel view={view} t={t} active={i === active} />
+          <Carousel view={view} t={t} />
         </div>
       ))}
     </>
   );
 }
 
-function Carousel({ view, t, active }: { view: View; t: Controls; active: boolean }) {
+function Carousel({ view, t }: { view: View; t: Controls }) {
   const track = useRef<HTMLUListElement>(null);
   const [current, setCurrent] = useState(0);
   const last = view.slides.length - 1;
@@ -91,15 +91,6 @@ function Carousel({ view, t, active }: { view: View; t: Controls; active: boolea
     for (const slide of list.children) observer.observe(slide);
     return () => observer.disconnect();
   }, []);
-
-  // Where three fit side by side, start on the second one: no empty half on the first view.
-  useEffect(() => {
-    const list = track.current!;
-    const [first, second] = list.children;
-    if (!active || !second || list.scrollLeft !== 0) return;
-    const step = second.getBoundingClientRect().left - first.getBoundingClientRect().left;
-    if (list.clientWidth > 3 * Math.abs(step)) list.scrollLeft = step;
-  }, [active]);
 
   function show(index: number) {
     const list = track.current!;
@@ -171,7 +162,7 @@ function Carousel({ view, t, active }: { view: View; t: Controls; active: boolea
       >
         {view.slides.map((slide, i) => (
           <li key={slide.id} className="showcase-slide" data-current={i === current || undefined}>
-            <figure>
+            <figure data-parallax>
               <div className="phone" data-highlight={slide.highlight || undefined}>
                 <div className="phone-screen">
                   {slide.src ? (
@@ -217,7 +208,8 @@ function Carousel({ view, t, active }: { view: View; t: Controls; active: boolea
           </li>
         ))}
       </ul>
-      <div className="mt-4 flex items-center justify-center gap-4">
+      {/* On a computer all three stand side by side: nothing to turn. */}
+      <div className="mt-4 flex items-center justify-center gap-4 lg:hidden">
         {arrow(-1, t.previous)}
         {/* Too many for 44px targets side by side on a phone: there they only show the place. */}
         <div className="flex gap-2 sm:hidden" aria-hidden="true">

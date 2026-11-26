@@ -1,7 +1,8 @@
 import type { FeatureId } from './features.config';
 
 /**
- * "Inside the app": which screens each view shows, in order. A screen looks for
+ * "Inside the app": which screens each view shows, in order, three at most (they stand side by
+ * side on a computer, the middle one in front). A screen looks for
  * public/screens/<view>-<id>.png (or .webp, .jpg; see the README there) and draws its sketch until
  * the file exists. Captions live in src/i18n (showcase.captions).
  *
@@ -27,13 +28,8 @@ export type Screen = {
 
 export const screens: Record<ViewId, Screen[]> = {
   coach: [
-    { id: 'home' },
     { id: 'calendar', feature: 'calendar' },
-    { id: 'whiteboard', feature: 'whiteboard' },
     { id: 'whiteboard-roles', feature: 'whiteboard' },
-    { id: 'formation' },
-    { id: 'squad', feature: 'squad' },
-    { id: 'card', feature: 'squad' },
     // The Coaches Channel: one space for the coaches of every club.
     { id: 'channel', highlight: true },
   ],
