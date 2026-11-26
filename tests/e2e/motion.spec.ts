@@ -372,6 +372,65 @@ test('the walk: without a canvas or its frames, still pictures', async ({ page }
   }
 });
 
+test('cards: a light and a lean follow the mouse; touch screens only get the reveal', async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  const why = page.locator('#why-title + ul [data-spotlight]');
+  const features = page.locator('#features [data-spotlight]');
+  await expect(why).toHaveCount(3);
+  await expect(features).toHaveCount(6);
+  // Each feature has a picture slot, the same shape whether it holds a picture or not
+  for (const art of await page.locator('#features .feature-art').all()) {
+    const box = (await art.boundingBox())!;
+    expect(box.width / box.height).toBeCloseTo(1.6, 1);
+  }
+  const card = why.nth(1);
+  await card.scrollIntoViewIfNeeded();
+  const style = () =>
+    card.evaluate((el) => ({
+      on: Number(getComputedStyle(el).getPropertyValue('--spot-on') || 0),
+      transform: getComputedStyle(el).transform,
+    }));
+  if (isMobile) {
+    await card.tap();
+    await page.waitForTimeout(600);
+    expect(await style()).toEqual({ on: 0, transform: 'none' });
+    return;
+  }
+  // GSAP comes with the first sign of use
+  await page.mouse.move(5, 5);
+  await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
+  const box = (await card.boundingBox())!;
+  await page.mouse.move(box.x + 20, box.y + 20);
+  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.3, { steps: 5 });
+  await expect.poll(async () => (await style()).on).toBeGreaterThan(0.9);
+  expect((await style()).transform).toMatch(/^matrix3d/);
+  // The title's underline is drawn
+  await expect(card.locator('.card-title')).toHaveCSS('background-size', '100% 3px');
+  await page.mouse.move(5, 5);
+  await expect.poll(async () => (await style()).on).toBeLessThan(0.05);
+});
+
+test('cards below the screen rise in, one after the other, when they come into view', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
+  await page.evaluate(() => scrollTo({ top: 1, behavior: 'instant' }));
+  const cards = page.locator('#features [data-card-reveal]');
+  const opacity = (i: number) => cards.nth(i).evaluate((el) => getComputedStyle(el).opacity);
+  await expect.poll(() => opacity(0)).toBe('0');
+  // Still there for assistive tech while it waits
+  await expect(cards.first()).toBeVisible();
+  await page.locator('#features').evaluate((el) => el.scrollIntoView({ behavior: 'instant' }));
+  await expect.poll(() => opacity(0)).toBe('1');
+  await cards.nth(2).evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await expect.poll(() => opacity(2)).toBe('1');
+});
+
 test('inside the app: views, arrows, dots and keys', async ({ page, isMobile }) => {
   await page.goto('/');
   const coach = page.getByRole('tabpanel', { name: 'Coach view' });

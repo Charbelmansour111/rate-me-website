@@ -17,6 +17,63 @@ html.lenis body {
   pointer-events: none;
 }
 
+/* --- Cards with a light that follows the mouse (src/components/react-bits) --- */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: var(--page);
+}
+.spotlight-light,
+.spotlight-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  --at: calc(var(--spot-x, 0) * 1px) calc(var(--spot-y, 0) * 1px);
+}
+.spotlight-light {
+  z-index: -1;
+  background: radial-gradient(circle 260px at var(--at), var(--spot-fill));
+  opacity: calc(var(--spot-on, 0) * 0.14);
+}
+:root[data-theme='dark'] .spotlight-light {
+  opacity: calc(var(--spot-on, 0) * 0.2);
+}
+/* The border lights up near the mouse: a 1px ring cut out of the same light. */
+.spotlight-rim {
+  z-index: 1;
+  padding: 1px;
+  background: radial-gradient(circle 180px at var(--at), var(--spot-rim));
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: calc(var(--spot-on, 0) * 0.9);
+}
+.spotlight:hover {
+  border-color: var(--edge);
+  box-shadow: 0 18px 40px -24px rgb(11 11 12 / 0.35);
+}
+/* The title's orange underline, drawn from the start of the line on hover. */
+.card-title {
+  padding-bottom: 0.08em;
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat 0 100% / 0 3px;
+}
+[dir='rtl'] .card-title {
+  background-position: 100% 100%;
+}
+.spotlight:hover .card-title {
+  background-size: 100% 3px;
+}
+.feature-art {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.85rem;
+  background: var(--soft);
+}
+
 /* --- Tactics showcase --- */
 .tactics-pin {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
@@ -254,18 +311,15 @@ html.lenis body {
     }
   }
 
-  /* --- Feature cards lift under a mouse --- */
-  @media (hover: hover) {
-    .lift {
-      position: relative;
-      transition:
-        transform 200ms,
-        box-shadow 200ms;
+  /* --- Cards under a mouse: the title underlines, the card lifts its shadow --- */
+  @media (hover: hover) and (pointer: fine) {
+    .card-title {
+      transition: background-size 350ms cubic-bezier(0.2, 0.7, 0.2, 1);
     }
-    .lift:hover {
-      z-index: 1;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgb(11 11 12 / 0.1);
+    .spotlight {
+      transition:
+        box-shadow 250ms,
+        border-color 250ms;
     }
   }
 

@@ -3,9 +3,10 @@ import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale } from '@/i18n';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
-import { FeatureIcon } from './feature-icon';
+import { FeatureArt } from './feature-art';
 import { HeroDrill } from './hero-drill';
 import { PreRegisterForm } from './pre-register-form';
+import { SpotlightCard, spotlightStops } from './react-bits/spotlight-card';
 import { WalkCanvas, WalkGap, WalkGroup } from './journey-walk';
 import { Showcase } from './showcase';
 import { SiteFooter } from './site-footer';
@@ -97,12 +98,20 @@ export function HomePage({ locale }: { locale: Locale }) {
                 <h2 data-reveal id="why-title" className="display h2">
                   {t.why.title}
                 </h2>
-                <ul className="mt-14 grid gap-x-12 gap-y-10 md:grid-cols-3">
-                  {t.why.items.map((item) => (
-                    <li key={item.title} data-reveal className="border-t-3 border-accent pt-5">
-                      <h3 className="display h3">{item.title}</h3>
+                <ul className="mt-14 grid gap-5 md:grid-cols-3" style={spotlightStops}>
+                  {t.why.items.map((item, i) => (
+                    <SpotlightCard key={item.title} as="li" className="p-7">
+                      <span
+                        aria-hidden="true"
+                        className="display block text-2xl text-accent-text tabular-nums"
+                      >
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <h3 className="display h3 mt-4">
+                        <span className="card-title">{item.title}</span>
+                      </h3>
                       <p className="mt-3 text-lg text-muted">{item.text}</p>
-                    </li>
+                    </SpotlightCard>
                   ))}
                 </ul>
               </div>
@@ -128,24 +137,27 @@ export function HomePage({ locale }: { locale: Locale }) {
                     {t.features.note}
                   </p>
                 </div>
-                <ul className="mt-14 grid border-s border-t border-line sm:grid-cols-2 lg:grid-cols-3">
+                <ul
+                  className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                  style={spotlightStops}
+                >
                   {features.map(({ id, released }) => (
-                    <li
-                      key={id}
-                      data-reveal
-                      className="lift border-e border-b border-line bg-page p-7 sm:p-9"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <FeatureIcon id={id} />
+                    <SpotlightCard key={id} as="li" className="flex flex-col p-3">
+                      <div className="relative">
+                        <FeatureArt id={id} />
                         {!released && (
-                          <span className="rounded-full border-[1.5px] border-accent bg-tint px-3 py-0.5 text-sm font-semibold text-accent-text">
+                          <span className="absolute end-3 top-3 rounded-full border-[1.5px] border-accent bg-page px-3 py-0.5 text-sm font-semibold text-accent-text">
                             {t.features.soon}
                           </span>
                         )}
                       </div>
-                      <h3 className="display h3 mt-7">{t.features.items[id].title}</h3>
-                      <p className="mt-3 text-muted">{t.features.items[id].text}</p>
-                    </li>
+                      <div className="px-4 pt-6 pb-5">
+                        <h3 className="display h3">
+                          <span className="card-title">{t.features.items[id].title}</span>
+                        </h3>
+                        <p className="mt-3 text-muted">{t.features.items[id].text}</p>
+                      </div>
+                    </SpotlightCard>
                   ))}
                 </ul>
               </div>
