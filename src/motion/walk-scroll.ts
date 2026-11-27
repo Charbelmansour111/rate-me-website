@@ -33,10 +33,13 @@ export function scrubWalk(
 ) {
   let target = picture.progress();
   let at = target;
-  /** Set by a jump, until the walk has arrived. */
-  let jumping = false;
+  /** After a jump: how far the walk moves each screen frame until it has arrived (0: no jump). */
+  let glide = 0;
   const aim = (progress: number) => {
-    if (Math.abs(progress - target) > JUMP * picture.step()) jumping = true;
+    // A jump sets a steady speed from its whole length, so it arrives in GLIDE screen frames
+    if (Math.abs(progress - target) > JUMP * picture.step()) {
+      glide = Math.abs(progress - at) / GLIDE;
+    }
     target = progress;
   };
   const seek = (progress: number) => {
@@ -56,15 +59,18 @@ export function scrubWalk(
   const tick = (_time: number, deltaTime: number) => {
     const gap = target - at;
     if (gap === 0) return;
-    const share = 1 - Math.exp(-Math.min(deltaTime, 100) / 1000 / DAMP);
     const frame = picture.step();
-    // A hand: one frame of the walk per screen frame at most. A jump: glide there quickly.
-    const most = jumping ? Math.max(frame, Math.abs(gap) / GLIDE) : frame;
-    let move = gap * share;
-    if (Math.abs(move) > most) move = Math.sign(move) * most;
-    // Close enough to show the frame it is on: stop there
-    at = Math.abs(gap - move) < frame * 0.02 ? target : at + move;
-    if (at === target) jumping = false;
+    if (glide) {
+      // A jump: straight there at its speed, the frames blending as they pass
+      at = Math.abs(gap) <= glide ? target : at + Math.sign(gap) * glide;
+      if (at === target) glide = 0;
+    } else {
+      // A hand: damped, one frame of the walk per screen frame at most
+      let move = gap * (1 - Math.exp(-Math.min(deltaTime, 100) / 1000 / DAMP));
+      if (Math.abs(move) > frame) move = Math.sign(move) * frame;
+      // Close enough to show the frame it is on: stop there
+      at = Math.abs(gap - move) < frame * 0.02 ? target : at + move;
+    }
     seek(at);
   };
   gsap.ticker.add(tick);
