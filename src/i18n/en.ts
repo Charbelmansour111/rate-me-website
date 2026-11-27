@@ -67,6 +67,9 @@ export const en = {
     note: 'Rate Me has not launched yet. Features tagged “Coming soon” arrive after the first release.',
     soon: 'Coming soon',
     example: 'Example',
+    report: 'Monthly report (PDF)',
+    // Arabic only: the screenshots are of the app in English
+    inEnglish: '',
     controls: {
       label: 'Feature cards',
       carousel: 'carousel',
@@ -105,8 +108,9 @@ export const en = {
       squad: {
         title: 'Squad and player cards',
         photo:
-          'The player card screen in the app: an overall of 85, then pace, passing, physical, shooting, defending and dribbling',
-        detail: 'The Squad screen in the app: the goalkeepers, each with a shirt number',
+          'The player card in the app, as a shield: Sam Demo, 86 overall, attacking midfielder, number 10, with six stats from 74 to 90',
+        detail:
+          "The Squad screen in the app: two goalkeepers, four defenders and a midfielder, each with a card score and the coach's rating",
         text: 'Kit numbers, positions and a card for each player, shared only when the coach decides.',
         benefit: 'Every player in your squad gets a card.',
         bullets: [
@@ -118,9 +122,9 @@ export const en = {
       parentReport: {
         title: 'Monthly player report',
         photo:
-          'The monthly report in the app: attendance at 50%, two of four trainings and two of four matches, then matches and goals',
+          'The top of a monthly report PDF: Sam Demo, number 10, attacking midfielder, under 16, November 2026, with attendance at 91% and three matches played',
         detail:
-          "The monthly report in the app: attendance, matches, goals and passes, and the coach's rating",
+          "Two pages of the monthly report PDF for Sam Demo, November 2026: attendance, matches, goals and passes, positions, the coach's rating, the player card, the coach's comments and the next seven days",
         text: 'Each month the coach publishes a PDF report for each player: attendance, match stats, the coach’s rating and notes. Players can share it with their parents.',
         benefit: 'Each player gets a PDF of their month to share.',
         bullets: [
@@ -132,9 +136,9 @@ export const en = {
       matchRequests: {
         title: 'Match requests',
         photo:
-          'A match request in the Coaches Channel: a friendly on Saturday 28 to Sunday 29 November at 10:00, any age, home or away',
+          'A match request in the app: their proposal for Saturday 5 December at 10:00, away on the main pitch at Demo Park, with Accept, Counter and Decline',
         detail:
-          'The Request a match form in the app: match type, when, the time, the age group and the venue',
+          'The Coaches Channel in the app: messages from two coaches, then a friendly request for Saturday 28 to Sunday 29 November at 10:00, any age, home or away, with Cancel request',
         text: 'Find a friendly by sending a request to other clubs, and answer the ones you receive.',
         benefit: 'Find a friendly with another club.',
         bullets: [
@@ -194,10 +198,10 @@ export const en = {
           'Play the drill and the defenders move with the ball.',
           'Leave a player on Smart and the app picks the move.',
         ],
-        channel: [
-          'One channel for the coaches of every club on Rate Me.',
-          'Each message shows the coach’s club and team.',
-          'Match requests between coaches are coming soon.',
+        match: [
+          'A request shows the other team, its age group and its level.',
+          'Their proposal: the day, the time, the place and a note.',
+          'Accept, counter with another time or place, or decline.',
         ],
       },
       player: {
@@ -233,17 +237,25 @@ export const en = {
     captions: {
       coach: {
         home: { title: 'Home', text: 'What comes next for your team.' },
-        calendar: { title: 'Calendar', text: 'Trainings, matches and team days.' },
+        calendar: {
+          title: 'Calendar',
+          text: 'Trainings, matches and team days.',
+          alt: 'The calendar in the app for November 2026: trainings and matches marked on their days, and under it Saturday 28 November, a match against Demo FC at 11:00',
+        },
         whiteboard: { title: 'Whiteboard', text: 'Draw a drill and play it back.' },
         'whiteboard-roles': {
           title: 'Roles',
           text: 'Give each player a role, or leave it automatic.',
-          alt: 'Roles on the whiteboard: a defender is set to Press, next to Smart, Cover, Mark and Intercept. Defenders carry the badges P, C, M and I, attackers O and R.',
+          alt: 'Roles on the whiteboard for player 6. When they have the ball: Press (chosen), Cover, Mark, Zone, Intercept or Hold. When we have the ball: Smart, Support, Run, Hold, Passer or Finisher.',
         },
         formation: { title: 'Formation', text: 'Your lineup on the pitch.' },
         squad: { title: 'Squad', text: 'Your players and their cards.' },
         card: { title: 'Player card', text: 'Shared only when you decide.' },
-        channel: { title: 'Coaches Channel', text: 'Meet the coaches of other clubs.' },
+        match: {
+          title: 'Match requests',
+          text: 'Accept, counter or decline a match.',
+          alt: 'A match request received in the app: Demo FC, under 16, competitive, proposes Saturday 5 December at 10:00, away, on the main pitch at Demo Park, with Accept, Counter and Decline',
+        },
       },
       player: {
         home: { title: 'Home', text: 'The next training or match.' },

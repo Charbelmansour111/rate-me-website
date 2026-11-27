@@ -7,6 +7,7 @@ import type { Look } from '@/config/screens.config';
 import type { Dictionary } from '@/i18n';
 
 import { AppTabBar, type AppRole, type AppTab } from './app-tab-bar';
+import { PhoneFrame } from './phone-frame';
 import { TiltedCard } from './react-bits/tilted-card';
 
 export type Slide = {
@@ -18,7 +19,7 @@ export type Slide = {
   src: string | null;
   sketch: string | null;
   soon: string | null;
-  /** The phone's frame: black, orange (the middle one) or white. */
+  /** The glow behind the phone: orange for the middle one. */
   look: Look;
   /** Drawn as the app's player card instead of a phone. */
   card: boolean;
@@ -119,59 +120,37 @@ export function ShowcaseTabs({
 }
 
 /**
- * The screen in its phone: a thin bezel in the phone's colour, side buttons, a status bar with the
- * dynamic island above the screenshot (or a sketch until there is one), the app's tab bar where the
- * app shows it, and a soft reflection on the glass.
+ * The screen in the site's one phone frame (phone-frame.tsx): the screenshot (or a sketch until
+ * there is one), with the app's tab bar drawn over it where the app shows one.
  */
 function PhoneScreen({ slide, large = false }: { slide: Slide; large?: boolean }) {
   return (
-    <div className="phone" data-look={slide.look}>
-      <span className="phone-keys" aria-hidden="true" />
-      <div className="phone-screen" data-dark={slide.dark || undefined}>
-        <div className="phone-status" aria-hidden="true">
-          <span>9:41</span>
-          <span className="phone-island" />
-          <svg viewBox="0 0 34 12" className="phone-icons">
-            <path d="M1 11h2V8H1zM5 11h2V6H5zM9 11h2V4H9zM13 11h2V2h-2z" fill="currentColor" />
-            <rect
-              x="19.5"
-              y="1.5"
-              width="12"
-              height="9"
-              rx="2.5"
-              fill="none"
-              stroke="currentColor"
-            />
-            <rect x="21" y="3" width="8" height="6" rx="1.2" fill="currentColor" />
-          </svg>
+    <PhoneFrame dark={slide.dark}>
+      {slide.src ? (
+        <div className="phone-shot">
+          <Image
+            src={slide.src}
+            alt={slide.alt ?? slide.title}
+            width={780}
+            height={1688}
+            sizes={large ? '17rem' : '(min-width: 64rem) 21.25rem, 18rem'}
+            className="block h-auto w-full"
+          />
+          {slide.tab && <AppTabBar {...slide.tab} />}
         </div>
-        {slide.src ? (
-          <div className="phone-shot">
-            <Image
-              src={slide.src}
-              alt={slide.alt ?? slide.title}
-              width={large ? 360 : 330}
-              height={large ? 780 : 715}
-              sizes={large ? '360px' : '(min-width: 64rem) 330px, 270px'}
-              className="block h-auto w-full"
-            />
-            {slide.tab && <AppTabBar {...slide.tab} />}
-          </div>
-        ) : (
-          <svg
-            viewBox="0 20 220 440"
-            className="phone-sketch bg-soft"
-            fill="none"
-            stroke="var(--edge)"
-            strokeWidth="1.5"
-            aria-hidden="true"
-          >
-            <path d={slide.sketch!} />
-          </svg>
-        )}
-        <span className="phone-glass" aria-hidden="true" />
-      </div>
-    </div>
+      ) : (
+        <svg
+          viewBox="0 20 220 440"
+          className="phone-sketch bg-soft"
+          fill="none"
+          stroke="var(--edge)"
+          strokeWidth="1.5"
+          aria-hidden="true"
+        >
+          <path d={slide.sketch!} />
+        </svg>
+      )}
+    </PhoneFrame>
   );
 }
 

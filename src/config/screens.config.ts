@@ -5,7 +5,7 @@ import type { FeatureId } from './features.config';
 /**
  * "Inside the app": which screens each view shows, in order, three at most (they stand side by
  * side on a computer, the middle one in front). A screen looks for
- * public/screens/<view>-<id>.png (or .webp, .jpg; see the README there) and draws its sketch until
+ * public/screens/<view>-<id>.webp (or .png, .jpg; see the README there) and draws its sketch until
  * the file exists. Captions live in src/i18n (showcase.captions).
  *
  * `feature`: shows "Coming soon" while that feature is not released (features.config.ts).
@@ -17,8 +17,8 @@ import type { FeatureId } from './features.config';
  * the Coaches Channel and an event open on top of the tabs, without it.
  * `dark`: the status bar above the screen is dark (the screen's own top is dark).
  *
- * The three phones of a view each have their own frame, by place: black, orange in the middle
- * (with the strongest glow), white. Picked for contrast on the charcoal panel.
+ * Every phone has the same ink frame (src/components/phone-frame.tsx); the glow behind it is
+ * orange for the middle one, the strongest.
  */
 export const looks = ['black', 'orange', 'white'] as const;
 export type Look = (typeof looks)[number];
@@ -32,7 +32,7 @@ export type ScreenId =
   | 'squad'
   | 'event'
   | 'card'
-  | 'channel';
+  | 'match';
 export type ViewId = 'coach' | 'player';
 export type Screen = {
   id: ScreenId;
@@ -44,10 +44,11 @@ export type Screen = {
 
 export const screens: Record<ViewId, Screen[]> = {
   coach: [
-    { id: 'calendar', feature: 'calendar', tab: 'calendar' },
+    // The app's own screens with demo data (WEBSITE 18); they draw their own tab bar
+    { id: 'calendar', feature: 'calendar' },
     { id: 'whiteboard-roles', feature: 'whiteboard', dark: true },
-    // The Coaches Channel: one space for the coaches of every club.
-    { id: 'channel' },
+    // A match request received: their proposal, then Accept, Counter or Decline
+    { id: 'match', feature: 'matchRequests' },
   ],
   player: [
     { id: 'home', tab: 'home' },

@@ -11,7 +11,7 @@ import { ShowcaseTabs, type Slide } from './showcase-tabs';
 
 const EXTENSIONS = ['webp', 'png', 'jpg'];
 
-/** "coach-home.ar.png" wins on the Arabic page, "coach-home.png" is used for both. */
+/** "coach-home.ar.webp" wins on the Arabic page, "coach-home.webp" is used for both. */
 function findScreen(view: ViewId, id: ScreenId, locale: Locale): string | null {
   for (const name of [`${view}-${id}.${locale}`, `${view}-${id}`]) {
     for (const extension of EXTENSIONS) {
@@ -43,8 +43,8 @@ const SKETCHES: Record<ScreenId, string> = {
   event:
     'M20 60H200V150H20Z M36 84H130 M36 106H170 M36 128H100 M20 172H104V206H20Z M116 172H200V206H116Z M20 232H110 M20 258H200 M20 284H200 M20 310H160 M20 340H200V400H20Z',
   card: 'M40 70H180V300L110 340L40 300Z M110 100a34 34 0 1 1 0 68a34 34 0 0 1 0-68 M70 200H150 M64 232h34 M64 258h34 M122 232h34 M122 258h34 M20 370H200 M20 400H150',
-  channel:
-    'M20 60H120 M20 90H140V140H32L20 152Z M80 170H200V232L188 220H80Z M20 250H150V300H32L20 312Z M96 330H200V388L188 376H96Z M20 410H160V440H20Z M176 412h24v26h-24Z',
+  match:
+    'M20 60H200V130H20Z M36 84H130 M36 106H100 M20 150H200V330H20Z M36 172H120 M36 194H150 M36 220H184V280H36Z M36 296H184V318H36Z M60 350H100 M130 350H170',
 };
 
 export function Showcase({ locale }: { locale: Locale }) {
@@ -96,6 +96,7 @@ export function Showcase({ locale }: { locale: Locale }) {
             card={<PlayerCard t={t.showcase.playerCard} />}
             preRegister="#pre-register"
           />
+          {t.features.inEnglish && <p className="showcase-lang">{t.features.inEnglish}</p>}
         </div>
       </div>
     </section>

@@ -786,7 +786,7 @@ test('inside the app: three screens a view, arrows, dots and keys on phones', as
     const list = coach.getByRole('list');
     await list.focus();
     await page.keyboard.press('ArrowRight');
-    await expect(current).toContainText('Coaches Channel');
+    await expect(current).toContainText('Match requests');
     await expect(next).toBeDisabled();
     await page.keyboard.press('ArrowLeft');
     await expect(current).toContainText('Roles');
@@ -821,18 +821,18 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       await expect(phones.locator('.phone-sketch')).toHaveCount(0);
     }
     await expect(page.locator('#view-player .shield-card')).toHaveCount(1);
-    const roles = page.locator('.phone img[src*="coach-whiteboard-roles.png"]');
+    const roles = page.locator('.phone img[src*="coach-whiteboard-roles.webp"]');
     for (const role of ['Press', 'Cover', 'Mark', 'Intercept']) {
       await expect(roles).toHaveAttribute('alt', new RegExp(role));
     }
     for (const name of [
       'coach-calendar',
       'coach-whiteboard-roles',
-      'coach-channel',
+      'coach-match',
       'player-home',
       'player-event',
     ]) {
-      const image = page.locator(`.phone img[src*="${name}.png"]`);
+      const image = page.locator(`.phone img[src*="${name}.webp"]`);
       await expect(image).toHaveCount(1);
       const url = (await image.getAttribute('src'))!;
       const response = await page.request.get(url);
@@ -872,12 +872,15 @@ test('inside the app: big phones with a glow, big tabs, and the pill glides', as
   }
   // A soft glow behind each, no hard border
   await expect(view.locator('.phone-glow')).toHaveCount(3);
-  // Three frames for contrast on the charcoal: black, orange in the middle, white
-  expect(await phones.evaluateAll((els) => els.map((el) => el.getAttribute('data-look')))).toEqual([
-    'black',
-    'orange',
-    'white',
-  ]);
+  // One frame everywhere (WEBSITE 18): an ink bezel; the middle glow is the orange one
+  expect(
+    await phones.evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor)),
+  ).toEqual(['rgb(23, 23, 26)', 'rgb(23, 23, 26)', 'rgb(23, 23, 26)']);
+  expect(
+    await view
+      .locator('.phone-glow')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-look'))),
+  ).toEqual(['black', 'orange', 'white']);
   for (const phone of await phones.all()) await expect(phone).toHaveCSS('outline-style', 'none');
   // Tabs: 44px tall at least, 16px text; captions 16px and up
   const tabs = page.locator('#inside [role="tab"]');

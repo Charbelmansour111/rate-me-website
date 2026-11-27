@@ -357,10 +357,10 @@ test('inside the app: the tab bar on screens that have one, with the right tab c
   page,
 }) => {
   await page.goto('/');
+  // The coach view shows the app's own clean screens (WEBSITE 18): their tab bar is in the
+  // picture, so none is drawn over them
   const coach = page.locator('#view-coach');
-  await expect(coach.locator('.app-tabs')).toHaveCount(1);
-  await expect(coach.locator('.app-tab')).toHaveCount(5);
-  await expect(coach.locator('.app-tab[data-on]')).toHaveText('Calendar');
+  await expect(coach.locator('.app-tabs')).toHaveCount(0);
   const player = page.locator('#view-player');
   await expect(player.locator('.app-tab')).toHaveCount(4);
   await expect(player.locator('.app-tab[data-on]')).toHaveText('Home');

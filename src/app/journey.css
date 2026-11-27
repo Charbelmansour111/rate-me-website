@@ -236,8 +236,8 @@
   pointer-events: none;
 }
 
-/* A phone: a thin bezel in its colour (black, orange in the middle, white), side buttons, a status
-   bar with the dynamic island, the screen, a soft reflection on the glass. No blurred shadow: it
+/* The phone (src/components/phone-frame.tsx), one frame everywhere: a thin ink bezel, side keys, a
+   status bar with the island, the screen, a soft reflection on the glass. No blurred shadow: it
    would be repainted over the walk as the phones move; the shadow on the ground is a gradient. */
 .phone {
   --bezel-face: #17171a;
@@ -251,16 +251,6 @@
   box-shadow:
     inset 0 0 0 1px var(--bezel-edge),
     inset 0 0 0 3px rgb(0 0 0 / 0.35);
-}
-.phone[data-look='orange'] {
-  --bezel-face: #ff5a00;
-  --bezel-edge: #ffa36b;
-  --bezel-key: #e04f00;
-}
-.phone[data-look='white'] {
-  --bezel-face: #f3eee6;
-  --bezel-edge: #d6cfc2;
-  --bezel-key: #cfc7b9;
 }
 /* Power on one side, the two volume keys on the other */
 .phone::before,
@@ -562,6 +552,14 @@ html:not([data-js]) .phone {
   letter-spacing: 0;
 }
 
+/* Arabic only: the screens are of the app in English */
+.showcase-lang {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
 /* --- What a screen does: a dialog grown out of its phone --- */
 .screen-dialog {
   width: min(56rem, calc(100vw - 2rem));
@@ -592,7 +590,7 @@ html:not([data-js]) .phone {
   }
 }
 .screen-dialog-phone .phone {
-  --phone: min(17rem, 62vw);
+  --phone: min(17rem, 62vw, calc((100dvh - 6rem) * 0.45));
   transform: none;
 }
 /* On a phone: what it does first, then a smaller phone under it. */
@@ -775,10 +773,29 @@ html:not([data-js]) .phone {
   font-size: 0.875rem;
   font-weight: 600;
 }
-.feature-example {
+.feature-photo[data-frame='paper'] {
+  background: #ebe5da;
+}
+/* The report's first page as a sheet of paper on the card, a little turned, off the bottom edge */
+.feature-sheet {
   position: absolute;
-  bottom: 0.6rem;
-  inset-inline-start: 0.6rem;
+  top: 9%;
+  inset-inline: 11%;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(40 30 20 / 0.12),
+    0 8px 18px rgb(40 30 20 / 0.16);
+  rotate: -2deg;
+}
+/* "Example": in the card's body, level with the icon, never on the picture */
+.feature-body > .feature-example {
+  position: absolute;
+  top: 0.6rem;
+  inset-inline-end: 1rem;
+}
+.feature-example {
   padding: 0.1rem 0.6rem;
   border-radius: 999px;
   background: #0b0b0c;
@@ -790,10 +807,6 @@ html:not([data-js]) .phone {
 :lang(ar) .feature-example {
   letter-spacing: 0;
 }
-/* An app screen in the dialog: whole, on the app's own white */
-.feature-dialog-photo[data-screen] {
-  background: #fff;
-}
 .feature-soon.static {
   position: static;
   display: inline-block;
@@ -801,6 +814,7 @@ html:not([data-js]) .phone {
   color: var(--accent-text);
 }
 .feature-body {
+  position: relative;
   display: grid;
   flex: 1;
   align-content: start;
@@ -943,16 +957,75 @@ html:not([data-js]) .phone {
   aspect-ratio: 4 / 3;
   background: var(--softer);
 }
+/* The app's own screens in the dialog, whole: the phone, or the PDF's pages as paper, on light
+   paper so the ink frame and the white sheets both read; Example and what they are under them */
+.feature-dialog-shot {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1rem;
+  padding: 1.75rem 1.25rem 1.25rem;
+  background: #ebe5da;
+  color: #4f4a43;
+}
+.feature-dialog-shot .phone {
+  --phone: min(15.5rem, 50vw, calc((100dvh - 10rem) * 0.45));
+}
+.paper-stack {
+  display: grid;
+  width: min(16.5rem, 58vw, calc((100dvh - 11rem) / 2.2));
+  /* Room for the page under it, which shows on the far side */
+  margin-inline-end: 2.25rem;
+}
+.paper-sheet {
+  grid-area: 1 / 1;
+  align-self: start;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(40 30 20 / 0.14),
+    0 12px 28px rgb(40 30 20 / 0.2);
+  rotate: -1.5deg;
+}
+.paper-sheet[data-under] {
+  translate: 2.25rem 1.25rem;
+  rotate: 3deg;
+}
+[dir='rtl'] .paper-sheet[data-under] {
+  translate: -2.25rem 1.25rem;
+  rotate: -3deg;
+}
+.feature-dialog-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.feature-dialog-shot[data-frame='paper'] .feature-dialog-caption {
+  /* Below the page that hangs lower */
+  margin-top: 1.25rem;
+}
 .feature-dialog-text {
   padding: 1.75rem clamp(1.5rem, 4vw, 2.5rem) 2rem;
   font-size: 1.125rem;
+}
+/* On a phone the close button sits over the top of it: the pictures start below it */
+@media (max-width: 47.99rem) {
+  .feature-dialog-shot {
+    padding-top: 4.25rem;
+  }
 }
 @media (min-width: 48rem) {
   .feature-dialog-panel {
     grid-template-columns: 1fr 1.1fr;
     align-items: center;
   }
-  .feature-dialog-photo {
+  .feature-dialog-photo,
+  .feature-dialog-shot {
     height: 100%;
     min-height: 26rem;
     aspect-ratio: auto;
