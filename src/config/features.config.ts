@@ -7,7 +7,7 @@ export const features = [
   { id: 'whiteboard', released: true },
   { id: 'squad', released: true },
   { id: 'parentReport', released: true },
-  { id: 'matchRequests', released: false },
+  { id: 'matchRequests', released: true },
   { id: 'tournaments', released: false },
   { id: 'assistant', released: false },
 ] as const;
