@@ -332,7 +332,19 @@ export const en = {
     match: {
       label: 'A match request in the app',
       example: 'Example',
-      alt: 'A match request in the Coaches Channel: a friendly on Saturday 28 to Sunday 29 November at 10:00, any age, home or away, with a Cancel request button',
+      team: 'Pinewood Academy',
+      meta: 'Beirut · U16 · Competitive',
+      status: 'Your answer',
+      counters: '2 counters left',
+      caption: 'Their proposal',
+      when: 'Sat 6 Dec · 10:00',
+      where: 'Home · Main pitch',
+      accept: 'Accept',
+      counter: 'Counter',
+      decline: 'Decline',
+      safety: 'Contact is between coaches only. No player details are shared.',
+      description:
+        'Example of a match request in the app: Pinewood Academy, U16, proposes Saturday 6 December at 10:00, at home. You can accept, counter or decline.',
     },
     players:
       'Three players in red walking across a pitch towards a ball, seen from behind, in black and white',

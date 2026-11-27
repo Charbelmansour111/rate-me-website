@@ -164,13 +164,14 @@ test('community: three stock portraits, and the app’s match request, said to b
       .toBeGreaterThan(0);
   }
   await expect(section).not.toContainText(/founding coach/i);
-  // The app's match request, as it is now (released): a screenshot of the request card, no
-  // names, said to be an example, nothing coming soon
+  // The app's match request, drawn in the site's colours (WEBSITE 15; WEBSITE 18 keeps it here):
+  // a made-up team, said to be an example, one description for screen readers, nothing coming soon
   const card = section.locator('.match-card');
   await expect(card.locator('.match-example')).toHaveText('Example');
-  const shot = card.locator('img');
-  await expect(shot).toHaveAttribute('src', /match-request/);
-  await expect(shot).toHaveAttribute('alt', /friendly/);
+  await expect(card).toHaveAttribute('role', 'img');
+  await expect(card).toHaveAttribute('aria-label', /accept, counter or decline/);
+  await expect(card.locator('.match-accept')).toHaveText('Accept');
+  await expect(card.locator('img')).toHaveCount(0);
   await expect(card).not.toContainText(/Coming soon/);
   await expect(card.locator('button, a')).toHaveCount(0);
   // Atmosphere: one photo of players from behind, in black and white

@@ -29,7 +29,6 @@ photo's page.
 | `public/features/parentReport-detail.webp`  | own work / Rate Me                 | the app's monthly report                      | 4:3, attendance to the coach rating                      |
 | `public/features/matchRequests.webp`        | own work / Rate Me                 | the app's Coaches Channel                     | 16:10, the request card only                             |
 | `public/features/matchRequests-detail.webp` | own work / Rate Me                 | the app's Request a match form                | 4:3                                                      |
-| `public/community/match-request.webp`       | own work / Rate Me                 | the app's Coaches Channel                     | the request card only                                    |
 | `public/community/players.webp`             | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                                   | 4:3, the lower half, 1000 px, black and white            |
 | `public/footer/pitch.webp`                  | Photo by Omar Ramadan on Unsplash  | htGM-eEzsdk                                   | the turf band only (no faces), 1600 px, black and white  |
 | `public/features/tournaments.webp`          | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw       | 16:10, the net against the sky, 1200 px, black and white |
@@ -108,7 +107,7 @@ first three portraits (coach-1 to coach-3); the other five files stay but are no
 Screenshots (`site-assets/screens`, not committed) are our own work, Rate Me. Only the app's own
 area is taken from them, never a name, a face or a club:
 
-- Screenshot (519): the Coaches Channel. Used: the request card (match requests card, community).
+- Screenshot (519): the Coaches Channel. Used: the request card (match requests card). The community section draws its own card.
 - Screenshot (520): the Request a match form. Used: the match requests dialog.
 - Screenshot (521): a player's monthly report. Used below the player's name and club (the report
   card and dialog).

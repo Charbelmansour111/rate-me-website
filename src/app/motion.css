@@ -116,6 +116,72 @@ html.lenis {
   font-size: 0.875rem;
   font-weight: 600;
 }
+.match-tile {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: var(--tint);
+  color: var(--accent-text);
+}
+.match-verified {
+  color: var(--accent-text);
+}
+.match-chip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--accent-text);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.match-proposal {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--soft);
+}
+.match-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+}
+.match-line svg {
+  color: var(--accent-text);
+}
+.match-accept {
+  display: grid;
+  min-height: 3rem;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: var(--brand-orange);
+  color: var(--brand-black);
+  font-weight: 700;
+}
+.match-text-action {
+  display: grid;
+  min-height: 2.75rem;
+  place-items: center;
+  color: var(--accent-text);
+  font-weight: 700;
+}
+.match-safety {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.match-safety svg {
+  flex-shrink: 0;
+}
 .community-photo {
   width: 100%;
   height: auto;
