@@ -101,6 +101,9 @@ typography:
   text-xl:
     fontFamily: 'Barlow, system-ui, sans-serif'
     fontSize: '1.25rem'
+  card-title:
+    fontFamily: 'Bebas Neue, Barlow, sans-serif'
+    fontSize: 'clamp(1.35rem, 1.1rem + 0.5vw, 1.6rem)'
   card-small:
     fontFamily: 'Barlow, system-ui, sans-serif'
     fontSize: '0.8125rem'
@@ -118,6 +121,7 @@ rounded:
   phone: '2.6rem'
   phone-screen: '2.2rem'
   phone-focus: '2.8rem'
+  app-md: '0.75rem'
   badge: '0.35rem'
   line: '2px'
   pill: '999px'
@@ -258,6 +262,14 @@ Three looks, chosen by what a block holds and the same in every stage (`src/app/
   Words on the black half, a black button on the orange half (`btn-dark`), a dashed pass between.
   Laid out by its own width (a container query), so it works in a half column.
 
+### Paint
+
+Behind the tactics section, two thick oblique strokes, orange and white, as if rolled on: wide
+strokes at -12 degrees with thin ridges of lighter and darker paint along them (more strokes, no
+filter, no blur). They show only in the panel's gaps and margins: the words and the board stand on
+the panel's own solid colour in front of them. Rolled on (dash offset) as the section comes in,
+paused off screen; still under reduced motion.
+
 ### Pitch lines
 
 `src/components/pitch-lines.tsx`, drawn in the stage's pitch-line colour: the halfway line and
@@ -277,11 +289,19 @@ text.
 
 ### Cards / Containers
 
-Panels as above. "What you get" is a carousel of paper cards: one 4:3 photo each, the feature's
-icon, its title, one line of what it gives, Coming soon where it applies, More. Three a view on a
-computer, one and a half on a phone; swipe, drag, arrows, dots and arrow keys, mirrored in Arabic.
-A button over each card opens it in a dialog (bigger photo, three facts from the app,
-Pre-register).
+Panels as above. "What you get" is a carousel of paper cards: one 16:10 photo each (an app screen
+where a photo would be stock), the feature's icon, its title, one line of what it gives, Coming
+soon where it applies, More. Four a view from 1280px, three from 1024, one and a half on a phone;
+the whole section fits one screen at 1440 x 900 and 1280 x 720. On a computer the row stops at the
+content's edges (whole cards, a clear start and end). Swipe, drag, arrows, dots and arrow keys,
+mirrored in Arabic; at either end its arrow dims (`aria-disabled`, still reachable), the dots fill
+up to the last card in view and a counter says "7 of 7". A button over each card opens it in a
+dialog (bigger photo, three facts from the app, Pre-register).
+
+The community section shows three portraits at most, captioned "Photos for illustration", and the
+app's match request as the app draws it (team with its shield tile, status chip, the proposal,
+Accept, Counter, Decline, the safety line), in this site's colours, marked as an example. App
+pieces keep the app's 0.75rem corner (`app-md`).
 
 ### Inputs / Fields
 
@@ -304,13 +324,16 @@ Cookie settings and the language switch.
 
 ### Inside the app
 
-Three phones a view, about 340px each at 1440: black, orange in the middle (strongest glow),
-white, by place. Each phone: a thin bezel in its colour, side keys, a status bar with the dynamic
+Three phones a view, sized from the screen's height so each is under 72% of it (`31vh` wide, at
+most 340px), so three fit whole at 1440 x 900 and 1280 x 720: black, orange in the middle
+(strongest glow), white, by place. Each phone: a thin bezel in its colour, side keys, a status bar with the dynamic
 island over the screenshot, a soft reflection, a ground shadow. Where the app shows its tab bar
 (the calendar, the player's home), the app's own bar is drawn over the screenshot's: Ionicons,
 white, `#dbdbdb` hairline, the chosen tab in `#b33f00`. A button over each phone opens a dialog
-with what its screen does. The player view ends on the app's player card, marked as an example:
-the photo in the tier's orange ring, a raised position badge (white rim, green face, shine).
+with what its screen does. The player view ends on the app's shield card (rate-me: `shield-card.tsx`), shown whole and
+marked as an example: the crest with its inner outline in the tier's gradient, the overall and
+position big on the left (they stand off the card when it tilts), the photo on the right, the name
+on a band, six attributes in two columns with the app's three-letter codes.
 
 ### The walk
 
