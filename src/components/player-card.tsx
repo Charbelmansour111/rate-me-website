@@ -3,15 +3,19 @@ import type { CSSProperties } from 'react';
 
 import type { Dictionary } from '@/i18n';
 
+import { TiltedCard } from './react-bits/tilted-card';
+
 type Strings = Dictionary['showcase']['playerCard'];
 type StatKey = keyof Strings['stats'];
 
 /**
- * The app's player card ("ticket" design, rate-me src/features/cards/player-card.tsx), drawn in
- * HTML, CSS and SVG: one cut corner, the tier tag, the overall in a ring out of 100, the photo,
- * a perforation, the name and position, then six attributes in full words with bars. Its own
- * tier names and attribute names; no video-game card, no club or competition marks. An example:
- * a stock photo and no real name.
+ * The app's shield card (rate-me: features/cards/shield-card.tsx), the one a coach sees on opening
+ * a player: a crest with its shoulders cut and its sides narrowing to a point, an inner outline,
+ * the overall and the position big on the left with the kit number and the tier, the photo on the
+ * right, the name on a band, then six attributes in two columns with three-letter codes. Its own
+ * tier and attribute names, no other game's artwork, no club or competition marks. An example: a
+ * stock photo and no real name. Shown whole; the badge and the photo stand off the card when it
+ * tilts (`data-depth`, src/components/react-bits/tilted-card.motion.ts).
  */
 const OVERALL = 72;
 const NUMBER = 8;
@@ -23,132 +27,95 @@ const STATS: Record<StatKey, number> = {
   defending: 58,
   physical: 70,
 };
-/** The app's look for the "regular" tier, and its midfielder colour. */
+/** The app's codes: the first three letters of its short names (Speed, Finishing, Vision...). */
+const CODES: Record<StatKey, string> = {
+  pace: 'SPE',
+  shooting: 'FIN',
+  passing: 'VIS',
+  dribbling: 'CON',
+  defending: 'TAC',
+  physical: 'STR',
+};
+/** The app's look for the "regular" tier (rate-me: theme/domain.ts, cardLook). */
 const LOOK = {
   from: '#1c1b29',
   to: '#3a1606',
   accent: '#ff7a1a',
   label: '#e6dcd2',
-  chip: '#ff7a1a',
-  onChip: '#1c1b29',
-  position: '#22c55e',
-  onPosition: '#14141a',
+  line: 'rgb(255 255 255 / 0.28)',
 };
-const STAT_MAX = 99;
+const CREST =
+  'M14 0 L86 0 L100 10 L100 104 Q100 112 93 116 L54 138 Q50 140 46 138 L7 116 Q0 112 0 104 L0 10 Z';
+const OUTLINE =
+  'M16 4 L84 4 L96 12 L96 103 Q96 109 91 112 L53 133 Q50 135 47 133 L9 112 Q4 109 4 103 L4 12 Z';
 
 export function PlayerCard({ t }: { t: Strings }) {
-  const size = 104;
-  const stroke = 8;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
+  const keys = Object.keys(STATS) as StatKey[];
+  const columns = [keys.slice(0, 3), keys.slice(3, 6)];
   return (
-    <div
-      className="player-card"
-      role="img"
-      aria-label={t.label}
-      style={
-        {
-          '--card-from': LOOK.from,
-          '--card-to': LOOK.to,
-          '--card-accent': LOOK.accent,
-          '--card-label': LOOK.label,
-          '--card-position': LOOK.position,
-        } as CSSProperties
-      }
-    >
-      <svg
-        className="player-card-ground"
-        viewBox="0 0 100 140"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="player-card-ground" x1="0" y1="0" x2="0.4" y2="1">
-            <stop offset="0" stopColor={LOOK.from} />
-            <stop offset="1" stopColor={LOOK.to} />
-          </linearGradient>
-        </defs>
-        <path
-          d="M0 6 Q0 0 6 0 L82 0 L100 18 L100 134 Q100 140 94 140 L6 140 Q0 140 0 134 Z"
-          fill="url(#player-card-ground)"
-        />
-      </svg>
-      <div className="player-card-body" aria-hidden="true">
-        <div className="player-card-top">
-          <div className="player-card-tier">
-            <span
-              className="player-card-chip"
-              style={{ background: LOOK.chip, color: LOOK.onChip }}
-            >
-              {t.tier}
-            </span>
-            <span className="player-card-ring" style={{ width: size, height: size }}>
-              <svg width={size} height={size}>
-                <circle
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={r}
-                  stroke="rgb(255 255 255 / 0.16)"
-                  strokeWidth={stroke}
-                  fill="none"
-                />
-                <circle
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={r}
-                  stroke={LOOK.accent}
-                  strokeWidth={stroke}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(c * OVERALL) / 100} ${c}`}
-                  transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                />
-              </svg>
-              <span className="player-card-overall">
-                {OVERALL}
-                <small>{t.outOf}</small>
+    <figure className="shield-wrap">
+      {/* React Bits TiltedCard: the card leans to the mouse, its caption stays put */}
+      <TiltedCard className="card-tilt">
+        <div
+          className="shield-card"
+          role="img"
+          aria-label={t.label}
+          style={
+            {
+              '--card-accent': LOOK.accent,
+              '--card-label': LOOK.label,
+              '--card-line': LOOK.line,
+            } as CSSProperties
+          }
+        >
+          <svg
+            className="shield-ground"
+            viewBox="0 0 100 140"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="shield-regular" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0" stopColor={LOOK.from} />
+                <stop offset="1" stopColor={LOOK.to} />
+              </linearGradient>
+            </defs>
+            <path d={CREST} fill="url(#shield-regular)" />
+            <path d={OUTLINE} fill="none" stroke={LOOK.line} strokeWidth="0.7" />
+          </svg>
+          <div className="shield-body" aria-hidden="true">
+            <div className="shield-top">
+              <div className="shield-badge" data-depth="2">
+                <span className="shield-overall">{OVERALL}</span>
+                <span className="shield-position">{t.positionCode}</span>
+                <span className="shield-rule" />
+                <span className="shield-kit">#{NUMBER}</span>
+                <span className="shield-tier">{t.tier}</span>
+              </div>
+              {/* A stock photo, black and white (docs/PHOTO-CREDITS.md) */}
+              <span className="shield-photo" data-depth="1">
+                <Image src="/cards/player.jpg" alt="" width={140} height={140} sizes="140px" />
               </span>
-            </span>
+            </div>
+            <div className="shield-band">
+              <span>{t.name}</span>
+            </div>
+            <div className="shield-stats">
+              {columns.map((column, c) => (
+                <ul key={c} className="shield-column">
+                  {column.map((key) => (
+                    <li key={key}>
+                      <b>{STATS[key]}</b>
+                      <span>{CODES[key]}</span>
+                    </li>
+                  ))}
+                </ul>
+              ))}
+            </div>
           </div>
-          <span className="player-card-portrait" data-depth="1">
-            {/* A stock photo, black and white (docs/PHOTO-CREDITS.md); its ring is the tier's
-                colour, as in the app */}
-            <Image
-              className="player-card-photo"
-              src="/cards/player.jpg"
-              alt=""
-              width={112}
-              height={112}
-              sizes="112px"
-            />
-            {/* The position, raised: a shadow, a white rim (the app's position tokens), the
-                position colour as its face, a soft shine. It moves a little more than the card
-                when it tilts (src/components/react-bits/tilted-card.motion.ts). */}
-            <span className="player-card-badge" data-depth="2" style={{ color: LOOK.onPosition }}>
-              {t.positionLetter}
-            </span>
-          </span>
         </div>
-        <div className="player-card-perforation" />
-        <div className="player-card-identity">
-          <span className="player-card-name">{t.name}</span>
-          <span className="player-card-meta">
-            {t.position} · #{NUMBER}
-          </span>
-        </div>
-        <ul className="player-card-bars">
-          {(Object.keys(STATS) as StatKey[]).map((key) => (
-            <li key={key}>
-              <span className="player-card-stat">{t.stats[key]}</span>
-              <span className="player-card-track">
-                <span style={{ width: `${(STATS[key] / STAT_MAX) * 100}%` }} />
-              </span>
-              <span className="player-card-value">{STATS[key]}</span>
-            </li>
-          ))}
-        </ul>
-        <span className="player-card-example">{t.example}</span>
-      </div>
-    </div>
+      </TiltedCard>
+      <figcaption className="shield-example">{t.example}</figcaption>
+    </figure>
   );
 }

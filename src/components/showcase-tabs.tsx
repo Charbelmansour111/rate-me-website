@@ -263,7 +263,7 @@ function Carousel({
               {/* Its shadow on the ground under it: a gradient, nothing to repaint */}
               <span className="phone-ground" aria-hidden="true" />
               {slide.card ? (
-                <TiltedCard className="card-tilt">{card}</TiltedCard>
+                card
               ) : (
                 <TiltedCard className="phone-tilt">
                   <PhoneScreen slide={slide} />
