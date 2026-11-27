@@ -9,7 +9,10 @@ import { appShots } from '../../src/config/app-shots';
  * The app's own screens (WEBSITE 18): in colour, as the app shows them, so they are not in the
  * photos test. Each file is light, and its size in the code is its real size, so nothing jumps.
  */
-const shots = Object.values(appShots).flatMap((shot) => [shot!.face, ...shot!.pages]);
+const shots = Object.values(appShots).flatMap((shot) => [
+  ...(shot!.face ? [shot!.face] : []),
+  ...shot!.pages,
+]);
 const phones = readdirSync('public/screens')
   .filter((name) => name.endsWith('.webp'))
   .map((name) => `public/screens/${name}`);
@@ -25,6 +28,7 @@ describe('app screens', () => {
 
   it('card faces are 16:10, or the report page as paper', () => {
     for (const [id, shot] of Object.entries(appShots)) {
+      if (!shot!.face) continue;
       const ratio = shot!.face.width / shot!.face.height;
       if (shot!.frame === 'paper') expect(id).toBe('parentReport');
       else expect(ratio).toBeCloseTo(1.6, 2);

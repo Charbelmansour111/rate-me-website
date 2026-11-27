@@ -10,31 +10,34 @@ photo's page.
 
 ## On the site
 
-| File                               | Photo by                           | Unsplash                                | Crop                                                                                                    |
-| ---------------------------------- | ---------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `public/community/coach-1.jpg`     | Mostafa Kordzangeneh               | https://unsplash.com/photos/_tcJW4nqVtw | Square on the face, 640 px, black and white                                                             |
-| `public/community/coach-2.jpg`     | Josias Garibay                     | https://unsplash.com/photos/rifCUO-4X8k | Square on the face, 640 px, black and white                                                             |
-| `public/community/coach-3.jpg`     | Vicky Hladynets                    | https://unsplash.com/photos/_gDoyVv5F4c | Square on the face, 640 px, black and white                                                             |
-| `public/community/coach-4.jpg`     | Artem Kryzhanivskyi                | https://unsplash.com/photos/sEll8Ivzx1w | Square on the face, 640 px, black and white                                                             |
-| `public/community/coach-5.jpg`     | Alex Suprun                        | https://unsplash.com/photos/UUp9z94QhLA | Square on the face, 640 px, black and white                                                             |
-| `public/community/coach-6.jpg`     | Arthur Debons                      | https://unsplash.com/photos/Mrql2Og2GU8 | Square on the face, 640 px, black and white                                                             |
-| `public/community/coach-7.jpg`     | Christian Buehner                  | https://unsplash.com/photos/5YpZpFy8zzU | Square on the face, 640 px, black and white                                                             |
-| `public/community/coach-8.jpg`     | Lucas Clarysse                     | https://unsplash.com/photos/yMxLAdXh8Wc | Square on the face, 640 px, black and white                                                             |
-| `public/cards/player.jpg`          | Levi Meir Clancy                   | https://unsplash.com/photos/KIWxM_XvLlI | Square on the face, 480 px, black and white                                                             |
-| `public/features/whiteboard.webp`  | Jasper Benning                     | https://unsplash.com/photos/Ri4FXmD7DPM | 16:10, board only, 1200 px, colour                                                                      |
-| `public/features/calendar.webp`    | Alliance Football Club             | https://unsplash.com/photos/g8cK31aYH3E | 16:10, below the shorts (their club name) and away from the child: legs, boots, a cone, 1200 px, colour |
-| `public/community/players.webp`    | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                             | 4:3, the lower half, 960 px, colour                                                                     |
-| `public/footer/pitch.webp`         | Photo by Omar Ramadan on Unsplash  | htGM-eEzsdk                             | the turf band only (no faces), 1600 px, colour                                                          |
-| `public/features/tournaments.webp` | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw | 16:10, the net against the sky, 1200 px, colour                                                         |
-| `public/features/assistant.webp`   | Jeffrey F Lin                      | https://unsplash.com/photos/pSHpFB5WNUE | 16:10, the training sheet in two hands only (no faces, no logos), 740 px, colour                        |
+| File                                 | Photo by                           | Unsplash                                | Crop                                                                                                                                                                                                      |
+| ------------------------------------ | ---------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/community/coach-1.jpg`       | Mostafa Kordzangeneh               | https://unsplash.com/photos/_tcJW4nqVtw | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/community/coach-2.jpg`       | Josias Garibay                     | https://unsplash.com/photos/rifCUO-4X8k | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/community/coach-3.jpg`       | Vicky Hladynets                    | https://unsplash.com/photos/_gDoyVv5F4c | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/community/coach-4.jpg`       | Artem Kryzhanivskyi                | https://unsplash.com/photos/sEll8Ivzx1w | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/community/coach-5.jpg`       | Alex Suprun                        | https://unsplash.com/photos/UUp9z94QhLA | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/community/coach-6.jpg`       | Arthur Debons                      | https://unsplash.com/photos/Mrql2Og2GU8 | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/community/coach-7.jpg`       | Christian Buehner                  | https://unsplash.com/photos/5YpZpFy8zzU | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/community/coach-8.jpg`       | Lucas Clarysse                     | https://unsplash.com/photos/yMxLAdXh8Wc | Square on the face, 640 px, black and white                                                                                                                                                               |
+| `public/cards/player.jpg`            | Levi Meir Clancy                   | https://unsplash.com/photos/KIWxM_XvLlI | Square on the face, 480 px, black and white                                                                                                                                                               |
+| `public/features/whiteboard.webp`    | Jasper Benning                     | https://unsplash.com/photos/Ri4FXmD7DPM | 16:10, board only, 1200 px, black and white                                                                                                                                                               |
+| `public/features/calendar.webp`      | Alliance Football Club             | https://unsplash.com/photos/g8cK31aYH3E | 16:10, below the shorts (their club name) and away from the child: legs, boots, a cone, 1200 px, black and white                                                                                          |
+| `public/community/players.webp`      | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                             | 4:3, the lower half, 960 px, colour                                                                                                                                                                       |
+| `public/footer/pitch.webp`           | Photo by Omar Ramadan on Unsplash  | htGM-eEzsdk                             | the turf band only (no faces), 1600 px, colour                                                                                                                                                            |
+| `public/features/matchRequests.webp` | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw | 16:10, the net against the sky, 1200 px, black and white (the Match requests card)                                                                                                                        |
+| `public/features/tournaments.webp`   | Sammy Swae                         | https://unsplash.com/photos/cneBYhGBUtM | 16:10, the squad and the trophy, 1200 px, black and white; every mark under a soft round blur (the arch's tournament name and logos, the trophy's plate, the sponsor and crests on the shirts and shorts) |
+| `public/features/assistant.webp`     | Jeffrey F Lin                      | https://unsplash.com/photos/pSHpFB5WNUE | 16:10, the training sheet in two hands only (no faces, no logos), 740 px, black and white                                                                                                                 |
 
-The colour rule (WEBSITE 17): a photo where a face is visible is black and white, in the file
-itself; a photo with no visible face (from behind, legs, boots, the ball, turf, cones, a goal, a net,
-equipment) stays in colour. `src/config/photos.ts` lists every photo with `faces: true` or `false`,
-and `tests/unit/photos.test.ts` checks each file against it. App screens are not photos and stay
-as the app shows them. Every file is under 120 KB and loads lazily. The app's own screens are
-listed under "App screens (WEBSITE 18)" below. The community strip shows only the first three
-portraits (coach-1 to coach-3); the other five files stay but are not shown.
+The colour rule (WEBSITE 17, WEBSITE 19): a photo where a face is visible is black and white, in
+the file itself. A photo with no visible face (from behind, legs, boots, the ball, turf, cones, a
+goal, a net, equipment) stays in colour, except on the "What you get" cards, where every photo is
+black and white so the cards read as one set. `src/config/photos.ts` lists every photo with
+`faces` and `tone` (`grey` or `colour`), and `tests/unit/photos.test.ts` checks each file against
+it. App screens are not photos and stay as the app shows them. Every file is under 120 KB and
+loads lazily. The app's own screens are listed under "App screens (WEBSITE 18)" below. The
+community strip shows only the first three portraits (coach-1 to coach-3); the other five files
+stay but are not shown.
 
 - The whiteboard crop leaves out the board maker's name; the same file also stands in the tactics
   section on screens where that section is not pinned.
@@ -74,11 +77,11 @@ into `site-assets/screens/app` (not committed); here as webp, phones 780 px wide
 | `public/features/parentReport.webp`          | `report-1.png`                   | Monthly report card, as paper  | the top of page 1                                                                |
 | `public/features/parentReport-detail.webp`   | `report-1.png`                   | Report dialog, as paper        | page 1 down to the coach rating                                                  |
 | `public/features/parentReport-detail-2.webp` | `report-2.png`                   | Report dialog, as paper        | page 2 down to its footer                                                        |
-| `public/features/matchRequests.webp`         | `match-request-received.png`     | Match requests card            | 16:10, their proposal and Accept, Counter, Decline                               |
 | `public/features/matchRequests-detail.webp`  | `match-request-card.png`         | Match requests dialog, a phone | whole screen (the Coaches Channel with the request card)                         |
 
 `match-request-form.png` is not used: the received request and the channel say more in two
-pictures. The community section keeps its drawn match request card. The WEBSITE 15 crops of
+pictures. Since WEBSITE 19 the community shows these two screens in phones; the Match requests
+card shows the goal net, and only its dialog the app. The WEBSITE 15 crops of
 Screenshots 519 to 522 are gone, and the old PNG screens in `public/screens` with them.
 
 ## All 43 photos supplied
@@ -110,7 +113,7 @@ Screenshots 519 to 522 are gone, and the old PNG screens in `public/screens` wit
 | 21  | Jasper Benning, Ri4FXmD7DPM             | feature card: whiteboard        | also in the tactics section                         |
 | 22  | Jeffrey F Lin, 82zYqrbBfPA              | no                              | branded boots (logo)                                |
 | 23  | Jeffrey F Lin, pSHpFB5WNUE              | no                              | sponsor boards of a professional club               |
-| 24  | Jerome, nDHp2Z4rCHw                     | feature card: tournaments       |                                                     |
+| 24  | Jerome, nDHp2Z4rCHw                     | feature card: match requests    |                                                     |
 | 25  | Jorge Salvador, iGzHMzRZjRs             | no                              | a logo on the T-shirt                               |
 | 26  | Josias Garibay, rifCUO-4X8k             | community, coach-2              |                                                     |
 | 27  | Lars Bo Nielsen, zXn5qinCDKg            | no                              | youth match (minors), kit logos                     |
@@ -154,4 +157,4 @@ The ten Unsplash photos (`site-assets/stock`, not committed):
 | Lars Bo Nielsen, xewH-utuFYA        | no                 | recognisable faces, sponsors' logos                                                            |
 | Maximilian Müller, TdjvE-SnB34      | no                 | a real club's name across the shirts                                                           |
 | Md Mahdi, FSNXh_gQ81Q               | no                 | children's faces, a tournament's branding                                                      |
-| Sammy Swae, cneBYhGBUtM             | no                 | a crowd of faces, a trophy                                                                     |
+| Sammy Swae, cneBYhGBUtM             | tournaments card   | adults only; the arch, the trophy's plate, sponsors and crests blurred; black and white        |

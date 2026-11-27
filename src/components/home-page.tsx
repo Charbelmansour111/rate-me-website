@@ -38,7 +38,7 @@ export function HomePage({ locale }: { locale: Locale }) {
       benefit: t.features.items[id].benefit,
       bullets: t.features.items[id].bullets,
       alt: photos[id]?.photo ?? '',
-      src: shot?.face.src ?? publicFile('features', id),
+      src: shot?.face?.src ?? publicFile('features', id),
       shot,
       // The dialog's bigger picture, where it is a photo: the card's own
       detail: publicFile('features', id),

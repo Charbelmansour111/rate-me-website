@@ -135,8 +135,7 @@ export const en = {
       },
       matchRequests: {
         title: 'Match requests',
-        photo:
-          'A match request in the app: their proposal for Saturday 5 December at 10:00, away on the main pitch at Demo Park, with Accept, Counter and Decline',
+        photo: 'The corner of a goal net against the sky',
         detail:
           'The Coaches Channel in the app: messages from two coaches, then a friendly request for Saturday 28 to Sunday 29 November at 10:00, any age, home or away, with Cancel request',
         text: 'Find a friendly by sending a request to other clubs, and answer the ones you receive.',
@@ -149,7 +148,7 @@ export const en = {
       },
       tournaments: {
         title: 'Tournaments',
-        photo: 'The corner of a goal net against a blue sky',
+        photo: 'A football squad celebrating with a trophy at night, arms raised, spray in the air',
         text: 'Create a tournament, take registrations and follow the fixtures.',
         benefit: 'Run a tournament from sign-up to the final.',
         bullets: [

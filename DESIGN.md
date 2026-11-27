@@ -381,9 +381,11 @@ screen readers.
   left.
 - Show real app screens and real, licensed photographs, credited in `docs/PHOTO-CREDITS.md`.
 - Photos with a visible face are black and white; photos with no face (from behind, legs, the
-  ball, turf, cones, a goal, equipment) stay in colour (`src/config/photos.ts`, checked by
+  ball, turf, cones, a goal, equipment) stay in colour, except on the feature cards, which are all
+  black and white (`src/config/photos.ts`, `faces` and `tone`, checked by
   `tests/unit/photos.test.ts`); app screens stay as the app shows them, with an "Example" tag
-  where they show sample data.
+  where they show sample data. Any mark on a stock photo (a club's or a tournament's name, a
+  sponsor, a league patch) goes under a soft round blur; makers' logos on boots and balls stay.
 - Use stock photos for atmosphere only (the community, the footer's turf), with no faces, logos or
   names, never as our coach, player or club.
 

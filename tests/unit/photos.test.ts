@@ -6,8 +6,9 @@ import { describe, expect, it } from 'vitest';
 import { photos } from '../../src/config/photos';
 
 /**
- * The colour rule (WEBSITE 17), from src/config/photos.ts: a photo with a visible face is black
- * and white in the file itself; one with no face stays in colour. App screens are not in the list
+ * The colour rule, from src/config/photos.ts: a photo with a visible face is black and white in
+ * the file itself (WEBSITE 17); one with no face is whatever its tone says (the feature cards are
+ * all grey, WEBSITE 19), and the file must match it. App screens are not in the list
  * (tests/unit/app-shots.test.ts).
  */
 
@@ -28,14 +29,15 @@ async function colourfulness(file: string) {
 }
 
 describe('photos', () => {
-  it.each(photos.filter((p) => p.faces))(
-    '$file shows a face: black and white',
-    async ({ file }) => {
-      expect(await colourfulness(file)).toBeLessThan(2);
-    },
-  );
+  it.each(photos.filter((p) => p.faces))('$file shows a face: its tone is grey', ({ tone }) => {
+    expect(tone).toBe('grey');
+  });
 
-  it.each(photos.filter((p) => !p.faces))('$file shows no face: in colour', async ({ file }) => {
+  it.each(photos.filter((p) => p.tone === 'grey'))('$file is black and white', async ({ file }) => {
+    expect(await colourfulness(file)).toBeLessThan(2);
+  });
+
+  it.each(photos.filter((p) => p.tone === 'colour'))('$file is in colour', async ({ file }) => {
     expect(await colourfulness(file)).toBeGreaterThan(8);
   });
 
@@ -48,7 +50,8 @@ describe('photos', () => {
   it('lists every photograph in public/', () => {
     const listed = new Set(photos.map((p) => p.file));
     const folders = ['public/community', 'public/cards', 'public/footer', 'public/features'];
-    const app = /squad|parentReport|matchRequests/;
+    // The app's own screens (src/config/app-shots.ts), not photos
+    const app = /^(squad|parentReport)|-detail/;
     for (const folder of folders) {
       for (const name of readdirSync(folder)) {
         const file = `${folder}/${name}`;

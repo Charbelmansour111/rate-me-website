@@ -31,7 +31,7 @@ export function FeatureCardFace({
   return (
     <>
       <span className="feature-photo" data-frame={c.shot?.frame}>
-        {c.shot?.frame === 'paper' ? (
+        {c.shot?.face && c.shot.frame === 'paper' ? (
           // The report is a PDF: its first page lies as a sheet of paper, running off the bottom
           <span className="feature-sheet">
             <Image
@@ -44,7 +44,7 @@ export function FeatureCardFace({
               draggable={false}
             />
           </span>
-        ) : c.shot ? (
+        ) : c.shot?.face ? (
           // An app screen, cut to 16:10 in the file itself, so every width shows the same part
           <Image
             src={c.shot.face.src}
@@ -73,7 +73,7 @@ export function FeatureCardFace({
       <span className="feature-body">
         <span className="feature-icon">{icon}</span>
         {/* Example sits on the More line, off the picture (src/app/journey.css) */}
-        {c.example && <span className="feature-example">{c.example}</span>}
+        {c.example && c.shot?.face && <span className="feature-example">{c.example}</span>}
         <span id={`feature-${c.id}-title`} className="display h3 feature-title">
           {c.title}
         </span>

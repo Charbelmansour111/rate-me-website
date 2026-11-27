@@ -211,17 +211,23 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       const card = page
         .locator('.feature-card')
         .filter({ has: page.locator(`#feature-${id}-title`) });
-      // Example is said off the picture, in the card's body, and covers none of it
-      const tag = card.locator('.feature-example');
-      await expect(tag).toHaveText(ar ? 'مثال' : 'Example');
-      await expect(card.locator('.feature-photo .feature-example')).toHaveCount(0);
       await card.scrollIntoViewIfNeeded();
-      const photo = (await card.locator('.feature-photo').boundingBox())!;
-      const box = (await tag.boundingBox())!;
-      expect(box.y).toBeGreaterThanOrEqual(photo.y + photo.height);
-      // The face has its size set and waits until it is near
+      const tag = card.locator('.feature-example');
       const face = card.locator('.feature-photo img');
-      await expect(face).toHaveAttribute('width', /\d+/);
+      if (id === 'matchRequests') {
+        // A photo on the card (WEBSITE 19: a cropped screen read badly); the app is in the dialog
+        await expect(tag).toHaveCount(0);
+        await expect(face).toHaveAttribute('src', /matchRequests\.webp/);
+      } else {
+        // Example is said off the picture, in the card's body, and covers none of it
+        await expect(tag).toHaveText(ar ? 'مثال' : 'Example');
+        await expect(card.locator('.feature-photo .feature-example')).toHaveCount(0);
+        const photo = (await card.locator('.feature-photo').boundingBox())!;
+        const box = (await tag.boundingBox())!;
+        expect(box.y).toBeGreaterThanOrEqual(photo.y + photo.height);
+        // The face has its size set and waits until it is near
+        await expect(face).toHaveAttribute('width', /\d+/);
+      }
       await expect(face).toHaveAttribute('loading', 'lazy');
 
       await card.locator('.feature-card-hit').dispatchEvent('click');
