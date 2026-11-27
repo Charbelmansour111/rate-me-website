@@ -34,6 +34,7 @@ export function startMotion(signal: AbortSignal) {
   if (walk) gateWalk(walk, signal);
   else if (document.documentElement.dataset.walkGate === 'open') {
     document.documentElement.dataset.walkGate = 'none';
+    (window as Window & { __introRelease?: () => void }).__introRelease?.();
   }
   const hero = document.querySelector<HTMLElement>('[data-hero-drill]');
   if (hero) startHero(hero, signal);

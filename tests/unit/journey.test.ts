@@ -306,14 +306,29 @@ describe("the first visit's intro (WEBSITE 25)", () => {
   it('runs the script without error, and opens only when nothing is noted', () => {
     const run = (stored: Record<string, string>, width: number, reduce = false) => {
       const root = { dataset: {} as Record<string, string> };
+      const held = new Set<string>();
+      const win: { __introRelease?: () => void } = {};
       const env = {
         document: { documentElement: root },
         navigator: {},
         innerWidth: width,
         matchMedia: () => ({ matches: reduce }),
         localStorage: { getItem: (key: string) => stored[key] ?? null },
+        window: win,
+        setTimeout: () => 0,
+        addEventListener: (type: string, _: unknown, o: AddEventListenerOptions) => {
+          expect(o).toMatchObject({ capture: true, passive: false });
+          held.add(type);
+        },
+        removeEventListener: (type: string) => held.delete(type),
       };
       new Function(...Object.keys(env), INTRO_SCRIPT)(...Object.values(env));
+      // Open: the page is held still until the motion code lets go
+      if (root.dataset.walkGate === 'open') {
+        expect([...held].sort()).toEqual(['keydown', 'touchmove', 'wheel']);
+        win.__introRelease!();
+        expect(held.size).toBe(0);
+      } else expect(held.size).toBe(0);
       return root.dataset.walkGate;
     };
     expect(run({}, 1440)).toBe('open');

@@ -121,22 +121,28 @@ export const loading = {
   introFetchers: 6,
 };
 
+/** The keys that scroll the page: held while the intro is up. */
+const INTRO_KEYS = [' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
+
 /** Where a visit notes that it held a set whole (its render and stride): the next has no intro. */
 export const heldKey = ({ path, rev }: Pick<Sequence, 'path' | 'rev'>, stride: number) =>
   `walk-held ${path} ${rev} ${stride}`;
 
 /**
- * Run as the page is parsed, before its first paint (src/components/home-page.tsx): whether this
+ * Run as the page is parsed, before its first paint (src/components/walk-intro.tsx): whether this
  * visit gets the intro, so a return visit never sees it flash. None to save data, under reduced
  * motion, or when the set at this screen's stride was held whole before (the rule of
- * src/motion/walk-frames.ts, strideFor). It only sets <html data-walk-gate="open">; the motion code
- * does the rest, and CSS lets the intro go by itself should that code never come.
+ * src/motion/walk-frames.ts, strideFor). With one it sets <html data-walk-gate="open"> and holds the
+ * page still from that moment (the wheel, one finger, the scroll keys; Skip keeps its keys) until
+ * the motion code lets go (window.__introRelease) or, should that code never come, 9.5 s on, as
+ * CSS lets the intro go by itself.
  */
 export const INTRO_SCRIPT = (() => {
   const { landscape } = journey;
   const thinned = landscape.count >= crossfade.denseFrom ? loading.phoneStride : 1;
   const key = JSON.stringify(heldKey(landscape, 0).slice(0, -1));
-  return `(function(){try{var d=document.documentElement,c=navigator.connection||{};if(c.saveData||matchMedia('(prefers-reduced-motion: reduce)').matches)return;var s=innerWidth<${loading.phoneWidth}||/^(slow-2g|2g|3g)$/.test(c.effectiveType||'')?${thinned}:1;if(localStorage.getItem(${key}+s)==='1')return;d.dataset.walkGate='open'}catch(e){}})()`;
+  const keys = JSON.stringify(Object.fromEntries(INTRO_KEYS.map((k) => [k, 1])));
+  return `(function(){try{var d=document.documentElement,c=navigator.connection||{};if(c.saveData||matchMedia('(prefers-reduced-motion: reduce)').matches)return;var s=innerWidth<${loading.phoneWidth}||/^(slow-2g|2g|3g)$/.test(c.effectiveType||'')?${thinned}:1;if(localStorage.getItem(${key}+s)==='1')return;d.dataset.walkGate='open';var K=${keys},o={capture:true,passive:false},t=['wheel','touchmove','keydown'],h=function(e){if(e.touches&&e.touches.length>1)return;if(e.type==='keydown'&&(!K[e.key]||(e.target.closest&&e.target.closest('[data-walk-gate-skip]'))))return;e.preventDefault();e.stopImmediatePropagation()};t.forEach(function(n){addEventListener(n,h,o)});var r=window.__introRelease=function(){t.forEach(function(n){removeEventListener(n,h,o)})};setTimeout(r,9500)}catch(e){}})()`;
 })();
 
 /**

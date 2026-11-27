@@ -2,9 +2,6 @@ import { loading } from '@/config/journey.config';
 
 import type { Walk } from './walk';
 
-/** The keys that scroll the page: held while the intro is up. */
-const SCROLL_KEYS = new Set([' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End']);
-
 /**
  * A first visit's intro (WEBSITE 25): the walk plays like a video only once its frames are here, so
  * on a first visit the Rate Me mark and a thin line, filling as they come, stand over the page
@@ -22,6 +19,7 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
   const root = document.documentElement;
   const panel = document.querySelector<HTMLElement>('[data-walk-wait]');
   if (!panel || root.dataset.walkGate !== 'open' || walk.known()) {
+    (window as Window & { __introRelease?: () => void }).__introRelease?.();
     if (root.dataset.walkGate === 'open') root.dataset.walkGate = 'none';
     else root.dataset.walkGate ??= 'none';
     return;
@@ -30,21 +28,9 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
   const bar = panel.querySelector<HTMLElement>('[role="progressbar"]')!;
   const skip = panel.querySelector<HTMLButtonElement>('[data-walk-gate-skip]')!;
 
-  // Hold the page still: the wheel, a finger (one: pinching to zoom stays free) and the scroll keys
+  // The page is held still from the first paint (INTRO_SCRIPT), until this lets go
   const lock = new AbortController();
-  const hold = (event: Event) => {
-    if ('touches' in event && (event as TouchEvent).touches.length > 1) return;
-    if (event instanceof KeyboardEvent) {
-      if (!SCROLL_KEYS.has(event.key)) return;
-      // Space and Enter press the button when it has the focus
-      if (event.target === skip) return;
-    }
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  };
-  for (const type of ['wheel', 'touchmove', 'keydown']) {
-    addEventListener(type, hold, { capture: true, passive: false, signal: lock.signal });
-  }
+  const release = () => (window as Window & { __introRelease?: () => void }).__introRelease?.();
   // The page behind it is out of reach while it is up: the first Tab lands on Skip
   const behind: HTMLElement[] = [];
   for (let el: HTMLElement | null = box; el && el !== document.body; el = el.parentElement) {
@@ -61,6 +47,7 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
   function close(how: 'done' | 'capped' | 'skipped') {
     if (lock.signal.aborted) return;
     lock.abort();
+    release();
     clearInterval(timer);
     for (const el of behind) el.inert = false;
     root.dataset.walkGate = how;
@@ -98,6 +85,7 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
 
   signal.addEventListener('abort', () => {
     lock.abort();
+    release();
     clearInterval(timer);
     for (const el of behind) el.inert = false;
     panel.hidden = true;
