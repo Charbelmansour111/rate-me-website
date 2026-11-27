@@ -497,7 +497,8 @@ test('the tactics paint: behind solid ground, drawn in, still under reduced moti
   // With motion: rolled on as the section comes in
   await page.mouse.move(300, 300);
   await page.mouse.move(320, 320);
-  await expect(page.locator('html')).toHaveAttribute('data-stages', 'live');
+  // The motion code loads in a quiet moment after the first sign of use: give a busy machine time
+  await expect(page.locator('html')).toHaveAttribute('data-stages', 'live', { timeout: 15_000 });
   await page.locator('#tactics').evaluate((el) => el.scrollIntoView());
   const offsets = () =>
     svg
