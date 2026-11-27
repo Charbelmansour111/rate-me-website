@@ -42,6 +42,12 @@ const nextConfig: NextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
         ],
       },
+      {
+        // The walk's frames: their addresses carry the render (src/config/journey.config.ts, rev),
+        // so the bytes under one never change
+        source: '/journey/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
     ];
   },
   async rewrites() {
