@@ -49,7 +49,7 @@ describe('photos', () => {
 
   it('lists every photograph in public/', () => {
     const listed = new Set(photos.map((p) => p.file));
-    const folders = ['public/community', 'public/cards', 'public/footer', 'public/features'];
+    const folders = ['public/community', 'public/footer', 'public/features'];
     // The app's own screens (src/config/app-shots.ts), not photos
     const app = /^(squad|parentReport)|-detail/;
     for (const folder of folders) {

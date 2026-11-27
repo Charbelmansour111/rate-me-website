@@ -20,7 +20,6 @@ photo's page.
 | `public/community/coach-6.jpg`       | Arthur Debons                      | https://unsplash.com/photos/Mrql2Og2GU8 | Square on the face, 640 px, black and white                                                                                                                                                               |
 | `public/community/coach-7.jpg`       | Christian Buehner                  | https://unsplash.com/photos/5YpZpFy8zzU | Square on the face, 640 px, black and white                                                                                                                                                               |
 | `public/community/coach-8.jpg`       | Lucas Clarysse                     | https://unsplash.com/photos/yMxLAdXh8Wc | Square on the face, 640 px, black and white                                                                                                                                                               |
-| `public/cards/player.jpg`            | Levi Meir Clancy                   | https://unsplash.com/photos/KIWxM_XvLlI | Square on the face, 480 px, black and white                                                                                                                                                               |
 | `public/features/whiteboard.webp`    | Jasper Benning                     | https://unsplash.com/photos/Ri4FXmD7DPM | 16:10, board only, 1200 px, black and white                                                                                                                                                               |
 | `public/features/calendar.webp`      | Alliance Football Club             | https://unsplash.com/photos/g8cK31aYH3E | 16:10, below the shorts (their club name) and away from the child: legs, boots, a cone, 1200 px, black and white                                                                                          |
 | `public/community/players.webp`      | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                             | 4:3, the lower half, 960 px, colour                                                                                                                                                                       |
@@ -45,7 +44,6 @@ stay but are not shown.
   behind him.
 - The cones photo stands for trainings on the "Calendar and events" card: there is no feature called
   training. It shows someone's legs and boots at a cone, from below the shorts.
-- The player card's photo is an example on a sample card, not a player.
 - The Coach assistant card shows a training sheet in two coaches' hands (WEBSITE 17, in place of a
   stock portrait): the crop stops under the chins and above a maker's name on a shirt.
 
@@ -72,6 +70,7 @@ into `site-assets/screens/app` (not committed); here as webp, phones 780 px wide
 | `public/screens/coach-match.webp`            | `match-request-received.png`     | Inside the app, coach view     | whole screen                                                                     |
 | `public/screens/player-home.webp`            | earlier capture (f5a7437)        | Inside the app, player view    | whole screen, now webp                                                           |
 | `public/screens/player-event.webp`           | earlier capture (f5a7437)        | Inside the app, player view    | whole screen, now webp                                                           |
+| `public/screens/player-card.webp`            | `player-card.png`                | Inside the app, player view    | whole screen (WEBSITE 20, in place of the drawn card)                            |
 | `public/features/squad.webp`                 | `player-card.png`                | Squad card                     | 16:10, the shield only (under the style switch), sides widened with its own rays |
 | `public/features/squad-detail.webp`          | `squad.png`                      | Squad dialog, in a phone       | top of the list, seven whole rows, cut above the tab bar                         |
 | `public/features/parentReport.webp`          | `report-1.png`                   | Monthly report card, as paper  | the top of page 1                                                                |
@@ -117,7 +116,7 @@ Screenshots 519 to 522 are gone, and the old PNG screens in `public/screens` wit
 | 25  | Jorge Salvador, iGzHMzRZjRs             | no                              | a logo on the T-shirt                               |
 | 26  | Josias Garibay, rifCUO-4X8k             | community, coach-2              |                                                     |
 | 27  | Lars Bo Nielsen, zXn5qinCDKg            | no                              | youth match (minors), kit logos                     |
-| 28  | Levi Meir Clancy, KIWxM_XvLlI           | player card (example)           |                                                     |
+| 28  | Levi Meir Clancy, KIWxM_XvLlI           | no (was the drawn player card)  | replaced by the app's own card screen (WEBSITE 20)  |
 | 29  | Lucas Clarysse, yMxLAdXh8Wc             | community, coach-8              |                                                     |
 | 30  | Markus Spiske, KWQ2kQtxiKE              | no (now the app's own screen)   |                                                     |
 | 31  | Martin Baron, X9WZPIpkbn0               | no                              | may be under 18                                     |

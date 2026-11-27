@@ -824,13 +824,13 @@ test('inside the app: three screens a view, arrows, dots and keys on phones', as
 for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
   test(`${path}: every screen is real, and loads`, async ({ page }) => {
     await page.goto(path);
-    // No sketch is left: every phone has its picture; the player view ends on the player card
+    // No sketch is left: every phone has its picture; the player view ends on the player card,
+    // the app's own screen
     for (const view of ['coach', 'player']) {
       const phones = page.locator(`#view-${view} .phone`);
       await expect(phones.locator('img')).toHaveCount(await phones.count());
       await expect(phones.locator('.phone-sketch')).toHaveCount(0);
     }
-    await expect(page.locator('#view-player .shield-card')).toHaveCount(1);
     const roles = page.locator('#inside .phone img[src*="coach-whiteboard-roles.webp"]');
     for (const role of ['Press', 'Cover', 'Mark', 'Intercept']) {
       await expect(roles).toHaveAttribute('alt', new RegExp(role));
@@ -841,6 +841,7 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       'coach-match',
       'player-home',
       'player-event',
+      'player-card',
     ]) {
       const image = page.locator(`#inside .phone img[src*="${name}.webp"]`);
       await expect(image).toHaveCount(1);
@@ -954,40 +955,22 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
   });
 }
 
-test('inside the app: the player card, as the app draws it, leaning like the phones', async ({
+test('inside the app: the player card is the app’s own screen, in a phone, said to be an example', async ({
   page,
 }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.locator('#tab-player').click();
-  // The app's shield card (rate-me: features/cards/shield-card.tsx), shown whole
-  const card = page.locator('#view-player .shield-card');
-  await expect(card).toBeVisible();
-  await expect(card).toHaveAttribute('role', 'img');
-  await expect(card).toHaveAttribute('aria-label', /example/i);
-  // Inside React Bits' TiltedCard: the crest, the overall, six stats in two columns, the photo
-  await expect(card.locator('xpath=ancestor::*[@data-tilt]')).toHaveCount(1);
-  await expect(card.locator('.shield-ground path')).toHaveCount(2);
-  await expect(card.locator('.shield-overall')).toHaveText('72');
-  await expect(card.locator('.shield-column li')).toHaveCount(6);
-  await expect(card.locator('.shield-column span')).toHaveText([
-    'SPE',
-    'FIN',
-    'VIS',
-    'CON',
-    'TAC',
-    'STR',
-  ]);
-  await expect(page.locator('#view-player .shield-example')).toHaveText(/example/i);
+  // WEBSITE 20: no drawn card; the app's card screen in the one phone frame
+  const view = page.locator('#view-player');
+  await expect(view.locator('.shield-card, .card-tilt')).toHaveCount(0);
+  await expect(view.locator('.phone')).toHaveCount(3);
+  const card = view.locator('.phone img[src*="player-card.webp"]');
+  await expect(card).toHaveAttribute('alt', /player card/i);
+  await expect(view.locator('figcaption .feature-example')).toHaveText(['Example']);
   await card.scrollIntoViewIfNeeded();
-  // Whole: nothing of it is cut off by the panel or the screen's side
-  const box = (await card.boundingBox())!;
-  const panel = (await page.locator('#inside .panel').boundingBox())!;
-  expect(box.x).toBeGreaterThanOrEqual(panel.x);
-  expect(box.x + box.width).toBeLessThanOrEqual(panel.x + panel.width);
   await expect
-    .poll(() => card.locator('img').evaluate((el) => (el as HTMLImageElement).naturalWidth))
+    .poll(() => card.evaluate((el) => (el as HTMLImageElement).naturalWidth))
     .toBeGreaterThan(0);
-  await expect(page.locator('body')).not.toContainText(/FIFA/i);
 });
 
 test('plan, build, organize: each card opens for a closer look, 18px text', async ({ page }) => {

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import type { Look } from '@/config/screens.config';
 import type { Dictionary } from '@/i18n';
@@ -21,8 +21,8 @@ export type Slide = {
   soon: string | null;
   /** The glow behind the phone: orange for the middle one. */
   look: Look;
-  /** Drawn as the app's player card instead of a phone. */
-  card: boolean;
+  /** "Example": the screen shows sample data. */
+  example: string | null;
   /** Three facts, shown when the phone is opened. */
   details: readonly string[] | null;
   /** The app's tab bar over the screenshot, where the app shows one. */
@@ -38,13 +38,10 @@ type Opened = { view: View; slide: Slide; from: HTMLElement };
 export function ShowcaseTabs({
   views,
   t,
-  card,
   preRegister,
 }: {
   views: View[];
   t: Controls;
-  /** The player card, rendered on the server: nothing of it runs here. */
-  card: ReactNode;
   preRegister: string;
 }) {
   const [active, setActive] = useState(0);
@@ -101,12 +98,7 @@ export function ShowcaseTabs({
           data-active={i === active}
           className="showcase-view"
         >
-          <Carousel
-            view={view}
-            t={t}
-            card={card}
-            onOpen={(slide, from) => setOpened({ view, slide, from })}
-          />
+          <Carousel view={view} t={t} onOpen={(slide, from) => setOpened({ view, slide, from })} />
         </div>
       ))}
       <ScreenDialog
@@ -157,12 +149,10 @@ function PhoneScreen({ slide, large = false }: { slide: Slide; large?: boolean }
 function Carousel({
   view,
   t,
-  card,
   onOpen,
 }: {
   view: View;
   t: Controls;
-  card: ReactNode;
   onOpen: (slide: Slide, from: HTMLElement) => void;
 }) {
   const track = useRef<HTMLUListElement>(null);
@@ -241,23 +231,25 @@ function Carousel({
               <span className="phone-glow" data-look={slide.look} aria-hidden="true" />
               {/* Its shadow on the ground under it: a gradient, nothing to repaint */}
               <span className="phone-ground" aria-hidden="true" />
-              {slide.card ? (
-                card
-              ) : (
-                <TiltedCard className="phone-tilt">
-                  <PhoneScreen slide={slide} />
-                  {/* A button over the whole phone opens what the screen does. Over it, not
+              <TiltedCard className="phone-tilt">
+                <PhoneScreen slide={slide} />
+                {/* A button over the whole phone opens what the screen does. Over it, not
                       round it: the phone's own words (the clock, the tabs) stay out of its name. */}
-                  <button
-                    type="button"
-                    className="phone-button"
-                    aria-haspopup="dialog"
-                    aria-label={`${slide.title}: ${t.open}`}
-                    onClick={(event) => onOpen(slide, event.currentTarget)}
-                  />
-                </TiltedCard>
-              )}
+                <button
+                  type="button"
+                  className="phone-button"
+                  aria-haspopup="dialog"
+                  aria-label={`${slide.title}: ${t.open}`}
+                  onClick={(event) => onOpen(slide, event.currentTarget)}
+                />
+              </TiltedCard>
               <figcaption className="mx-auto mt-5 max-w-80 text-center">
+                {/* Sample data says so under the phone, never on the screen */}
+                {slide.example && (
+                  <span className="mb-2 block">
+                    <span className="feature-example">{slide.example}</span>
+                  </span>
+                )}
                 <span className="text-lg font-semibold">{slide.title}</span>
                 {slide.soon && (
                   <span className="mt-1 block">

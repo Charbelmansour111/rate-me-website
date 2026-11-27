@@ -6,7 +6,6 @@ import { looks, screens, type Screen, type ScreenId, type ViewId } from '@/confi
 import { getDictionary, type Locale } from '@/i18n';
 
 import { PanelLines } from './pitch-lines';
-import { PlayerCard } from './player-card';
 import { ShowcaseTabs, type Slide } from './showcase-tabs';
 
 const EXTENSIONS = ['webp', 'png', 'jpg'];
@@ -60,12 +59,12 @@ export function Showcase({ locale }: { locale: Locale }) {
         t.showcase.captions[view];
       const caption = captions[screen.id]!;
       const details: Partial<Record<ScreenId, readonly string[]>> = t.showcase.details[view];
-      const src = screen.kind === 'card' ? null : findScreen(view, screen.id, locale);
+      const src = findScreen(view, screen.id, locale);
       return {
         id: screen.id,
         ...caption,
         src,
-        sketch: src || screen.kind === 'card' ? null : SKETCHES[screen.id],
+        sketch: src ? null : SKETCHES[screen.id],
         soon: isReleased(screen) ? null : t.features.soon,
         look: looks[i % looks.length],
         tab:
@@ -73,7 +72,7 @@ export function Showcase({ locale }: { locale: Locale }) {
             ? { role: view, active: screen.tab, lang: src.includes('.ar.') ? 'ar' : 'en' }
             : null,
         dark: !!screen.dark,
-        card: screen.kind === 'card',
+        example: screen.example ? t.features.example : null,
         details: details[screen.id] ?? null,
       };
     }),
@@ -90,12 +89,7 @@ export function Showcase({ locale }: { locale: Locale }) {
           <h2 data-reveal id="inside-title" className="display h2">
             {t.showcase.title}
           </h2>
-          <ShowcaseTabs
-            views={views}
-            t={t.showcase.controls}
-            card={<PlayerCard t={t.showcase.playerCard} />}
-            preRegister="#pre-register"
-          />
+          <ShowcaseTabs views={views} t={t.showcase.controls} preRegister="#pre-register" />
           {t.features.inEnglish && <p className="showcase-lang">{t.features.inEnglish}</p>}
         </div>
       </div>

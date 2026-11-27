@@ -240,8 +240,7 @@ sizes are smaller because Readex Pro is wider and taller. Captions and card text
 
 Depth comes from the walk behind the panels, not from shadows. No `backdrop-filter`, and no
 blurred shadow on anything large over the walk: it would be repainted as it moves. Phones float on
-a soft orange glow and stand on a ground shadow, both radial gradients. The one blurred shadow is
-the player card's small position badge, inside the tilting card.
+a soft orange glow and stand on a ground shadow, both radial gradients.
 
 ## Shapes
 
@@ -345,10 +344,8 @@ a ground shadow. The coach view shows the app's clean demo screens (calendar, ro
 match request), which carry their own tab bar. On older captures (the player's home) the app's own
 bar is drawn over the screenshot's: Ionicons,
 white, `#dbdbdb` hairline, the chosen tab in `#b33f00`. A button over each phone opens a dialog
-with what its screen does. The player view ends on the app's shield card (rate-me: `shield-card.tsx`), shown whole and
-marked as an example: the crest with its inner outline in the tier's gradient, the overall and
-position big on the left (they stand off the card when it tilts), the photo on the right, the name
-on a band, six attributes in two columns with the app's three-letter codes.
+with what its screen does. The player view ends on the app's own card screen in the same phone
+frame (WEBSITE 20; the drawn card is gone), with "Example" under it.
 
 ### The walk
 
@@ -372,8 +369,8 @@ screen readers.
 - Content is visible at rest; only what is still below the screen waits to rise in. Headings rise
   word by word, never letter by letter (Arabic letters join). The footer rises in, part by part, as
   its pitch lines draw themselves.
-- Hover motion is for mouse users only: the light on cards, the tilt and glare on phones and the
-  player card (React Bits TiltedCard, its badge moving a little more), the tabs drawn to the mouse
+- Hover motion is for mouse users only: the light on cards, the tilt and glare on phones (React
+  Bits TiltedCard), the tabs drawn to the mouse
   (React Bits Magnet), a 2px lift and a slow photo zoom on feature cards.
 - Durations 0.3 to 0.8s (the footer's lines 1.1s), easing `power3.out` or
   `cubic-bezier(0.2, 0.8, 0.2, 1)`: things settle, they never bounce or overshoot. Nothing loops

@@ -87,21 +87,3 @@ it('the panels read the stage colours, in both themes', () => {
   expect(panel).toContain('--page: var(--st-surface)');
   expect(panel).toContain('--text: var(--st-text)');
 });
-
-// The player card in "Inside the app" (src/components/player-card.tsx), as the app draws it
-describe('palette: the player card', () => {
-  const card = { from: '#1c1b29', to: '#3a1606', label: '#e6dcd2', text: '#ffffff' };
-  it('text and labels are AA on both ends of its gradient', () => {
-    for (const ground of [card.from, card.to]) {
-      expect(contrast(card.text, ground)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(card.label, ground)).toBeGreaterThanOrEqual(4.5);
-    }
-  });
-  it('the tier chip and the position badge are AA', () => {
-    expect(contrast('#1c1b29', '#ff7a1a')).toBeGreaterThanOrEqual(4.5);
-    expect(contrast('#14141a', '#22c55e')).toBeGreaterThanOrEqual(4.5);
-  });
-  it('the orange ring and bars stand out from the card (3:1)', () => {
-    expect(contrast('#ff7a1a', card.from)).toBeGreaterThanOrEqual(3);
-  });
-});

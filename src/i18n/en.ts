@@ -216,23 +216,6 @@ export const en = {
         ],
       },
     },
-    // The player card as the app draws it, with a stock photo: an example, not a real player.
-    playerCard: {
-      example: 'Example',
-      name: 'Your player',
-      position: 'Midfielder',
-      positionCode: 'MID',
-      tier: 'Regular',
-      label: 'Example player card: a midfielder, number 8, rated 72 out of 100.',
-      stats: {
-        pace: 'Speed',
-        shooting: 'Finishing',
-        passing: 'Vision',
-        dribbling: 'Ball control',
-        defending: 'Tackling',
-        physical: 'Strength',
-      },
-    },
     captions: {
       coach: {
         home: { title: 'Home', text: 'What comes next for your team.' },
@@ -262,6 +245,7 @@ export const en = {
         card: {
           title: 'Player card',
           text: 'Shown when your coach publishes it. Ask for a shirt number and your coach approves it.',
+          alt: "The player card in the app: a coach rating of 8.4 out of 10, going up, then Sam Demo's card, 86 overall, attacking midfielder, number 10, with six stats",
         },
       },
     },

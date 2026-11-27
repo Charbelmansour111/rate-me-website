@@ -19,12 +19,6 @@ export const photos: Photo[] = [
   { file: 'public/community/coach-7.jpg', faces: true, tone: 'grey', what: 'portrait (not shown)' },
   { file: 'public/community/coach-8.jpg', faces: true, tone: 'grey', what: 'portrait (not shown)' },
   {
-    file: 'public/cards/player.jpg',
-    faces: true,
-    tone: 'grey',
-    what: 'portrait on the example card',
-  },
-  {
     file: 'public/features/tournaments.webp',
     faces: true,
     tone: 'grey',
@@ -34,7 +28,7 @@ export const photos: Photo[] = [
   {
     file: 'public/features/calendar.webp',
     faces: false,
-    tone: 'colour',
+    tone: 'grey',
     what: 'legs and boots at a cone',
   },
   { file: 'public/features/whiteboard.webp', faces: false, tone: 'grey', what: 'a tactics board' },
@@ -42,7 +36,7 @@ export const photos: Photo[] = [
   {
     file: 'public/features/assistant.webp',
     faces: false,
-    tone: 'grey',
+    tone: 'colour',
     what: 'a training sheet in two hands',
   },
   // No face, outside the cards: colour

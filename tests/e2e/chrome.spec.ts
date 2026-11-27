@@ -384,29 +384,6 @@ test('inside the app: the tab bar on screens that have one, with the right tab c
   await expect(page.locator('.showcase-view .phone-keys')).toHaveCount(phones);
 });
 
-test('the player card: a raised position badge that moves more than the card', async ({
-  page,
-  isMobile,
-}) => {
-  test.skip(isMobile, 'the tilt follows a mouse');
-  await page.goto('/', { waitUntil: 'networkidle' });
-  await page.getByRole('tab', { name: 'Player view' }).click();
-  const card = page.locator('.card-tilt');
-  await expect(card.locator('.shield-card')).toHaveCount(1);
-  await card.scrollIntoViewIfNeeded();
-  // The overall and position stand off the card: a shadow, and more parallax than the card
-  const badge = card.locator('.shield-badge');
-  await expect(badge.locator('.shield-overall')).toHaveText('72');
-  expect(await badge.evaluate((el) => getComputedStyle(el).textShadow)).not.toBe('none');
-  await page.mouse.move(10, 10);
-  await page.waitForTimeout(800);
-  const box = (await card.boundingBox())!;
-  await page.mouse.move(box.x + box.width * 0.95, box.y + box.height * 0.9, { steps: 10 });
-  await expect
-    .poll(() => badge.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41))
-    .toBeGreaterThan(3);
-});
-
 test.describe('WEBSITE 15: sizes that fit the screen', () => {
   test.skip(({ isMobile }) => isMobile, 'screen sizes of a computer');
   for (const [width, height] of [

@@ -9,7 +9,7 @@ import type { FeatureId } from './features.config';
  * the file exists. Captions live in src/i18n (showcase.captions).
  *
  * `feature`: shows "Coming soon" while that feature is not released (features.config.ts).
- * `kind: 'card'`: drawn as the app's player card (src/components/player-card.tsx), not a phone.
+ * `example`: the screen shows sample data, and says so under its phone.
  * Each phone opens a panel with three facts about the screen (src/i18n: showcase.details).
  *
  * `tab`: the app's bottom tab bar is drawn over the screenshot's own, with this tab chosen
@@ -37,7 +37,7 @@ export type ViewId = 'coach' | 'player';
 export type Screen = {
   id: ScreenId;
   feature?: FeatureId;
-  kind?: 'card';
+  example?: true;
   tab?: AppTab;
   dark?: true;
 };
@@ -53,6 +53,7 @@ export const screens: Record<ViewId, Screen[]> = {
   player: [
     { id: 'home', tab: 'home' },
     { id: 'event', feature: 'calendar' },
-    { id: 'card', feature: 'squad', kind: 'card' },
+    // The player's card, as the app shows it (WEBSITE 20: the drawn card is gone)
+    { id: 'card', feature: 'squad', dark: true, example: true },
   ],
 };
