@@ -238,7 +238,9 @@ sizes are smaller because Readex Pro is wider and taller. Captions and card text
 
 ## Elevation & Depth
 
-Depth comes from the walk behind the panels, not from shadows. No `backdrop-filter`, and no
+Depth comes from the walk behind the panels, not from shadows. On phones the walk is a 250px slice of a 960px
+frame, stretched about 4.7 times, so there it is atmosphere (WEBSITE 21): a 2px blur, as if out of
+focus behind the panels, and a dark wash (25% at the top to 45% at the bottom) between it and them. No `backdrop-filter`, and no
 blurred shadow on anything large over the walk: it would be repainted as it moves. Phones float on
 a soft orange glow and stand on a ground shadow, both radial gradients.
 

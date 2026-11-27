@@ -305,7 +305,14 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
     [at, sequence.count],
   );
   // Half way between 10 and 11 (to the scroll's whole pixels): both drawn, faded by the config's
-  // window round the midpoint
+  // window round the midpoint. The walk eases there (src/motion/walk-scroll.ts): wait for it.
+  await expect
+    .poll(async () => {
+      const a = await walk.evaluate((el) => Number((el as HTMLElement).dataset.at));
+      await page.waitForTimeout(150);
+      return Math.abs(a - (await walk.evaluate((el) => Number((el as HTMLElement).dataset.at))));
+    })
+    .toBeLessThan(0.001);
   await expect(walk).toHaveAttribute('data-blend', new RegExp(`^10 ${10 + s} 0\\.\\d{3}$`));
   const { exact, alpha } = await walk.evaluate((el) => ({
     exact: Number((el as HTMLElement).dataset.at),

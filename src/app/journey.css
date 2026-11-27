@@ -63,6 +63,25 @@
     display: none;
   }
 }
+/* On a phone the walk is a 250px slice of a 960px frame, stretched about 4.7 times (WEBSITE 21):
+   shown as it is, its blocks and the giant grass blades read as low resolution. So there it is
+   atmosphere: a light blur, as if out of focus behind the panels (a little larger, so the blur
+   never shows a soft edge at the screen's sides), and a dark wash over it. The canvas is drawn
+   once per frame either way; the blur is the compositor's. */
+@media (max-width: 47.99rem) and (prefers-reduced-motion: no-preference) {
+  [data-js]:not([data-journey='off']) .walk {
+    filter: blur(2px);
+    scale: 1.03;
+  }
+  [data-js]:not([data-journey='off']) main::after {
+    content: '';
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    background: linear-gradient(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.45));
+    pointer-events: none;
+  }
+}
 
 /* What people read always has a solid ground: a charcoal panel (src/app/palette.css) with a thin
    orange line, no blur and no shadow. */
