@@ -15,8 +15,8 @@ import {
 } from '@/config/journey.config';
 import { hasFrames } from '@/lib/journey-files';
 import { blend, covered, frameList, nearest, shapeFor, strideFor, wanted } from '@/motion/walk';
-import { betweenList, outward } from '@/motion/walk-frames';
-import { pairMotion } from '@/config/walk-pairs';
+import { apart, betweenList, merge, outward, spacingOf, tierTwo } from '@/motion/walk-frames';
+import { halfMotion, pairMotion } from '@/config/walk-pairs';
 
 const { landscape, portrait } = journey;
 
@@ -175,8 +175,22 @@ describe('the walk', () => {
     expect(w).toBeLessThan(0.25);
     // Two frames apart (a phone): the motion of both pairs, so a narrower window or a cut
     expect(pairWindow(landscape, mid, mid + 2)).toBeLessThanOrEqual(w);
-    // Half a pair (an in-between frame): half its motion
-    expect(pairWindow(landscape, mid, mid + 0.5)).toBeCloseTo(Math.min(0.5, 2 * w));
+    // Half a pair (an in-between frame, WEBSITE 23): that half's own measured motion, and the cut
+    // from halfCutFrom
+    expect(halfMotion).toHaveLength(2 * (landscape.count - 1));
+    const h = halfMotion[2 * mid];
+    expect(pairWindow(landscape, mid, mid + 0.5)).toBeCloseTo(
+      h >= crossfade.halfCutFrom ? 0 : Math.min(0.5, (0.5 * crossfade.soft) / h),
+    );
+    const sharp = halfMotion.findIndex(
+      (px) => px >= crossfade.halfCutFrom && px < crossfade.cutFrom,
+    );
+    expect(sharp).toBeGreaterThanOrEqual(0);
+    const at = sharp / 2;
+    expect(pairWindow(landscape, at, at + 0.5)).toBe(0);
+    // Each pair, split in two, mostly moves about half as far
+    const median = (xs: readonly number[]) => [...xs].sort((a, b) => a - b)[xs.length >> 1];
+    expect(median(halfMotion)).toBeLessThanOrEqual(median(pairMotion) / 2 + 1);
     // A set without a map fades all the way
     expect(pairWindow(journey.portrait, 3, 4)).toBe(0.5);
   });
@@ -199,9 +213,41 @@ describe('the walk', () => {
   });
   it('fetches the whole set in the background from where the walk is, outward', () => {
     expect(outward([0, 1, 2, 3, 4, 5], 3)).toEqual([3, 2, 4, 1, 5, 0]);
-    // In-between frames (tier 2): none until the set has them
-    expect(betweenList(landscape)).toEqual([]);
-    const tiered = { ...landscape, count: 3, between: { path: '/x/f', factor: 2 } };
-    expect(betweenList(tiered)).toEqual([0.5, 1.5]);
+    // In-between frames: one in every pair of the landscape set, on file (WEBSITE 23)
+    const mids = betweenList(landscape);
+    expect(mids).toHaveLength(landscape.count - 1);
+    expect(mids.every((at) => at % 1 === 0.5)).toBe(true);
+    expect(readdirSync('public/journey/mid')).toHaveLength(mids.length);
+    for (const at of mids.slice(0, 3)) {
+      const file = frameUrl(landscape, at).split('?')[0];
+      expect(existsSync(`public${file}`), file).toBe(true);
+    }
+    // A pair skipped for an artefact keeps its real frames
+    const tiered = { ...landscape, count: 4, between: { path: '/x/f', factor: 2, skip: [1] } };
+    expect(betweenList(tiered)).toEqual([0.5, 2.5]);
+    expect(betweenList({ ...landscape, between: undefined })).toEqual([]);
+  });
+  it('tier 2: the in-between frames on a wide screen, the skipped real frames on a phone', () => {
+    expect(tierTwo(landscape, 1, false)).toEqual(betweenList(landscape));
+    const phone = tierTwo(landscape, 2, true);
+    expect(phone).toHaveLength(190);
+    expect(phone.every((i) => i % 2 === 1)).toBe(true);
+    // A set already thinned another way (saving data on a computer) gets none
+    expect(tierTwo(landscape, 2, false)).toEqual([]);
+  });
+  it('never blends across a frame of the set, and narrows the decoded window where tier 2 is in', () => {
+    const all = merge([0, 1, 2, 3], [0.5, 2.5]);
+    expect(all).toEqual([0, 0.5, 1, 2, 2.5, 3]);
+    expect(apart(all, 0, 1)).toBe(true);
+    expect(apart(all, 1, 2)).toBe(false);
+    expect(apart(all, 0.5, 1)).toBe(false);
+    expect(spacingOf(frameList(landscape))).toBe(1);
+    const dense = merge(frameList(landscape), betweenList(landscape));
+    expect(spacingOf(dense)).toBe(0.5);
+    // About as many decoded with tier 2 in as without (2 MB each: about 150 MB at most)
+    const plain = wanted(frameList(landscape), 200, 1).length;
+    const tiered = wanted(dense, 200, 1, 0, 0.5).length;
+    expect(tiered).toBeLessThanOrEqual(plain + 2);
+    expect(Math.max(plain, tiered) * ((960 * 540 * 4) / 1e6)).toBeLessThanOrEqual(150);
   });
 });

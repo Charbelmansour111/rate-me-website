@@ -5,7 +5,7 @@
 // Each frame is shrunk to 240 px wide and cut into 15 px blocks; for every block with some texture
 // the best match in the next frame is searched within 12 px (48 px at 960). The number kept per pair
 // is the 90th percentile of how far the blocks moved, in pixels of the 960 px frame.
-import { readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, writeFileSync } from 'node:fs';
 import sharp from 'sharp';
 
 // The landscape set (src/config/journey.config.ts): every fNNN file, in order
@@ -63,22 +63,50 @@ function motion(a, b) {
 const pairs = [];
 for (let i = 0; i < count - 1; i++) pairs.push(motion(frames[i], frames[i + 1]));
 
-const rows = [];
-for (let i = 0; i < pairs.length; i += 20) rows.push(`  ${pairs.slice(i, i + 20).join(', ')},`);
+// The in-between frames (public/journey/mid/fNNN-1, tier 2), where there are: the two halves of
+// each pair, frame i to its in-between and the in-between to frame i + 1
+const mids = existsSync('public/journey/mid')
+  ? readdirSync('public/journey/mid').filter((name) => /^f\d+-1\.webp$/.test(name))
+  : [];
+const halves = [];
+if (mids.length === count - 1) {
+  for (let i = 0; i < count - 1; i++) {
+    const mid = await sharp(`public/journey/mid/${mids[i]}`)
+      .resize(W, H)
+      .greyscale()
+      .raw()
+      .toBuffer();
+    halves.push(motion(frames[i], mid), motion(mid, frames[i + 1]));
+  }
+}
+
+const list = (values) => {
+  const rows = [];
+  for (let i = 0; i < values.length; i += 20) rows.push(`  ${values.slice(i, i + 20).join(', ')},`);
+  return rows.join('\n');
+};
 writeFileSync(
   'src/config/walk-pairs.ts',
   `/**
  * How far the picture moves from each frame of the walk to the next (entry i: frame i to i + 1), in
  * pixels of the 960 px frame: the 90th percentile over the parts of the frame with detail in them.
- * Written by scripts/walk-pairs.mjs from public${path}*; run it again after a new render. The
- * crossfade reads it (src/config/journey.config.ts, \`pairWindow\`).
+ * \`halfMotion\` is the same for the two halves of each pair, through its in-between frame (entries
+ * 2i and 2i + 1), empty without them. Written by scripts/walk-pairs.mjs from public${path}* and
+ * public/journey/mid; run it again after a new render. The crossfade reads it
+ * (src/config/journey.config.ts, \`pairWindow\`).
  */
 export const pairMotion: readonly number[] = [
-${rows.join('\n')}
+${list(pairs)}
+];
+
+export const halfMotion: readonly number[] = [
+${list(halves)}
 ];
 `,
 );
-const sorted = [...pairs].sort((x, y) => x - y);
-console.log(
-  `${pairs.length} pairs; median ${sorted[Math.floor(sorted.length / 2)]} px, 90th ${sorted[Math.floor(sorted.length * 0.9)]} px, max ${sorted.at(-1)} px`,
-);
+const stats = (values) => {
+  const sorted = [...values].sort((x, y) => x - y);
+  return `median ${sorted[Math.floor(sorted.length / 2)]} px, 90th ${sorted[Math.floor(sorted.length * 0.9)]} px, max ${sorted.at(-1)} px`;
+};
+console.log(`${pairs.length} pairs; ${stats(pairs)}`);
+if (halves.length) console.log(`${halves.length} halves; ${stats(halves)}`);
