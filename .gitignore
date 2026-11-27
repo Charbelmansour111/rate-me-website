@@ -53,3 +53,4 @@ next-env.d.ts
 
 # Photos and pictures dropped in to be prepared for the site (WEBSITE 15): never committed
 /incoming/
+/site-assets/
