@@ -753,10 +753,6 @@ html:not([data-js]) .phone {
 .feature-card:hover .feature-photo img {
   scale: 1.03;
 }
-/* The assistant's portrait is square: keep the face in the frame */
-.feature-photo img[src*='assistant'] {
-  object-position: 50% 30%;
-}
 .feature-photo .pitch-box {
   --st-pitch-line: #fff;
   opacity: 0.85;

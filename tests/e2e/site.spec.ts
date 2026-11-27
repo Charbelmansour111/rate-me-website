@@ -174,7 +174,7 @@ test('community: three stock portraits, and the app’s match request, said to b
   await expect(card.locator('img')).toHaveCount(0);
   await expect(card).not.toContainText(/Coming soon/);
   await expect(card.locator('button, a')).toHaveCount(0);
-  // Atmosphere: one photo of players from behind, in black and white
+  // Atmosphere: one photo of players from behind, in colour (no face shows)
   await expect(section.locator('.community-photo')).toHaveAttribute('alt', /from behind/);
 });
 

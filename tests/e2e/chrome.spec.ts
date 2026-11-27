@@ -256,7 +256,7 @@ test('coming soon stays on what is not released, and every card has a photo', as
   await expect(cards.filter({ hasText: 'Match requests' })).not.toContainText('Coming soon');
   await expect(cards.filter({ hasText: 'Coach assistant' }).locator('img')).toHaveAttribute(
     'alt',
-    /portrait/,
+    /training sheet/,
   );
 });
 

@@ -85,7 +85,7 @@ export const en = {
     items: {
       calendar: {
         title: 'Calendar and events',
-        photo: 'Yellow training cones in a line on the grass',
+        photo: 'Legs and red boots beside an orange training cone on the pitch',
         text: 'Trainings, matches, trips and team days, with attendance for each one.',
         benefit: 'See every session in one calendar, and who came.',
         bullets: [
@@ -161,7 +161,7 @@ export const en = {
       assistant: {
         title: 'Coach assistant',
         text: 'Ask about your week or get a starting point for a drill. You stay in charge of every change.',
-        photo: 'Black and white portrait of a young man in a light shirt, smiling slightly',
+        photo: "Two coaches' hands holding a training sheet on the pitch",
         benefit: 'Ask about your week in plain words.',
         bullets: [
           'See what is coming up and which trainings still have no drills.',
@@ -349,8 +349,7 @@ export const en = {
       description:
         'Example of a match request in the app: Pinewood Academy, U16, proposes Saturday 6 December at 10:00, at home. You can accept, counter or decline.',
     },
-    players:
-      'Three players in red walking across a pitch towards a ball, seen from behind, in black and white',
+    players: 'Three players in red walking across a pitch towards a ball, seen from behind',
   },
   faq: {
     kicker: 'FAQ',

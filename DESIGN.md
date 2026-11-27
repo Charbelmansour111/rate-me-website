@@ -380,8 +380,10 @@ screen readers.
 - Check each new colour pair in the palette or stage test and each new string in Arabic, right to
   left.
 - Show real app screens and real, licensed photographs, credited in `docs/PHOTO-CREDITS.md`.
-- Keep every photograph black and white (`tests/unit/photos.test.ts` checks the files); app
-  screens stay in colour and carry an "Example" tag where they show sample data.
+- Photos with a visible face are black and white; photos with no face (from behind, legs, the
+  ball, turf, cones, a goal, equipment) stay in colour (`src/config/photos.ts`, checked by
+  `tests/unit/photos.test.ts`); app screens stay as the app shows them, with an "Example" tag
+  where they show sample data.
 - Use stock photos for atmosphere only (the community, the footer's turf), with no faces, logos or
   names, never as our coach, player or club.
 

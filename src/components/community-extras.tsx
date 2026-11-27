@@ -145,8 +145,8 @@ export function MatchRequestCard({ t }: { t: Community }) {
 }
 
 /**
- * Atmosphere: three players walking out, from behind (Unsplash, docs/PHOTO-CREDITS.md), in black
- * and white. Not our players or our club; no names go with it.
+ * Atmosphere: three players walking out, from behind (Unsplash, docs/PHOTO-CREDITS.md), in colour
+ * (no face shows, src/config/photos.ts). Not our players or our club; no names go with it.
  */
 export function PlayersPhoto({ alt }: { alt: string }) {
   return (
@@ -154,8 +154,8 @@ export function PlayersPhoto({ alt }: { alt: string }) {
       data-reveal
       src="/community/players.webp"
       alt={alt}
-      width={1000}
-      height={750}
+      width={960}
+      height={720}
       sizes="(min-width: 64rem) 30rem, 90vw"
       className="community-photo"
     />
