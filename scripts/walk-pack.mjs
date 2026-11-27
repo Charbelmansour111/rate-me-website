@@ -35,5 +35,6 @@ const lines = [
   '',
 ];
 writeFileSync('src/config/walk-pack.ts', lines.join('\n'));
+execSync('npx prettier --write src/config/walk-pack.ts', { stdio: 'ignore' });
 const total = parts.reduce((sum, part) => sum + part.length, 0);
 console.log(`${frames.length} frames, ${(total / 1e6).toFixed(2)} MB`);
