@@ -10,35 +10,27 @@ photo's page.
 
 ## On the site
 
-| File                                        | Photo by                           | Unsplash                                      | Crop                                                     |
-| ------------------------------------------- | ---------------------------------- | --------------------------------------------- | -------------------------------------------------------- |
-| `public/community/coach-1.jpg`              | Mostafa Kordzangeneh               | https://unsplash.com/photos/_tcJW4nqVtw       | Square on the face, 640 px                               |
-| `public/community/coach-2.jpg`              | Josias Garibay                     | https://unsplash.com/photos/rifCUO-4X8k       | Square on the face, 640 px                               |
-| `public/community/coach-3.jpg`              | Vicky Hladynets                    | https://unsplash.com/photos/_gDoyVv5F4c       | Square on the face, 640 px                               |
-| `public/community/coach-4.jpg`              | Artem Kryzhanivskyi                | https://unsplash.com/photos/sEll8Ivzx1w       | Square on the face, 640 px                               |
-| `public/community/coach-5.jpg`              | Alex Suprun                        | https://unsplash.com/photos/UUp9z94QhLA       | Square on the face, 640 px, black and white              |
-| `public/community/coach-6.jpg`              | Arthur Debons                      | https://unsplash.com/photos/Mrql2Og2GU8       | Square on the face, 640 px, black and white              |
-| `public/community/coach-7.jpg`              | Christian Buehner                  | https://unsplash.com/photos/5YpZpFy8zzU       | Square on the face, 640 px, black and white              |
-| `public/community/coach-8.jpg`              | Lucas Clarysse                     | https://unsplash.com/photos/yMxLAdXh8Wc       | Square on the face, 640 px, black and white              |
-| `public/cards/player.jpg`                   | Levi Meir Clancy                   | https://unsplash.com/photos/KIWxM_XvLlI       | Square on the face, 480 px, black and white              |
-| `public/features/whiteboard.webp`           | Jasper Benning                     | https://unsplash.com/photos/Ri4FXmD7DPM       | 16:10, board only, 1200 px, black and white              |
-| `public/features/calendar.webp`             | Oghenovo Egbegbedia                | https://unsplash.com/photos/vsJsZmm0zv4       | 16:10, 1200 px, black and white                          |
-| `public/features/squad.webp`                | own work / Rate Me                 | the app's monthly report, player card section | 16:10, numbers only, padded with the app's white         |
-| `public/features/squad-detail.webp`         | own work / Rate Me                 | `public/screens/coach-squad.png`              | 16:10, the top of the Squad screen (the Squad dialog)    |
-| `public/features/parentReport.webp`         | own work / Rate Me                 | the app's monthly report                      | 16:10, below the player's name and club                  |
-| `public/features/parentReport-detail.webp`  | own work / Rate Me                 | the app's monthly report                      | 4:3, attendance to the coach rating                      |
-| `public/features/matchRequests.webp`        | own work / Rate Me                 | the app's Coaches Channel                     | 16:10, the request card only                             |
-| `public/features/matchRequests-detail.webp` | own work / Rate Me                 | the app's Request a match form                | 4:3                                                      |
-| `public/community/players.webp`             | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                                   | 4:3, the lower half, 1000 px, black and white            |
-| `public/footer/pitch.webp`                  | Photo by Omar Ramadan on Unsplash  | htGM-eEzsdk                                   | the turf band only (no faces), 1600 px, black and white  |
-| `public/features/tournaments.webp`          | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw       | 16:10, the net against the sky, 1200 px, black and white |
-| `public/features/assistant.jpg`             | Beatriz Cattel                     | https://unsplash.com/photos/az3QxXQ7Fqc       | Square on the face, 640 px, black and white              |
+| File                               | Photo by                           | Unsplash                                | Crop                                                     |
+| ---------------------------------- | ---------------------------------- | --------------------------------------- | -------------------------------------------------------- |
+| `public/community/coach-1.jpg`     | Mostafa Kordzangeneh               | https://unsplash.com/photos/_tcJW4nqVtw | Square on the face, 640 px                               |
+| `public/community/coach-2.jpg`     | Josias Garibay                     | https://unsplash.com/photos/rifCUO-4X8k | Square on the face, 640 px                               |
+| `public/community/coach-3.jpg`     | Vicky Hladynets                    | https://unsplash.com/photos/_gDoyVv5F4c | Square on the face, 640 px                               |
+| `public/community/coach-4.jpg`     | Artem Kryzhanivskyi                | https://unsplash.com/photos/sEll8Ivzx1w | Square on the face, 640 px                               |
+| `public/community/coach-5.jpg`     | Alex Suprun                        | https://unsplash.com/photos/UUp9z94QhLA | Square on the face, 640 px, black and white              |
+| `public/community/coach-6.jpg`     | Arthur Debons                      | https://unsplash.com/photos/Mrql2Og2GU8 | Square on the face, 640 px, black and white              |
+| `public/community/coach-7.jpg`     | Christian Buehner                  | https://unsplash.com/photos/5YpZpFy8zzU | Square on the face, 640 px, black and white              |
+| `public/community/coach-8.jpg`     | Lucas Clarysse                     | https://unsplash.com/photos/yMxLAdXh8Wc | Square on the face, 640 px, black and white              |
+| `public/cards/player.jpg`          | Levi Meir Clancy                   | https://unsplash.com/photos/KIWxM_XvLlI | Square on the face, 480 px, black and white              |
+| `public/features/whiteboard.webp`  | Jasper Benning                     | https://unsplash.com/photos/Ri4FXmD7DPM | 16:10, board only, 1200 px, black and white              |
+| `public/features/calendar.webp`    | Oghenovo Egbegbedia                | https://unsplash.com/photos/vsJsZmm0zv4 | 16:10, 1200 px, black and white                          |
+| `public/community/players.webp`    | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                             | 4:3, the lower half, 1000 px, black and white            |
+| `public/footer/pitch.webp`         | Photo by Omar Ramadan on Unsplash  | htGM-eEzsdk                             | the turf band only (no faces), 1600 px, black and white  |
+| `public/features/tournaments.webp` | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw | 16:10, the net against the sky, 1200 px, black and white |
+| `public/features/assistant.jpg`    | Beatriz Cattel                     | https://unsplash.com/photos/az3QxXQ7Fqc | Square on the face, 640 px, black and white              |
 
 Every photograph on the site is black and white (WEBSITE 15): the files themselves, and the
 community portraits in CSS. App screenshots stay in colour. Every file is under 120 KB and loads
-lazily. The Squad and Monthly report cards show crops of
-the app's own screens (WEBSITE 15): the photos meant for them were not supplied (no `incoming/`
-folder), and a real screen beats a generic stock picture. The community strip shows only the
+lazily. The app's own screens are listed under "App screens (WEBSITE 18)" below. The community strip shows only the
 first three portraits (coach-1 to coach-3); the other five files stay but are not shown. Portraits are black and white, the rest in colour.
 
 - The whiteboard crop leaves out the board maker's name; the same file also stands in the tactics
@@ -51,6 +43,32 @@ first three portraits (coach-1 to coach-3); the other five files stay but are no
 - The Coach assistant card's portrait stands for the person asking the assistant; its alt text
   describes the photo only, and nothing says he is a coach. The square crop leaves out the small
   maker's logo on the shirt.
+
+## App screens (WEBSITE 18)
+
+All own work / Rate Me: the app with demo data only (Sam Demo, Demo FC, Demo United, Demo Park,
+Coach Robin Test, Coach Jamie Sample; no real person, club or face). Captured clean at 1170 x 2532
+into `site-assets/screens/app` (not committed); here as webp, phones 780 px wide, each under 120 KB
+(`tests/unit/app-shots.test.ts`). In colour, as the app shows them.
+
+| File                                         | From (`site-assets/screens/app`) | Where                          | Crop                                                                             |
+| -------------------------------------------- | -------------------------------- | ------------------------------ | -------------------------------------------------------------------------------- |
+| `public/screens/coach-calendar.webp`         | `calendar.png`                   | Inside the app, coach view     | whole screen                                                                     |
+| `public/screens/coach-whiteboard-roles.webp` | `whiteboard-roles.png`           | Inside the app, coach view     | whole screen                                                                     |
+| `public/screens/coach-match.webp`            | `match-request-received.png`     | Inside the app, coach view     | whole screen                                                                     |
+| `public/screens/player-home.webp`            | earlier capture (f5a7437)        | Inside the app, player view    | whole screen, now webp                                                           |
+| `public/screens/player-event.webp`           | earlier capture (f5a7437)        | Inside the app, player view    | whole screen, now webp                                                           |
+| `public/features/squad.webp`                 | `player-card.png`                | Squad card                     | 16:10, the shield only (under the style switch), sides widened with its own rays |
+| `public/features/squad-detail.webp`          | `squad.png`                      | Squad dialog, in a phone       | top of the list, seven whole rows, cut above the tab bar                         |
+| `public/features/parentReport.webp`          | `report-1.png`                   | Monthly report card, as paper  | the top of page 1                                                                |
+| `public/features/parentReport-detail.webp`   | `report-1.png`                   | Report dialog, as paper        | page 1 down to the coach rating                                                  |
+| `public/features/parentReport-detail-2.webp` | `report-2.png`                   | Report dialog, as paper        | page 2 down to its footer                                                        |
+| `public/features/matchRequests.webp`         | `match-request-received.png`     | Match requests card            | 16:10, their proposal and Accept, Counter, Decline                               |
+| `public/features/matchRequests-detail.webp`  | `match-request-card.png`         | Match requests dialog, a phone | whole screen (the Coaches Channel with the request card)                         |
+
+`match-request-form.png` is not used: the received request and the channel say more in two
+pictures. The community section keeps its drawn match request card. The WEBSITE 15 crops of
+Screenshots 519 to 522 are gone, and the old PNG screens in `public/screens` with them.
 
 ## All 43 photos supplied
 
@@ -107,12 +125,9 @@ first three portraits (coach-1 to coach-3); the other five files stay but are no
 Screenshots (`site-assets/screens`, not committed) are our own work, Rate Me. Only the app's own
 area is taken from them, never a name, a face or a club:
 
-- Screenshot (519): the Coaches Channel. Used: the request card (match requests card). The community section draws its own card.
-- Screenshot (520): the Request a match form. Used: the match requests dialog.
-- Screenshot (521): a player's monthly report. Used below the player's name and club (the report
-  card and dialog).
-- Screenshot (522): the same report's player card section. Used: the numbers only; the coach's
-  comment below it, which names an opponent, is left out.
+- Screenshots (519) to (522): the Coaches Channel, the Request a match form, a monthly report and
+  its player card section. Used in WEBSITE 15, replaced in WEBSITE 18 by the clean demo captures
+  above; no longer on the site.
 - Screenshot (524): a player card with a real child's name and face. Not used, not even cropped.
 
 The ten Unsplash photos (`site-assets/stock`, not committed):
