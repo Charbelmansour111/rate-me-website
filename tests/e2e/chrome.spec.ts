@@ -363,7 +363,13 @@ test('the scroll cue is there at the top and gone after the first scroll', async
   await page.goto('/');
   const cue = page.locator('.scroll-cue');
   await expect(cue).toBeVisible();
-  await page.mouse.wheel(0, 400);
+  // A wheel over the page (not the bar), until the page has really scrolled: under load the first
+  // one can land before the page listens
+  await page.mouse.move(600, 400);
+  await expect(async () => {
+    await page.mouse.wheel(0, 400);
+    expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
+  }).toPass({ timeout: 10_000 });
   await expect(cue).toBeHidden();
 });
 
@@ -435,11 +441,32 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       region.locator('.carousel-arrow').last(),
     ];
     const count = region.locator('[data-count]');
+    // Each press glides the row a card on: wait until it has stopped before the next (under load a
+    // glide outlasts any fixed wait)
+    const track = region.locator('.feature-track');
+    const left = () => track.evaluate((el) => el.scrollLeft);
+    // Moved on, or already at its end (the arrow says so a moment after the row stops)
+    const settled = async (from: number, arrow: typeof next) => {
+      await expect
+        .poll(
+          async () =>
+            (await left()) !== from || (await arrow.getAttribute('aria-disabled')) === 'true',
+        )
+        .toBe(true);
+      await expect
+        .poll(async () => {
+          const a = await left();
+          await page.waitForTimeout(120);
+          return a === (await left());
+        })
+        .toBe(true);
+    };
     // To the end, with the next arrow
     for (let i = 0; i < 8; i++) {
       if ((await next.getAttribute('aria-disabled')) === 'true') break;
+      const from = await left();
       await next.dispatchEvent('click');
-      await page.waitForTimeout(450);
+      await settled(from, next);
     }
     await expect(next).toHaveAttribute('aria-disabled', 'true');
     await expect(count).toHaveText(rtl ? '7 من 7' : '7 of 7');
@@ -458,8 +485,9 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
     // Back to the start: the back arrow is the dimmed one
     for (let i = 0; i < 8; i++) {
       if ((await back.getAttribute('aria-disabled')) === 'true') break;
+      const from = await left();
       await back.dispatchEvent('click');
-      await page.waitForTimeout(450);
+      await settled(from, back);
     }
     await expect(back).toHaveAttribute('aria-disabled', 'true');
     await expect(next).toHaveAttribute('aria-disabled', 'false');

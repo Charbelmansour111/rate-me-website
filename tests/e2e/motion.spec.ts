@@ -99,9 +99,25 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
     expect(await page.evaluate(() => (window as unknown as { cls: number }).cls)).toBeLessThan(
       0.001,
     );
-    // With motion on, as visitors get it
-    const { violations } = await new AxeBuilder({ page }).analyze();
-    expect(violations.map((v) => v.id)).toEqual([]);
+    // With motion on, as visitors get it, once the walk has come to rest: while it still eases, the
+    // panels' colours are between two stages for a moment. A lasting violation still fails.
+    const walk = page.locator('[data-walk]');
+    const at = async () => Number(await walk.getAttribute('data-at'));
+    await expect
+      .poll(
+        async () => {
+          const a = await at();
+          await page.waitForTimeout(300);
+          return Math.abs(a - (await at())) < 0.01;
+        },
+        { timeout: 15_000 },
+      )
+      .toBe(true);
+    await expect
+      .poll(async () => (await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id), {
+        timeout: 30_000,
+      })
+      .toEqual([]);
   });
 }
 
@@ -605,9 +621,12 @@ test('the walk: frames wait for the first paint, then the whole set, then tier 2
 }) => {
   const sequence = sequenceFor(isMobile);
   const asked: { frame: number; at: number }[] = [];
+  const mids: { frame: number; at: number }[] = [];
   page.on('request', (request) => {
     const match = request.url().match(/\/journey\/seq\/f(\d+)\./);
     if (match) asked.push({ frame: Number(match[1]), at: Date.now() });
+    const mid = request.url().match(/\/journey\/mid\/f(\d+)-1\./);
+    if (mid) mids.push({ frame: Number(mid[1]) + 0.5, at: Date.now() });
   });
   await page.goto('/', { waitUntil: 'networkidle' });
   await ready(page);
@@ -621,17 +640,15 @@ test('the walk: frames wait for the first paint, then the whole set, then tier 2
   const later = () => asked.filter(({ frame }) => frame !== 0);
   expect(later().length).toBeGreaterThan(0);
   expect(Math.min(...later().map(({ at }) => at))).toBeGreaterThan(painted);
-  const mids: { frame: number; at: number }[] = [];
   // The frames round the top come first
   expect(
     later()
-    const mid = request.url().match(/\/journey\/mid\/f(\d+)-1\./);
-    if (mid) mids.push({ frame: Number(mid[1]) + 0.5, at: Date.now() });
       .slice(0, 8)
       .every(({ frame }) => frame <= 24 * stride),
   ).toBe(true);
   // Then every frame of the set at its stride, each fetched once, kept by the worker
   const all = frameList(sequence, stride);
+  const tier1 = () => later().filter(({ frame }) => all.includes(frame));
   await expect
     .poll(() => new Set(tier1().map(({ frame }) => frame)).size, { timeout: 60_000 })
     .toBe(wholeSet(sequence, stride));
@@ -658,7 +675,6 @@ test('the walk: frames wait for the first paint, then the whole set, then tier 2
   await ready(page);
   const kept = Number(await walk.getAttribute('data-loaded'));
   expect(kept * ((960 * 540 * 4) / 1e6)).toBeLessThanOrEqual(150);
-  const tier1 = () => later().filter(({ frame }) => all.includes(frame));
 });
 
 /** Serves the page as it is built with a portrait set, whether or not there is one yet. */
