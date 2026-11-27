@@ -66,6 +66,7 @@ export const en = {
     title: 'What you get',
     note: 'Rate Me has not launched yet. Features tagged “Coming soon” arrive after the first release.',
     soon: 'Coming soon',
+    example: 'Example',
     controls: {
       label: 'Feature cards',
       carousel: 'carousel',
@@ -103,7 +104,9 @@ export const en = {
       },
       squad: {
         title: 'Squad and player cards',
-        photo: 'The Squad screen in the app: the goalkeepers, each with a shirt number',
+        photo:
+          'The player card screen in the app: an overall of 85, then pace, passing, physical, shooting, defending and dribbling',
+        detail: 'The Squad screen in the app: the goalkeepers, each with a shirt number',
         text: 'Kit numbers, positions and a card for each player, shared only when the coach decides.',
         benefit: 'Every player in your squad gets a card.',
         bullets: [
@@ -115,7 +118,9 @@ export const en = {
       parentReport: {
         title: 'Monthly player report',
         photo:
-          'The player screen in the app: the card at 89 out of 100 and a coach rating of 7.0, published to the player',
+          'The monthly report in the app: attendance at 50%, two of four trainings and two of four matches, then matches and goals',
+        detail:
+          "The monthly report in the app: attendance, matches, goals and passes, and the coach's rating",
         text: 'Each month the coach publishes a PDF report for each player: attendance, match stats, the coach’s rating and notes. Players can share it with their parents.',
         benefit: 'Each player gets a PDF of their month to share.',
         bullets: [
@@ -126,7 +131,10 @@ export const en = {
       },
       matchRequests: {
         title: 'Match requests',
-        photo: 'A ball on the line of an empty pitch, a goal in the distance',
+        photo:
+          'A match request in the Coaches Channel: a friendly on Saturday 28 to Sunday 29 November at 10:00, any age, home or away',
+        detail:
+          'The Request a match form in the app: match type, when, the time, the age group and the venue',
         text: 'Find a friendly by sending a request to other clubs, and answer the ones you receive.',
         benefit: 'Find a friendly with another club.',
         bullets: [
@@ -322,22 +330,12 @@ export const en = {
     ],
     coaches: 'Photos for illustration',
     match: {
-      label: 'A match request in the app (example)',
+      label: 'A match request in the app',
       example: 'Example',
-      team: 'Pinewood Academy',
-      meta: 'Beirut · U16 · Competitive',
-      status: 'Your answer',
-      counters: '2 counters left',
-      caption: 'Their proposal',
-      when: 'Sat 6 Dec · 10:00',
-      where: 'Home · Main pitch',
-      accept: 'Accept',
-      counter: 'Counter',
-      decline: 'Decline',
-      safety: 'Contact is between coaches only. No player details are shared.',
-      description:
-        'Example of a match request in the app: Pinewood Academy, U16, proposes Saturday 6 December at 10:00, at home. You can accept, counter or decline.',
+      alt: 'A match request in the Coaches Channel: a friendly on Saturday 28 to Sunday 29 November at 10:00, any age, home or away, with a Cancel request button',
     },
+    players:
+      'Three players in red walking across a pitch towards a ball, seen from behind, in black and white',
   },
   faq: {
     kicker: 'FAQ',

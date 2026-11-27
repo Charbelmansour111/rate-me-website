@@ -164,18 +164,17 @@ test('community: three stock portraits, and the app’s match request, said to b
       .toBeGreaterThan(0);
   }
   await expect(section).not.toContainText(/founding coach/i);
-  // The app's match request, as it is now (released): an example, one description for
-  // screen readers, the app's parts drawn in the site's colours, nothing coming soon
+  // The app's match request, as it is now (released): a screenshot of the request card, no
+  // names, said to be an example, nothing coming soon
   const card = section.locator('.match-card');
-  await expect(card).toHaveAttribute('role', 'img');
-  await expect(card).toHaveAttribute('aria-label', /Example of a match request/);
   await expect(card.locator('.match-example')).toHaveText('Example');
-  await expect(card.locator('.match-chip')).toHaveText('Your answer');
-  await expect(card.locator('.match-accept')).toHaveText('Accept');
-  await expect(card.locator('.match-text-action')).toHaveText(['Counter', 'Decline']);
-  await expect(card.locator('.match-safety')).toContainText('No player details are shared');
+  const shot = card.locator('img');
+  await expect(shot).toHaveAttribute('src', /match-request/);
+  await expect(shot).toHaveAttribute('alt', /friendly/);
   await expect(card).not.toContainText(/Coming soon/);
   await expect(card.locator('button, a')).toHaveCount(0);
+  // Atmosphere: one photo of players from behind, in black and white
+  await expect(section.locator('.community-photo')).toHaveAttribute('alt', /from behind/);
 });
 
 test('feature cards: a photo on every card, the same shape, each saying what it shows', async ({
