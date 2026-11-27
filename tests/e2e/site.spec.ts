@@ -164,16 +164,19 @@ test('community: three stock portraits, and the app’s match request, said to b
       .toBeGreaterThan(0);
   }
   await expect(section).not.toContainText(/founding coach/i);
-  // The app's match request, drawn in the site's colours (WEBSITE 15; WEBSITE 18 keeps it here):
-  // a made-up team, said to be an example, one description for screen readers, nothing coming soon
-  const card = section.locator('.match-card');
-  await expect(card.locator('.match-example')).toHaveText('Example');
-  await expect(card).toHaveAttribute('role', 'img');
-  await expect(card).toHaveAttribute('aria-label', /accept, counter or decline/);
-  await expect(card.locator('.match-accept')).toHaveText('Accept');
-  await expect(card.locator('img')).toHaveCount(0);
-  await expect(card).not.toContainText(/Coming soon/);
-  await expect(card.locator('button, a')).toHaveCount(0);
+  // The app itself in the site's phone frame (WEBSITE 19): a request received in front, the
+  // channel with a request sent behind it; Example under them, nothing coming soon
+  const phones = section.locator('.match-phones');
+  await expect(phones.locator('.phone')).toHaveCount(2);
+  await expect(phones.locator('.match-phone-front img')).toHaveAttribute('alt', /Accept, Counter/);
+  await expect(phones.locator('.match-phone-back img')).toHaveAttribute('alt', /Cancel request/);
+  await expect(phones.locator('figcaption .match-example')).toHaveText('Example');
+  await expect(phones).not.toContainText(/Coming soon/);
+  await expect(phones.locator('button, a')).toHaveCount(0);
+  // The phone behind never reaches past the column into the words beside it
+  const column = (await phones.boundingBox())!;
+  const back = (await phones.locator('.match-phone-back').boundingBox())!;
+  expect(back.x + back.width).toBeLessThanOrEqual(column.x + column.width + 1);
   // Atmosphere: one photo of players from behind, in colour (no face shows)
   await expect(section.locator('.community-photo')).toHaveAttribute('alt', /from behind/);
 });

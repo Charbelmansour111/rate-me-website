@@ -256,7 +256,7 @@ Three looks, chosen by what a block holds and the same in every stage (`src/app/
 
 - **Ink** (`#0b0b0c`, orange edge): what you act on. The "Plan, build, organize" cards, the
   feature dialog.
-- **Paper** (`#fffcf7`, black edge): what you read and keep. The feature cards, the match request.
+- **Paper** (`#fffcf7`, black edge): what you read and keep. The feature cards.
 - **Split** (half black, half orange, on the diagonal): the one key call to action of a section.
   Words on the black half, a black button on the orange half (`btn-dark`), a dashed pass between.
   Laid out by its own width (a container query), so it works in a half column.
@@ -303,9 +303,17 @@ slightly turned, captioned "Monthly report (PDF)". On `/ar` the captions add "ا
 بالإنجليزية": the layout mirrors, the screenshots do not.
 
 The community section shows three portraits at most, captioned "Photos for illustration", and the
-app's match request as the app draws it (team with its shield tile, status chip, the proposal,
-Accept, Counter, Decline, the safety line), in this site's colours, marked as an example. App
-pieces keep the app's 0.75rem corner (`app-md`).
+app itself in the site's phone frame (WEBSITE 19): a request received in front, the Coaches
+Channel with a request sent behind it, offset to the far side and inside its column. "Example" and
+what it is go under the phones; on `/ar` also "التطبيق معروض بالإنجليزية".
+
+The FAQ's left column holds a short play in the tactics board's language (`faq-play.tsx`): chalk
+lines, a curved orange pass, a white run into the box ending on an orange "?" node (mirrored to
+"؟" in Arabic). It is drawn in stroke by stroke with the tactics paint's code
+(`src/motion/brush.ts`), simply drawn under reduced motion, and left out on phones.
+
+The walk fades into the footer: no border, a gradient from transparent to the footer's own colour
+over the last stretch above it, at every width.
 
 ### Inputs / Fields
 

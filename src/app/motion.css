@@ -102,51 +102,35 @@ html.lenis {
 .coach-photo img {
   filter: grayscale(1) contrast(1.05);
 }
-.match-card {
+.match-phones {
   position: relative; /* above the corner arc */
 }
-/* The card: the same as the feature cards (1px ink, 1.25rem, no shadow); the app's own pieces
-   inside keep the app's 0.75rem corners (app-md) */
-.match-board {
-  padding: 1.25rem;
-  border-radius: 1.25rem;
-}
-.match-state {
-  margin-bottom: 0.5rem;
-  color: var(--muted);
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-:lang(ar) .match-state {
-  letter-spacing: 0;
-}
-/* The request you sent, as it sits in the channel */
-.match-sent {
-  display: block;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgb(255 90 0 / 0.35);
-  border-radius: 0.75rem;
-  background: var(--tint);
-}
-.match-ghost {
+/* Two phones: the received request in front, the channel behind it, offset to the far side and a
+   little higher. Both inside this column, never over the words beside it. */
+.match-phones-stage {
   display: grid;
-  min-height: 2.75rem;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--page);
-  font-weight: 700;
+  grid-template-columns: 1fr;
+  padding-inline-end: 42%;
+  padding-top: 2.5rem;
 }
-/* The request you received */
-.match-received {
-  display: block;
-  padding: 1rem;
-  border: 1px solid var(--line);
-  border-radius: 0.75rem;
+.match-phones-stage .phone {
+  --phone: 100%;
 }
-/* Under the card, never on it: Example and what it is */
+.match-phone-front {
+  position: relative;
+  z-index: 1;
+  grid-area: 1 / 1;
+  max-width: 15rem;
+}
+.match-phone-back {
+  grid-area: 1 / 1;
+  max-width: 13.5rem;
+  translate: 70% -2.5rem;
+}
+[dir='rtl'] .match-phone-back {
+  translate: -70% -2.5rem;
+}
+/* Under the phones, never on them: Example and what it is */
 .match-example {
   padding: 0.1rem 0.6rem;
   border-radius: 999px;
@@ -157,82 +141,13 @@ html.lenis {
 }
 .match-caption {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.75rem;
+  gap: 0.4rem 0.6rem;
+  margin-top: 1rem;
   color: var(--muted);
   font-size: 0.875rem;
   font-weight: 600;
-}
-.match-tile {
-  display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 0.75rem;
-  background: var(--tint);
-  color: var(--accent-text);
-}
-.match-verified {
-  color: var(--accent-text);
-}
-.match-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: var(--tint);
-  color: var(--accent-text);
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-.match-proposal {
-  display: grid;
-  gap: 0.3rem;
-  padding: 0.9rem 1rem;
-  border-radius: 0.75rem;
-  background: var(--soft);
-}
-.match-line {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-}
-.match-line svg {
-  color: var(--accent-text);
-}
-.match-accept {
-  display: grid;
-  min-height: 3rem;
-  place-items: center;
-  border-radius: 0.5rem;
-  background: var(--brand-orange);
-  color: var(--brand-black);
-  font-weight: 700;
-}
-.match-text-action {
-  display: grid;
-  min-height: 2.75rem;
-  place-items: center;
-  color: var(--accent-text);
-  font-weight: 700;
-}
-.match-safety {
-  margin-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  background: var(--soft);
-  color: var(--muted);
-  font-size: 0.875rem;
-}
-.match-safety svg {
-  flex-shrink: 0;
 }
 .community-photo {
   width: 100%;
@@ -242,6 +157,58 @@ html.lenis {
 }
 
 /* --- FAQ (src/components/faq-accordion.tsx) --- */
+/* The play in the empty column under the heading (src/components/faq-play.tsx): only where the
+   column stands beside the questions; on a phone it would only push them down */
+.faq-play {
+  display: none;
+}
+@media (min-width: 64rem) {
+  .faq-play {
+    display: block;
+    width: 100%;
+    max-width: 21rem;
+    height: auto;
+    margin-top: 3rem;
+  }
+}
+[dir='rtl'] .faq-play {
+  scale: -1 1;
+}
+/* Drawn by default: the motion code draws it in only where it can (src/motion/brush.ts) */
+.faq-play [data-brush-stroke] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.faq-play-chalk {
+  stroke: var(--muted);
+  opacity: 0.55;
+}
+.faq-play-pass {
+  stroke: var(--brand-orange);
+}
+.faq-play-run {
+  stroke: var(--text);
+}
+.faq-play-ours {
+  fill: var(--text);
+}
+.faq-play-them circle {
+  fill: var(--page);
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.faq-play-them path {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.faq-play-node {
+  fill: var(--brand-orange);
+}
+.faq-play-mark {
+  fill: var(--brand-black);
+  font-size: 26px;
+  font-weight: 700;
+}
 .faq-item {
   position: relative;
   border-bottom: 1px solid var(--line);

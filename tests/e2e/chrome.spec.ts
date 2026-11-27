@@ -494,7 +494,7 @@ test('the tactics paint: behind solid ground, drawn in, still under reduced moti
 }) => {
   const page = await browser.newPage();
   await page.goto('/', { waitUntil: 'networkidle' });
-  const svg = page.locator('[data-brush]');
+  const svg = page.locator('.brush-strokes[data-brush]');
   await expect(svg).toHaveAttribute('aria-hidden', 'true');
   await expect(svg.locator('[data-brush-stroke]')).not.toHaveCount(0);
   // No filter or blur anywhere in it

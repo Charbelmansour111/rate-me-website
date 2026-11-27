@@ -5,8 +5,9 @@ import { getDictionary, localePath, type Locale } from '@/i18n';
 import { publicFile } from '@/lib/public-file';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
-import { CoachPhotos, MatchRequestCard, PlayersPhoto } from './community-extras';
+import { CoachPhotos, MatchRequestPhones, PlayersPhoto } from './community-extras';
 import { FaqAccordion } from './faq-accordion';
+import { FaqPlay } from './faq-play';
 import { CtaSplit } from './cta-split';
 import { FeatureCardFace } from './feature-card-face';
 import { FeatureCarousel } from './feature-carousel';
@@ -223,7 +224,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   <PlayersPhoto alt={t.community.players} />
                 </div>
                 <div>
-                  <MatchRequestCard t={t.community} />
+                  <MatchRequestPhones t={t.community} inEnglish={t.features.inEnglish} />
                   <h3 data-reveal className="mt-12 text-lg font-semibold">
                     {t.community.stepsTitle}
                   </h3>
@@ -271,6 +272,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   <h2 data-reveal id="faq-title" className="display h2">
                     {t.faq.title}
                   </h2>
+                  <FaqPlay />
                 </div>
                 <FaqAccordion items={t.faq.items} privacyHref={localePath(locale, '/privacy')} />
               </div>

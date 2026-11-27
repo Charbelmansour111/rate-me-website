@@ -831,7 +831,7 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       await expect(phones.locator('.phone-sketch')).toHaveCount(0);
     }
     await expect(page.locator('#view-player .shield-card')).toHaveCount(1);
-    const roles = page.locator('.phone img[src*="coach-whiteboard-roles.webp"]');
+    const roles = page.locator('#inside .phone img[src*="coach-whiteboard-roles.webp"]');
     for (const role of ['Press', 'Cover', 'Mark', 'Intercept']) {
       await expect(roles).toHaveAttribute('alt', new RegExp(role));
     }
@@ -842,7 +842,7 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       'player-home',
       'player-event',
     ]) {
-      const image = page.locator(`.phone img[src*="${name}.webp"]`);
+      const image = page.locator(`#inside .phone img[src*="${name}.webp"]`);
       await expect(image).toHaveCount(1);
       const url = (await image.getAttribute('src'))!;
       const response = await page.request.get(url);
