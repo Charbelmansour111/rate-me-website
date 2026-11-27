@@ -297,7 +297,7 @@ mirrored in Arabic; at either end its arrow dims (`aria-disabled`, still reachab
 up to the last card in view and a counter says "7 of 7". A button over each card opens it in a
 dialog (bigger photo, three facts from the app, Pre-register). Three cards show the app's own
 screens (`src/config/app-shots.ts`): a 16:10 face cut so it reads at card size, "Example" in the
-card's body level with the icon (never on the picture), and in the dialog the whole screen in the
+card's body on the More line (never on the picture), and in the dialog the whole screen in the
 phone frame, or, for the monthly report (a PDF), its two pages as white sheets on `paper-ground`,
 slightly turned, captioned "Monthly report (PDF)". On `/ar` the captions add "التطبيق معروض
 بالإنجليزية": the layout mirrors, the screenshots do not.

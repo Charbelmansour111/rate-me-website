@@ -789,10 +789,10 @@ html:not([data-js]) .phone {
     0 8px 18px rgb(40 30 20 / 0.16);
   rotate: -2deg;
 }
-/* "Example": in the card's body, level with the icon, never on the picture */
+/* "Example": in the card's body, on the More line across from it, never on the picture */
 .feature-body > .feature-example {
   position: absolute;
-  top: 0.6rem;
+  bottom: 1rem;
   inset-inline-end: 1rem;
 }
 .feature-example {

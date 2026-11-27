@@ -72,7 +72,7 @@ export function FeatureCardFace({
       </span>
       <span className="feature-body">
         <span className="feature-icon">{icon}</span>
-        {/* Example sits level with the icon, off the picture */}
+        {/* Example sits on the More line, off the picture (src/app/journey.css) */}
         {c.example && <span className="feature-example">{c.example}</span>}
         <span id={`feature-${c.id}-title`} className="display h3 feature-title">
           {c.title}
