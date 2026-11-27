@@ -1,29 +1,69 @@
+import { pairMotion } from './walk-pairs';
+
 /**
  * The walk behind the home page: numbered images, drawn by the scroll. `portrait` is used where the
  * screen is taller than wide, once all its files are there; until then `landscape` is used
- * everywhere. For a new render, replace the files and change `count`; the rest follows from it.
+ * everywhere. For a new render, replace the files, change `count` and raise `rev` (the frames are
+ * cached for good under their address, which carries it), then run scripts/walk-pairs.mjs.
+ *
+ * `between` (tier 2, off until its files are made and approved): in-between frames for wide screens
+ * on a good connection, `factor - 1` of them between each two frames, numbered `fNNN-k`. They are
+ * fetched after the frames themselves and used as they arrive.
  */
-export type Sequence = { path: string; count: number; ext: string; pad: number };
+export type Sequence = {
+  path: string;
+  count: number;
+  ext: string;
+  pad: number;
+  rev: number;
+  between?: { path: string; factor: number };
+};
 export type Shape = 'landscape' | 'portrait';
 export const journey: Record<Shape, Sequence> = {
-  landscape: { path: '/journey/seq/f', count: 381, ext: 'webp', pad: 3 },
-  portrait: { path: '/journey/portrait/f', count: 48, ext: 'webp', pad: 3 },
+  landscape: { path: '/journey/seq/f', count: 381, ext: 'webp', pad: 3, rev: 1 },
+  portrait: { path: '/journey/portrait/f', count: 48, ext: 'webp', pad: 3, rev: 1 },
 };
 
 /**
- * How two neighbouring frames blend: by the fraction between them, all the way (a window of 0.5),
- * like a film between its frames (WEBSITE 17). Only true neighbours blend, frames one stride apart:
- * across a gap left by a frame still loading the nearest one shows alone, since a crossfade of two
- * frames far apart is a double image. `window` and `denseFrom` are kept so a set can narrow it.
+ * How two neighbouring frames blend (WEBSITE 22). A crossfade of two frames taken from camera
+ * positions far apart shows every edge twice, so each pair fades by how far its picture moves
+ * (src/config/walk-pairs.ts): all the way between the two (a window of 0.5) when it moves `soft`
+ * px of the 960 px frame or less, over a narrower part of the way the more it moves, and not at all
+ * (a cut) from `cutFrom` px. At rest the walk shows the nearest frame alone (src/motion/walk.ts).
+ * Only true neighbours blend: across a gap left by a frame still loading the nearest shows alone.
+ * Sets of `denseFrom` frames or more are thinned on phones.
  */
-export const crossfade = { denseFrom: 150, window: 0.5 };
+export const crossfade = { denseFrom: 150, window: 0.5, soft: 6, cutFrom: 32 };
 
 /**
- * How the frames are loaded (src/motion/walk.ts). Only the frames within `window` of where the walk
- * is are kept decoded; the others are let go and fetched again (from the browser's cache) when the
- * walk comes back to them. Every `anchorEvery`-th frame stays, so a jump always has a frame close
- * by. On phones (screens under `phoneWidth` px) a dense set uses every `phoneStride`-th frame.
- * Nothing is fetched before the page has loaded and painted.
+ * The fade window between two frames `from` and `to` of a set (fractions for in-between frames): by
+ * how far the picture moves over that stretch. Sets without a motion map fade all the way.
+ */
+export function pairWindow({ count }: Sequence, from: number, to: number) {
+  if (pairMotion.length !== count - 1 || to <= from) return crossfade.window;
+  let moved = 0;
+  for (let i = Math.floor(from); i < Math.ceil(to) && i < pairMotion.length; i++) {
+    // The share of pair i that lies between the two
+    moved += pairMotion[i] * (Math.min(to, i + 1) - Math.max(from, i));
+  }
+  if (moved >= crossfade.cutFrom) return 0;
+  return Math.min(crossfade.window, (crossfade.window * crossfade.soft) / Math.max(moved, 1e-6));
+}
+
+/**
+ * How the frames are loaded (src/motion/walk.ts, src/motion/frames.worker.ts), in two parts.
+ *
+ * The files: after the page has loaded and painted, and when it is quiet, a worker fetches every
+ * frame of the set in use, `fetchers` at a time (fewer on a phone), at low priority, from where the
+ * walk is outward. It keeps their compressed bytes in memory and in the Cache API (`cache`, one
+ * cache per name, the frames' addresses carrying the render), so a return visit needs no network.
+ * To save data only the frames the walk comes to are fetched.
+ *
+ * The pictures: only the frames within `window` of where the walk is are kept decoded (from the
+ * bytes in memory, in milliseconds), or while it moves `ahead` in front and `behind` behind, and
+ * every `anchorEvery`-th one, so a jump always has a frame close by. On phones (screens under
+ * `phoneWidth` px) a dense set uses every `phoneStride`-th frame; so do slow connections (below 4G)
+ * and saving data.
  */
 export const loading = {
   window: 24,
@@ -32,11 +72,11 @@ export const loading = {
   phoneWidth: 768,
   ahead: 40,
   behind: 8,
+  fetchers: 6,
+  phoneFetchers: 4,
+  decoders: 4,
+  cache: 'walk-frames',
 };
-
-/** The fade window for a set of `count` frames. */
-export const fadeWindow = (count: number) =>
-  count >= crossfade.denseFrom ? crossfade.window : 0.5;
 
 /**
  * Where the panels change colour with the walk (0 to 1 of the walk, so they follow the frame
@@ -66,8 +106,23 @@ export const scenes: Record<SceneId, { from: number; to: number }> = {
   pitch: { from: 0.5, to: 1 },
 };
 
-export const frameUrl = ({ path, pad, ext }: Sequence, i: number) =>
+/** Where a frame's file is in public/. */
+export const framePath = ({ path, pad, ext }: Sequence, i: number) =>
   `${path}${String(i).padStart(pad, '0')}.${ext}`;
+
+/**
+ * A frame's address: its file and the render it is from, so it can be cached for good (the
+ * /journey/ files are served immutable, next.config.ts). A fraction is an in-between frame.
+ */
+export function frameUrl(sequence: Sequence, at: number) {
+  const { between, rev, pad, ext } = sequence;
+  const whole = Math.floor(at);
+  if (between && at !== whole) {
+    const k = Math.round((at - whole) * between.factor);
+    return `${between.path}${String(whole).padStart(pad, '0')}-${k}.${ext}?v=${rev}`;
+  }
+  return `${framePath(sequence, at)}?v=${rev}`;
+}
 
 export const frameAt = ({ count }: Sequence, progress: number) =>
   Math.round(progress * (count - 1));

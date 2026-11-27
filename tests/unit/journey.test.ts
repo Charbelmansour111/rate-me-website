@@ -3,17 +3,20 @@ import { describe, expect, it } from 'vitest';
 
 import {
   crossfade,
-  fadeWindow,
   frameAt,
+  framePath,
   frameUrl,
   journey,
   loading,
+  pairWindow,
   sceneAt,
   scenes,
   stillAt,
 } from '@/config/journey.config';
 import { hasFrames } from '@/lib/journey-files';
-import { blend, frameList, nearest, shapeFor, strideFor, wanted } from '@/motion/walk';
+import { blend, covered, frameList, nearest, shapeFor, strideFor, wanted } from '@/motion/walk';
+import { betweenList, outward } from '@/motion/walk-frames';
+import { pairMotion } from '@/config/walk-pairs';
 
 const { landscape, portrait } = journey;
 
@@ -47,7 +50,14 @@ describe('the walk', () => {
         count - 1,
       ]);
     }
-    expect(frameUrl(landscape, 7)).toBe('/journey/seq/f007.webp');
+    expect(framePath(landscape, 7)).toBe('/journey/seq/f007.webp');
+    // The address carries the render, so it can be cached for good
+    expect(frameUrl(landscape, 7)).toBe(`/journey/seq/f007.webp?v=${landscape.rev}`);
+    // In-between frames (tier 2) are numbered after the frame before them
+    const tiered = { ...landscape, between: { path: '/journey/mid/f', factor: 3 } };
+    expect(frameUrl(tiered, 7 + 1 / 3)).toBe(`/journey/mid/f007-1.webp?v=${landscape.rev}`);
+    expect(frameUrl(tiered, 7 + 2 / 3)).toBe(`/journey/mid/f007-2.webp?v=${landscape.rev}`);
+    expect(frameUrl(tiered, 8)).toBe(`/journey/seq/f008.webp?v=${landscape.rev}`);
   });
   it('has scenes that follow on from 0 to 1', () => {
     let end = 0;
@@ -68,6 +78,8 @@ describe('the walk', () => {
     expect(strideFor(dense, { phone: false, saveData: false })).toBe(1);
     expect(strideFor(dense, { phone: true, saveData: false })).toBe(loading.phoneStride);
     expect(strideFor(dense, { phone: false, saveData: true })).toBe(2);
+    // Below 4G: the thinned set, as on a phone
+    expect(strideFor(dense, { phone: false, saveData: false, slow: true })).toBe(2);
     // A short set is never thinned on a phone: its frames are already far apart
     expect(strideFor({ ...landscape, count: 48 }, { phone: true, saveData: false })).toBe(1);
     expect(frameList(dense)).toHaveLength(381);
@@ -115,11 +127,18 @@ describe('the walk', () => {
     });
   });
   it('blends neighbours by the fraction, like film, and never across a gap', () => {
-    // All the way: the upper frame shows by how far along it is (WEBSITE 17)
+    // A window of 0.5: the upper frame shows by how far along it is (WEBSITE 17)
     expect(crossfade.window).toBe(0.5);
-    expect(fadeWindow(crossfade.denseFrom)).toBe(0.5);
-    expect(blend([10, 11], 10.25, fadeWindow(381), 1)!.alpha).toBeCloseTo(0.25);
-    expect(blend([10, 12], 11.5, fadeWindow(381), 2)!.alpha).toBeCloseTo(0.75);
+    expect(blend([10, 11], 10.25, 0.5, 1)!.alpha).toBeCloseTo(0.25);
+    expect(blend([10, 12], 11.5, 0.5, 2)!.alpha).toBeCloseTo(0.75);
+    // A window of 0: a cut at the midpoint, never two at once
+    expect(blend([10, 11], 10.49, 0, 1)!.alpha).toBe(0);
+    expect(blend([10, 11], 10.5, 0, 1)!.alpha).toBe(1);
+    // Per pair: the window is asked of the two frames either side
+    expect(
+      blend([10, 11], 10.5, (a, b) => (a === 10 && b === 11 ? 0.1 : 0.5), 1)!.alpha,
+    ).toBeCloseTo(0.5);
+    expect(blend([10, 11], 10.42, () => 0.1, 1)!.alpha).toBeCloseTo(0.1);
     // A frame still loading between them: the nearest shows alone, no double image, no blank
     expect(blend([10, 14], 11, 0.5, 2)).toEqual({ from: 10, to: 10, alpha: 0 });
     expect(blend([10, 14], 13, 0.5, 2)).toEqual({ from: 14, to: 14, alpha: 0 });
@@ -139,5 +158,50 @@ describe('the walk', () => {
     expect(back).not.toContain(200 - ahead - 1);
     expect(back).toContain(200 + behind);
     expect(back).not.toContain(200 + behind + 1);
+  });
+  it('fades each pair by how far its picture moves: a cut where it moves a lot (WEBSITE 22)', () => {
+    // A motion map for every pair of the set, from scripts/walk-pairs.mjs
+    expect(pairMotion).toHaveLength(landscape.count - 1);
+    const calm = pairMotion.indexOf(Math.min(...pairMotion));
+    const far = pairMotion.findIndex((px) => px >= crossfade.cutFrom);
+    expect(far).toBeGreaterThanOrEqual(0);
+    // Hardly moving (a tenth of the calmest pair): all the way; moving far: a cut; between,
+    // narrower the more it moves
+    expect(pairWindow(landscape, calm, calm + 0.1)).toBe(0.5);
+    expect(pairWindow(landscape, far, far + 1)).toBe(0);
+    const mid = pairMotion.findIndex((px) => px > 12 && px < 20);
+    const w = pairWindow(landscape, mid, mid + 1);
+    expect(w).toBeCloseTo((0.5 * crossfade.soft) / pairMotion[mid]);
+    expect(w).toBeLessThan(0.25);
+    // Two frames apart (a phone): the motion of both pairs, so a narrower window or a cut
+    expect(pairWindow(landscape, mid, mid + 2)).toBeLessThanOrEqual(w);
+    // Half a pair (an in-between frame): half its motion
+    expect(pairWindow(landscape, mid, mid + 0.5)).toBeCloseTo(Math.min(0.5, 2 * w));
+    // A set without a map fades all the way
+    expect(pairWindow(journey.portrait, 3, 4)).toBe(0.5);
+  });
+  it('lets the walk move only where a decoded frame is near', () => {
+    expect(covered([10, 11, 12], 12.4, 1)).toBe(true);
+    expect(covered([10, 11, 12], 13.5, 1)).toBe(false);
+    expect(covered([], 3, 1)).toBe(false);
+  });
+  it('thins the frames it decodes ahead of a fast walk, and reaches further', () => {
+    const all = frameList({ ...landscape, count: 381 });
+    const fast = wanted(all, 100, 1, 4).filter(
+      (i) => i > 101 && i < 380 && i % loading.anchorEvery !== 0,
+    );
+    // Every fourth frame, as far as 20 screen frames at that speed
+    expect(fast.every((i) => i % 4 === 0)).toBe(true);
+    expect(Math.max(...fast)).toBeGreaterThanOrEqual(100 + loading.ahead);
+    expect(Math.max(...fast)).toBeLessThanOrEqual(180);
+    // At a hand's pace, every frame
+    expect(wanted(all, 100, 1, 1)).toEqual(wanted(all, 100, 1));
+  });
+  it('fetches the whole set in the background from where the walk is, outward', () => {
+    expect(outward([0, 1, 2, 3, 4, 5], 3)).toEqual([3, 2, 4, 1, 5, 0]);
+    // In-between frames (tier 2): none until the set has them
+    expect(betweenList(landscape)).toEqual([]);
+    const tiered = { ...landscape, count: 3, between: { path: '/x/f', factor: 2 } };
+    expect(betweenList(tiered)).toEqual([0.5, 1.5]);
   });
 });
