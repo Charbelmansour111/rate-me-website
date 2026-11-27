@@ -1,6 +1,7 @@
 import { startHero } from './hero';
 import { startTactics } from './tactics';
 import { startWalk } from './walk';
+import { gateWalk } from './walk-gate';
 
 /** What says someone is using the page: until then nothing needs GSAP or smooth scrolling. */
 const FIRST_USE = ['scroll', 'wheel', 'pointermove', 'pointerdown', 'touchstart', 'keydown'];
@@ -29,6 +30,8 @@ function whenStill(start: () => void, signal: AbortSignal) {
 export function startMotion(signal: AbortSignal) {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-walk]');
   const walk = canvas ? startWalk(canvas, signal) : undefined;
+  // A first visit waits a moment for the frames (src/motion/walk-gate.ts)
+  if (walk) gateWalk(walk, signal);
   const hero = document.querySelector<HTMLElement>('[data-hero-drill]');
   if (hero) startHero(hero, signal);
   const tactics = document.querySelector<HTMLElement>('[data-tactics]');

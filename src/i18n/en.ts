@@ -33,6 +33,11 @@ export const en = {
     sub: "We're building a community of coaches in Lebanon first, then the Middle East.",
     join: 'Join the coaches community',
     scroll: 'Scroll',
+    gate: {
+      title: 'Setting up the walk to the pitch',
+      label: 'Loading the walk',
+      skip: 'Skip the wait',
+    },
     drill: {
       plays: ['Rondo', 'Wide overlap', 'Through ball', 'Switch of play', 'Press and win'],
       pause: 'Pause',
