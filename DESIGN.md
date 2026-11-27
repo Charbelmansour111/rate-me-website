@@ -306,10 +306,11 @@ app itself in the site's phone frame (WEBSITE 19): a request received in front, 
 Channel with a request sent behind it, offset to the far side and inside its column. "Example" and
 what it is go under the phones; on `/ar` also "التطبيق معروض بالإنجليزية".
 
-The FAQ's left column holds a short play in the tactics board's language (`faq-play.tsx`): chalk
-lines, a curved orange pass, a white run into the box ending on an orange "?" node (mirrored to
-"؟" in Arabic). It is drawn in stroke by stroke with the tactics paint's code
-(`src/motion/brush.ts`), simply drawn under reduced motion, and left out on phones.
+The FAQ's left column holds a stadium scoreboard (`faq-play.tsx`, WEBSITE 20): white strokes, a
+row of lit orange lamps, an orange "?" where the score goes (mirrored to "؟" in Arabic, no digits).
+It is not a pitch: the tactics section owns the board. It is drawn in stroke by stroke with the
+tactics paint's code (`src/motion/brush.ts`), simply drawn under reduced motion, and left out on
+phones.
 
 The walk fades into the footer: no border, a gradient from transparent to the footer's own colour
 over the last stretch above it, at every width.

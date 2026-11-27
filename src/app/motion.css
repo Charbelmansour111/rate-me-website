@@ -157,7 +157,7 @@ html.lenis {
 }
 
 /* --- FAQ (src/components/faq-accordion.tsx) --- */
-/* The play in the empty column under the heading (src/components/faq-play.tsx): only where the
+/* The scoreboard in the empty column under the heading (src/components/faq-play.tsx): only where the
    column stands beside the questions; on a phone it would only push them down */
 .faq-play {
   display: none;
@@ -179,34 +179,15 @@ html.lenis {
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
 }
-.faq-play-chalk {
-  stroke: var(--muted);
-  opacity: 0.55;
-}
-.faq-play-pass {
-  stroke: var(--brand-orange);
-}
-.faq-play-run {
+.faq-play-line {
   stroke: var(--text);
 }
-.faq-play-ours {
-  fill: var(--text);
-}
-.faq-play-them circle {
-  fill: var(--page);
-  stroke: var(--text);
-  stroke-width: 3;
-}
-.faq-play-them path {
-  stroke: var(--text);
-  stroke-width: 3;
-}
-.faq-play-node {
+.faq-play-lamps {
   fill: var(--brand-orange);
 }
 .faq-play-mark {
-  fill: var(--brand-black);
-  font-size: 26px;
+  fill: var(--brand-orange);
+  font-size: 78px;
   font-weight: 700;
 }
 .faq-item {
