@@ -23,6 +23,11 @@ export type FeatureCard = {
   alt: string;
   src: string | null;
   soon: string | null;
+  /** The dialog's bigger picture, and what it shows. */
+  detail: string | null;
+  detailAlt: string;
+  /** "Example" on app screens with sample data. */
+  example: string | null;
 };
 type Controls = Dictionary['features']['controls'];
 
@@ -349,16 +354,18 @@ function FeatureDialog({
               />
             </svg>
           </button>
-          <div className="feature-dialog-photo">
-            {card.src && (
+          <div className="feature-dialog-photo" data-screen={card.example ? '' : undefined}>
+            {card.detail && (
               <Image
-                src={card.src}
-                alt={card.alt}
+                src={card.detail}
+                alt={card.detailAlt}
                 fill
                 sizes="(min-width: 48rem) 26rem, 90vw"
-                className="object-cover"
+                // An app screen is shown whole, on the app's white; a photo fills its frame
+                className={card.example ? 'object-contain' : 'object-cover'}
               />
             )}
+            {card.example && <span className="feature-example">{card.example}</span>}
           </div>
           <div className="feature-dialog-text">
             {card.soon && <span className="feature-soon static">{card.soon}</span>}

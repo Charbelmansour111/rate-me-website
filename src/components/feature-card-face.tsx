@@ -20,6 +20,7 @@ export function FeatureCardFace({
     alt: string;
     src: string | null;
     soon: string | null;
+    example: string | null;
   };
   icon: ReactNode;
   more: string;
@@ -39,6 +40,7 @@ export function FeatureCardFace({
         )}
         <BoxCorner />
         {c.soon && <span className="feature-soon">{c.soon}</span>}
+        {c.example && <span className="feature-example">{c.example}</span>}
       </span>
       <span className="feature-body">
         <span className="feature-icon">{icon}</span>

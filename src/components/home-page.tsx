@@ -4,7 +4,7 @@ import { getDictionary, localePath, type Locale } from '@/i18n';
 import { publicFile } from '@/lib/public-file';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
-import { CoachPhotos, MatchRequestCard } from './community-extras';
+import { CoachPhotos, MatchRequestCard, PlayersPhoto } from './community-extras';
 import { FaqAccordion } from './faq-accordion';
 import { CtaSplit } from './cta-split';
 import { FeatureCardFace } from './feature-card-face';
@@ -22,11 +22,15 @@ import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
 import { TacticsSection } from './tactics-section';
 
+/** The feature cards whose pictures are the app's own screens, with sample data. */
+const SCREENSHOTS = new Set(['squad', 'parentReport', 'matchRequests']);
+
 /** A walk from the locker room (top) to the pitch (end), with the sections as panels in front. */
 export function HomePage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   /** What each feature's photo shows, where it has one. */
-  const photos: Partial<Record<string, { title: string; photo?: string }>> = t.features.items;
+  const photos: Partial<Record<string, { title: string; photo?: string; detail?: string }>> =
+    t.features.items;
   const cards = features.map(({ id, released }) => ({
     id,
     title: t.features.items[id].title,
@@ -34,7 +38,12 @@ export function HomePage({ locale }: { locale: Locale }) {
     bullets: t.features.items[id].bullets,
     alt: photos[id]?.photo ?? '',
     src: publicFile('features', id),
+    // The dialog's bigger picture: its own file where there is one (an app screen), else the card's
+    detail: publicFile('features', `${id}-detail`) ?? publicFile('features', id),
+    detailAlt: photos[id]?.detail ?? photos[id]?.photo ?? '',
     soon: released ? null : t.features.soon,
+    // App screens with sample data say so
+    example: SCREENSHOTS.has(id) ? t.features.example : null,
   }));
   return (
     <>
@@ -205,6 +214,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                       </a>
                     }
                   />
+                  <PlayersPhoto alt={t.community.players} />
                 </div>
                 <div>
                   <MatchRequestCard t={t.community} />

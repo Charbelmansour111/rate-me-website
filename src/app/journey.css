@@ -775,6 +775,25 @@ html:not([data-js]) .phone {
   font-size: 0.875rem;
   font-weight: 600;
 }
+.feature-example {
+  position: absolute;
+  bottom: 0.6rem;
+  inset-inline-start: 0.6rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: #0b0b0c;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+:lang(ar) .feature-example {
+  letter-spacing: 0;
+}
+/* An app screen in the dialog: whole, on the app's own white */
+.feature-dialog-photo[data-screen] {
+  background: #fff;
+}
 .feature-soon.static {
   position: static;
   display: inline-block;
