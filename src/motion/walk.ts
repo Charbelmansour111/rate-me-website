@@ -132,6 +132,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     root.dataset.journey = 'off';
     return;
   }
+  // The frames are drawn at their own size (CSS scales the canvas on the compositor): the best
+  // filter, should a frame ever be drawn scaled (a turn to a set of another size)
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   const saveData = Boolean(connection?.saveData);
   /** Nothing is fetched until the page has loaded and painted (see `afterPaint` below). */

@@ -17,7 +17,10 @@ const TIP = 0.55;
 export function startChrome(signal: AbortSignal) {
   const root = document.documentElement;
   root.dataset.motion = 'on';
-  const bar = document.querySelector<HTMLElement>('.site-bar');
+  // The progress line itself, not a custom property on the header: a property set on the bar
+  // restyles all of the header on every scrolled frame (WEBSITE 19); a transform on the line is
+  // drawn by the compositor alone
+  const bar = document.querySelector<HTMLElement>('.site-bar-progress');
   const dim = document.querySelector<HTMLElement>('[data-walk-dim]');
   const line = startRunningLine();
 
@@ -26,7 +29,7 @@ export function startChrome(signal: AbortSignal) {
     end: 'max',
     onUpdate: (self) => {
       const p = self.progress;
-      bar?.style.setProperty('--page-progress', p.toFixed(4));
+      if (bar) bar.style.transform = `scaleX(${p.toFixed(4)})`;
       if (dim) dim.style.opacity = String(DIM * Math.max(0, (p - (1 - END)) / END));
       line?.(self.scroll());
     },
@@ -38,7 +41,7 @@ export function startChrome(signal: AbortSignal) {
     page.kill();
     footer?.kill();
     delete root.dataset.motion;
-    bar?.style.removeProperty('--page-progress');
+    bar?.style.removeProperty('transform');
     if (dim) dim.style.removeProperty('opacity');
   });
 }

@@ -110,7 +110,9 @@ test.describe('the header', () => {
     await scrollToShare(page, 0.5);
     await expect(bar).not.toHaveAttribute('data-top');
     const progress = () =>
-      bar.evaluate((el) => Number(getComputedStyle(el).getPropertyValue('--page-progress')));
+      bar
+        .locator('.site-bar-progress')
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
     expect(await progress()).toBeGreaterThan(0.45);
     expect(await progress()).toBeLessThan(0.55);
     await scrollToShare(page, 1);

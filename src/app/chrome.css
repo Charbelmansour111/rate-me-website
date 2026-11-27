@@ -150,7 +150,7 @@
   height: 2px;
   border-radius: 2px;
   background: var(--brand-orange);
-  transform: scaleX(var(--page-progress, 0));
+  transform: scaleX(0);
   transform-origin: left;
 }
 [dir='rtl'] .site-bar-progress {
@@ -239,12 +239,22 @@
   --accent-text: var(--st-accent-text);
   position: relative;
   z-index: 1;
-  border-top: 1px solid var(--st-panel-edge);
   background: var(--page);
   color: var(--text);
 }
 .footer-pitch-wrap {
   position: relative;
+}
+/* No seam where the walk meets the footer (WEBSITE 19): the walk fades into the footer's own
+   colour over the last stretch above it, at every width */
+.site-footer::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  inset-inline: 0;
+  height: clamp(5rem, 12vw, 14rem);
+  background: linear-gradient(to bottom, transparent, var(--page));
+  pointer-events: none;
 }
 /* The turf photo behind the drawn pitch: faint, faded at its edges, never under text */
 .footer-photo {
