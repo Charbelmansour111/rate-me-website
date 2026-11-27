@@ -25,14 +25,14 @@ photo's page.
 | `public/features/calendar.webp`      | Alliance Football Club             | https://unsplash.com/photos/g8cK31aYH3E | 16:10, below the shorts (their club name) and away from the child: legs, boots, a cone, 1200 px, black and white                                                                                          |
 | `public/community/players.webp`      | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                             | 4:3, the lower half, 960 px, colour                                                                                                                                                                       |
 | `public/footer/pitch.webp`           | Photo by Omar Ramadan on Unsplash  | htGM-eEzsdk                             | the turf band only (no faces), 1600 px, colour                                                                                                                                                            |
-| `public/features/matchRequests.webp` | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw | 16:10, the net against the sky, 1200 px, black and white (the Match requests card)                                                                                                                        |
+| `public/features/matchRequests.webp` | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw | 16:10, the net against the sky, 1200 px, colour (the Match requests card)                                                                                                                                 |
 | `public/features/tournaments.webp`   | Sammy Swae                         | https://unsplash.com/photos/cneBYhGBUtM | 16:10, the squad and the trophy, 1200 px, black and white; every mark under a soft round blur (the arch's tournament name and logos, the trophy's plate, the sponsor and crests on the shirts and shorts) |
-| `public/features/assistant.webp`     | Jeffrey F Lin                      | https://unsplash.com/photos/pSHpFB5WNUE | 16:10, the training sheet in two hands only (no faces, no logos), 740 px, black and white                                                                                                                 |
+| `public/features/assistant.webp`     | Jeffrey F Lin                      | https://unsplash.com/photos/pSHpFB5WNUE | 16:10, the training sheet in two hands only (no faces, no logos), 740 px, colour                                                                                                                          |
 
 The colour rule (WEBSITE 17, WEBSITE 19): a photo where a face is visible is black and white, in
 the file itself. A photo with no visible face (from behind, legs, boots, the ball, turf, cones, a
-goal, a net, equipment) stays in colour, except on the "What you get" cards, where every photo is
-black and white so the cards read as one set. `src/config/photos.ts` lists every photo with
+goal, a net, equipment) has its own tone: in colour, except on the "What you get" cards, where most
+are black and white (WEBSITE 19) and the goal net and the training sheet are in colour (WEBSITE 20). `src/config/photos.ts` lists every photo with
 `faces` and `tone` (`grey` or `colour`), and `tests/unit/photos.test.ts` checks each file against
 it. App screens are not photos and stay as the app shows them. Every file is under 120 KB and
 loads lazily. The app's own screens are listed under "App screens (WEBSITE 18)" below. The
