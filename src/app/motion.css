@@ -310,8 +310,8 @@ html:not([data-js]) .faq-panel > * {
 }
 .tactics-marker {
   position: absolute;
-  top: calc(var(--i) * 100% / 3);
-  height: calc(100% / 3);
+  top: calc(var(--i) * 40vh);
+  height: 40vh;
   width: 1px;
   pointer-events: none;
 }
@@ -360,6 +360,8 @@ html:not([data-js]) .tactics-try + p {
   display: none;
 }
 .tactics-role-lines > * {
+/* Three steps, 40vh apart from the section's top: the first starts a quarter of a screen after the
+   section comes in (src/motion/tactics.ts watches a line at 75% of the screen) */
   opacity: 0;
   transition: opacity 300ms;
 }
@@ -421,7 +423,7 @@ html:not([data-js]) .tactics-try + p {
   /* Pinned on large screens. data-js is set before paint, so nothing shifts later. */
   @media (min-width: 64rem) and (min-height: 44rem) {
     [data-js] .tactics {
-      height: 320vh;
+      height: 170vh;
     }
     [data-js] .tactics-pin {
       position: sticky;
@@ -472,6 +474,8 @@ html:not([data-js]) .tactics-try + p {
     .tactics-ball {
       transition: opacity 400ms;
     }
+    /* As long as the steps need: the last starts as the pin takes hold, then the play runs for
+       the rest of the pinned scroll (about 0.8 of a screen). No stretch where nothing moves. */
     .tactics-trail,
     .tactics-arrow,
     .tactics-ring,

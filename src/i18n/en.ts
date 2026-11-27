@@ -275,8 +275,8 @@ export const en = {
     description:
       'Illustration: on a half pitch, four attackers pass the ball along curved lines from one side to the other. Each player with a role carries its letter. Of the three defenders, one presses the player on the ball (P), one covers behind him (C) and one marks an attacker (M). Two attackers run (R): one round the outside and one behind the defence.',
     families: {
-      attack: 'When we have the ball',
-      defence: 'When they have the ball',
+      attack: 'With ball',
+      defence: 'Without ball',
     },
     roles: {
       smart: 'Smart',
@@ -303,27 +303,18 @@ export const en = {
         intercept: 'Intercept',
       },
       captions: {
-        smart: 'Smart: the app moves each defender with the ball.',
-        press: 'Press: the nearest defenders step up to the player on the ball.',
-        cover: 'Cover: the defenders drop into a tight block in front of goal.',
-        mark: 'Mark: each defender stays with one attacker.',
-        zone: 'Zone: each defender guards an area and steps in when the ball comes into it.',
-        intercept: 'Intercept: a defender steps into the passing lane and cuts it.',
+        smart: 'Smart: the app moves them.',
+        press: 'Press: close down the ball.',
+        cover: 'Cover: drop into a block.',
+        mark: 'Mark: one attacker each.',
+        zone: 'Zone: guard an area.',
+        intercept: 'Intercept: cut the pass.',
       },
     },
     steps: [
-      {
-        title: 'Set the starting positions',
-        text: 'Put your players and the opponents where the drill begins.',
-      },
-      {
-        title: 'Give each player a role',
-        text: 'One for when we have the ball and one for when they have it, from the roles below. Smart reads the play on its own.',
-      },
-      {
-        title: 'Hit record and watch it play',
-        text: 'Pass the ball and see the defenders shift with it.',
-      },
+      { title: 'Place the players', text: 'Your team and the opponents, where it starts.' },
+      { title: 'Give each a role', text: 'One with the ball, one without.' },
+      { title: 'Press play', text: 'The defenders shift as the ball moves.' },
     ],
   },
   community: {

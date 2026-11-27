@@ -233,7 +233,8 @@ export function startTactics(root: HTMLElement, signal: AbortSignal) {
   );
   seen.observe(stage);
 
-  // Pinned: three invisible markers down the track choose the step.
+  // Pinned: three invisible markers down the track choose the step, as each crosses a line at 75%
+  // of the screen (src/app/motion.css places them 40vh apart).
   const markers = [...root.querySelectorAll('[data-marker]')];
   const scroll = new IntersectionObserver(
     (entries) => {
@@ -242,7 +243,7 @@ export function startTactics(root: HTMLElement, signal: AbortSignal) {
         if (entry.isIntersecting) go(markers.indexOf(entry.target));
       }
     },
-    { rootMargin: '-50% 0px -49% 0px' },
+    { rootMargin: '-75% 0px -24% 0px' },
   );
   for (const marker of markers) scroll.observe(marker);
 

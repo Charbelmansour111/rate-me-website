@@ -117,14 +117,21 @@ test('the steps follow the scroll (pinned) or play by themselves (phone)', async
     await section.locator('[data-stage]').scrollIntoViewIfNeeded();
     await expect(section).toHaveAttribute('data-step', '2', { timeout: 10_000 });
   } else {
-    const { top, height } = await section.evaluate((el) => ({
+    const { top, vh, height } = await section.evaluate((el) => ({
       top: el.getBoundingClientRect().top + scrollY,
+      vh: innerHeight,
       height: el.clientHeight,
     }));
-    for (const [step, part] of [0.2, 0.5, 0.8].entries()) {
+    // No dead scroll (WEBSITE 17): the pin is as long as its steps need, under two screens
+    expect(height).toBeLessThanOrEqual(vh * 1.75);
+    // The first step starts within a quarter of a screen of the section coming in
+    await page.evaluate((y) => scrollTo({ top: y, behavior: 'instant' }), top - vh * 0.74);
+    await expect(section).toHaveAttribute('data-step', '0');
+    // Then one step every 40% of a screen (markers 40vh apart, read at 75% of the screen)
+    for (const step of [1, 2]) {
       await page.evaluate(
-        (y) => scrollTo({ top: y - innerHeight / 2, behavior: 'instant' }),
-        top + height * part,
+        (y) => scrollTo({ top: y, behavior: 'instant' }),
+        top + (step * 0.4 + 0.2) * vh - 0.75 * vh,
       );
       await expect(section).toHaveAttribute('data-step', String(step));
     }
