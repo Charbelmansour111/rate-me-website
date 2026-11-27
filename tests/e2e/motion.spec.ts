@@ -1100,7 +1100,8 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
       .nth(i)
       .locator('.phone')
       .evaluate((el) => el.getBoundingClientRect().width);
-  expect(await width(at)).toBeGreaterThan(await width(at + 1));
+  // The front one grows over a short transition: wait for it to settle
+  await expect.poll(async () => (await width(at)) - (await width(at + 1))).toBeGreaterThan(1);
   if (isMobile) {
     // Part of the next screen shows
     const next = (await slides
