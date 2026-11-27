@@ -24,9 +24,8 @@ colors:
   danger-light: '#b3261e'
   danger-dark: '#ffb4ab'
   phone-black: '#17171a'
-  phone-orange-rim: '#ffa36b'
-  phone-white: '#f3eee6'
-  phone-white-rim: '#d6cfc2'
+  phone-rim: '#3d3d44'
+  paper-ground: '#ebe5da'
   card-from: '#1c1b29'
   card-to: '#3a1606'
   card-accent: '#ff7a1a'
@@ -296,7 +295,12 @@ the whole section fits one screen at 1440 x 900 and 1280 x 720. On a computer th
 content's edges (whole cards, a clear start and end). Swipe, drag, arrows, dots and arrow keys,
 mirrored in Arabic; at either end its arrow dims (`aria-disabled`, still reachable), the dots fill
 up to the last card in view and a counter says "7 of 7". A button over each card opens it in a
-dialog (bigger photo, three facts from the app, Pre-register).
+dialog (bigger photo, three facts from the app, Pre-register). Three cards show the app's own
+screens (`src/config/app-shots.ts`): a 16:10 face cut so it reads at card size, "Example" in the
+card's body level with the icon (never on the picture), and in the dialog the whole screen in the
+phone frame, or, for the monthly report (a PDF), its two pages as white sheets on `paper-ground`,
+slightly turned, captioned "Monthly report (PDF)". On `/ar` the captions add "التطبيق معروض
+بالإنجليزية": the layout mirrors, the screenshots do not.
 
 The community section shows three portraits at most, captioned "Photos for illustration", and the
 app's match request as the app draws it (team with its shield tile, status chip, the proposal,
@@ -326,10 +330,12 @@ Cookie settings and the language switch.
 ### Inside the app
 
 Three phones a view, sized from the screen's height so each is under 72% of it (`31vh` wide, at
-most 340px), so three fit whole at 1440 x 900 and 1280 x 720: black, orange in the middle
-(strongest glow), white, by place. Each phone: a thin bezel in its colour, side keys, a status bar with the dynamic
-island over the screenshot, a soft reflection, a ground shadow. Where the app shows its tab bar
-(the calendar, the player's home), the app's own bar is drawn over the screenshot's: Ionicons,
+most 340px), so three fit whole at 1440 x 900 and 1280 x 720, the middle one with the strongest
+(orange) glow. One phone frame everywhere (`phone-frame.tsx`, WEBSITE 18): a thin ink bezel, side
+keys, a drawn status bar (9:41, the island, signal, battery) over the screenshot, a soft reflection,
+a ground shadow. The coach view shows the app's clean demo screens (calendar, roles, a received
+match request), which carry their own tab bar. On older captures (the player's home) the app's own
+bar is drawn over the screenshot's: Ionicons,
 white, `#dbdbdb` hairline, the chosen tab in `#b33f00`. A button over each phone opens a dialog
 with what its screen does. The player view ends on the app's shield card (rate-me: `shield-card.tsx`), shown whole and
 marked as an example: the crest with its inner outline in the tier's gradient, the overall and
