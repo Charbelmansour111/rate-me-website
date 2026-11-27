@@ -319,7 +319,8 @@ menu button that opens the rest in a dialog.
 
 ### Footer
 
-On the field's colours, with half a pitch drawn across its top. The contact block, Privacy, Terms,
+On the field's colours, with half a pitch drawn across its top over a faint black-and-white band
+of turf (faded at its edges, never under text). The contact block, Privacy, Terms,
 Cookie settings and the language switch.
 
 ### Inside the app
@@ -373,6 +374,10 @@ screen readers.
 - Check each new colour pair in the palette or stage test and each new string in Arabic, right to
   left.
 - Show real app screens and real, licensed photographs, credited in `docs/PHOTO-CREDITS.md`.
+- Keep every photograph black and white (`tests/unit/photos.test.ts` checks the files); app
+  screens stay in colour and carry an "Example" tag where they show sample data.
+- Use stock photos for atmosphere only (the community, the footer's turf), with no faces, logos or
+  names, never as our coach, player or club.
 
 ### Don't
 
