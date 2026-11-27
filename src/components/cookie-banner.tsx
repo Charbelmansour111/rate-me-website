@@ -9,53 +9,95 @@ const KEY = 'analytics-consent';
 /** Sent by the footer's "Cookie settings" to show the choice again. */
 export const OPEN_COOKIES = 'rateme:cookies';
 
+/** After the first paint, when the page is quiet, and never over the first visit's intro. */
+function whenClear(show: () => void) {
+  let observer: MutationObserver | undefined;
+  const root = document.documentElement;
+  const check = () => {
+    if (root.dataset.walkGate === 'open') return false;
+    observer?.disconnect();
+    show();
+    return true;
+  };
+  const start = () => {
+    if (check()) return;
+    observer = new MutationObserver(check);
+    observer.observe(root, { attributes: true, attributeFilter: ['data-walk-gate'] });
+  };
+  const hasIdle = typeof requestIdleCallback === 'function';
+  const idle = hasIdle
+    ? requestIdleCallback(start, { timeout: 2500 })
+    : window.setTimeout(start, 800);
+  return () => {
+    if (hasIdle) cancelIdleCallback(idle as number);
+    else clearTimeout(idle);
+    observer?.disconnect();
+  };
+}
+
 /**
- * The only optional thing on the site is visitor statistics (cookie-free, src/config/site.ts:
- * analytics). They stay off until someone accepts here. Accept and Reject are the same size and
- * weight; the choice is kept in the browser and Cookie settings in the footer reopens it. When the
- * statistics are switched off on our side this renders nothing at all.
+ * The cookie choice (WEBSITE 25): a small bar at the bottom, on a first visit, once the page has
+ * painted and any intro has gone. The site keeps only what it needs in the browser (the theme
+ * chosen, the walk's pictures so it loads fast, this choice); the one optional thing is visitor
+ * statistics (cookie-free, src/config/site.ts: analytics), which run only after Accept, and only
+ * where they are switched on. "Essential only" and "Accept" are the same size and weight; the
+ * choice is kept in the browser, and Cookie settings in the footer opens it again.
  */
 export function CookieBanner({
   t,
   analytics,
+  privacyHref,
 }: {
   t: Dictionary['cookies'];
   analytics: { enabled: boolean; src: string; domain: string };
+  privacyHref: string;
 }) {
   const [choice, setChoice] = useState<'yes' | 'no' | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!analytics.enabled) return;
     // Read once the page is up: the server cannot know what this browser chose
-    const timer = setTimeout(() => {
-      const saved = localStorage.getItem(KEY);
+    const stop = whenClear(() => {
+      let saved: string | null = null;
+      try {
+        saved = localStorage.getItem(KEY);
+      } catch {
+        // Storage off: asked each visit, nothing optional runs
+      }
       if (saved === 'yes' || saved === 'no') setChoice(saved);
       else setOpen(true);
     });
     const reopen = () => setOpen(true);
     addEventListener(OPEN_COOKIES, reopen);
     return () => {
-      clearTimeout(timer);
+      stop();
       removeEventListener(OPEN_COOKIES, reopen);
     };
-  }, [analytics.enabled]);
+  }, []);
 
-  if (!analytics.enabled) return null;
   const decide = (value: 'yes' | 'no') => {
-    localStorage.setItem(KEY, value);
+    try {
+      localStorage.setItem(KEY, value);
+    } catch {
+      // Kept for this page only
+    }
     setChoice(value);
     setOpen(false);
   };
   return (
     <>
-      {choice === 'yes' && (
+      {analytics.enabled && choice === 'yes' && (
         <Script src={analytics.src} data-domain={analytics.domain} strategy="afterInteractive" />
       )}
       {open && (
-        <section aria-label={t.label} className="cookie-banner panel">
-          <p>{t.text}</p>
-          <div className="mt-4 grid grid-cols-2 gap-3">
+        <section aria-label={t.label} className="cookie-banner">
+          <p className="cookie-text">
+            {t.text}{' '}
+            <a href={privacyHref} className="cookie-link">
+              {t.privacy}
+            </a>
+          </p>
+          <div className="cookie-actions">
             <button type="button" className="btn btn-ghost" onClick={() => decide('no')}>
               {t.reject}
             </button>
@@ -69,9 +111,8 @@ export function CookieBanner({
   );
 }
 
-/** "Cookie settings" in the footer: only where there is a choice to make. */
-export function CookieSettingsButton({ label, enabled }: { label: string; enabled: boolean }) {
-  if (!enabled) return null;
+/** "Cookie settings" in the footer: the choice, again. */
+export function CookieSettingsButton({ label }: { label: string }) {
   return (
     <button
       type="button"

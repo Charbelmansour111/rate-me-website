@@ -52,8 +52,8 @@ export const legalEn: LegalTexts = {
         id: 'cookies',
         title: 'Cookies and analytics',
         text: [
-          'The website sets no tracking cookies. If you choose a theme, that choice is kept in your browser. If we turn on visitor statistics, we use a privacy-friendly tool without cookies that counts visits in total and does not follow you across sites.',
-          'Those statistics are the only optional part, and they are off until you accept them in the banner. Accept and Reject are the same size. Your choice is kept in your browser, and Cookie settings at the bottom of every page changes it. While statistics are switched off on our side, no banner appears and nothing optional runs.',
+          'The website sets no cookies. It keeps only what it needs in your browser: the theme, if you choose one; the pictures of the walk on the home page and a note that they are there, so the page loads fast and they are not downloaded again; and your cookie choice. None of it leaves your device or identifies you, and clearing your browser’s site data removes it.',
+          'If we turn on visitor statistics, we use a privacy-friendly tool without cookies that counts visits in total and does not follow you across sites. They are the only optional part, and they stay off until you choose Accept in the banner. Essential only and Accept are the same size. Your choice is kept in your browser, and Cookie settings at the bottom of every page changes it.',
         ],
       },
       {

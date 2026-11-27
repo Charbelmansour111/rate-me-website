@@ -417,14 +417,6 @@ html[data-walk-gate='open'] .intro {
 html[data-walk-gate='open'] .scroll-cue {
   visibility: hidden;
 }
-/* Held still under it from the first paint, before any script: the scrollbar's place stays kept,
-   so nothing moves sideways when it comes back */
-html:has(.intro) {
-  scrollbar-gutter: stable;
-}
-html[data-walk-gate='open'] {
-  overflow: hidden;
-}
 /* A faint pitch: the mark sits on its centre spot */
 .intro-pitch {
   position: absolute;

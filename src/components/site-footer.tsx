@@ -61,10 +61,7 @@ export function SiteFooter({ locale, path }: { locale: Locale; path: PagePath })
               </li>
             )}
             <li>
-              <CookieSettingsButton
-                label={t.footer.cookieSettings}
-                enabled={site.analytics.enabled}
-              />
+              <CookieSettingsButton label={t.footer.cookieSettings} />
             </li>
             {site.socials.map((social) => (
               <li key={social.name}>

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { site } from '@/config/site';
 import { THEME_SCRIPT } from '@/config/theme';
-import { getDictionary, type Locale } from '@/i18n';
+import { getDictionary, localePath, type Locale } from '@/i18n';
 
 import { CookieBanner } from './cookie-banner';
 
@@ -36,8 +36,12 @@ export function RootDocument({
           {t.a11y.skip}
         </a>
         {children}
-        {/* Visitor statistics, only after they are accepted */}
-        <CookieBanner t={t.cookies} analytics={site.analytics} />
+        {/* The cookie choice; visitor statistics only after they are accepted */}
+        <CookieBanner
+          t={t.cookies}
+          analytics={site.analytics}
+          privacyHref={`${localePath(locale, '/privacy')}#cookies`}
+        />
       </body>
     </html>
   );

@@ -4,19 +4,20 @@ const PORT = 3210;
 const baseURL = `http://localhost:${PORT}`;
 
 /**
- * Every test but the gate's own (tests/e2e/gate.spec.ts) opens the page as a return visit: the
- * walk's set noted as held before (src/motion/walk.ts), so no first-visit gate holds the scroll. The
- * cache itself is empty, so the frames still come in the usual way.
+ * Every test but the intro's and the cookie choice's own opens the page as a return visit: the
+ * walk's set noted as held before (src/motion/walk.ts), so no first-visit intro holds the scroll,
+ * and a cookie choice made, so no banner sits over the page. The cache itself is empty, so the
+ * frames still come in the usual way.
  */
 const returning = {
   cookies: [],
   origins: [
     {
       origin: baseURL,
-      localStorage: [1, 2].map((stride) => ({
-        name: `walk-held /journey/seq/f 1 ${stride}`,
-        value: '1',
-      })),
+      localStorage: [
+        ...[1, 2].map((stride) => ({ name: `walk-held /journey/seq/f 1 ${stride}`, value: '1' })),
+        { name: 'analytics-consent', value: 'no' },
+      ],
     },
   ],
 };

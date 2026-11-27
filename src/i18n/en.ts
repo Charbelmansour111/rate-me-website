@@ -464,9 +464,10 @@ export const en = {
   },
   cookies: {
     label: 'Cookie choice',
-    text: 'May we count visits to this site? Without cookies, in total only, and only if you accept.',
+    text: 'This site keeps only what it needs in your browser, like the walk’s pictures so it loads fast. May we also count visits? No cookies, totals only.',
+    privacy: 'Privacy',
     accept: 'Accept',
-    reject: 'Reject',
+    reject: 'Essential only',
   },
   notFound: {
     title: 'Offside',

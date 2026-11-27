@@ -411,14 +411,77 @@ for (const [path, yourData, retention, report] of [
   });
 }
 
-test('cookies: no banner and no settings while statistics are off; nothing pre-ticked', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await expect(page.locator('.cookie-banner')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Cookie settings' })).toHaveCount(0);
-  // The consent box starts empty: the visitor ticks it
-  await expect(page.locator('#f-consent')).not.toBeChecked();
+test.describe('the cookie choice (a first visit)', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('asks once, two equal buttons and the privacy page; kept; Cookie settings asks again', async ({
+    page,
+  }) => {
+    const statistics: string[] = [];
+    page.on('request', (request) => {
+      if (/plausible|analytics/.test(request.url())) statistics.push(request.url());
+    });
+    await page.goto('/privacy');
+    const banner = page.getByRole('region', { name: 'Cookie choice' });
+    await expect(banner).toBeVisible();
+    // After the first paint, fixed at the bottom: it moves nothing
+    expect(await banner.evaluate((el) => getComputedStyle(el).position)).toBe('fixed');
+    const essential = banner.getByRole('button', { name: 'Essential only' });
+    const accept = banner.getByRole('button', { name: 'Accept' });
+    const [a, b] = [await essential.boundingBox(), await accept.boundingBox()];
+    expect(Math.round(a!.width)).toBe(Math.round(b!.width));
+    expect(Math.round(a!.height)).toBe(Math.round(b!.height));
+    expect(a!.height).toBeGreaterThanOrEqual(44);
+    await expect(banner.getByRole('link', { name: 'Privacy' })).toHaveAttribute(
+      'href',
+      '/privacy#cookies',
+    );
+    await essential.click();
+    await expect(banner).toBeHidden();
+    expect(await page.evaluate(() => localStorage.getItem('analytics-consent'))).toBe('no');
+    await page.reload();
+    await page.waitForTimeout(1500);
+    await expect(banner).toBeHidden();
+    // Nothing optional ran
+    expect(statistics).toEqual([]);
+    await page.getByRole('button', { name: 'Cookie settings' }).click();
+    await expect(banner).toBeVisible();
+    await banner.getByRole('button', { name: 'Accept' }).click();
+    expect(await page.evaluate(() => localStorage.getItem('analytics-consent'))).toBe('yes');
+    // The consent box of the form starts empty: the visitor ticks it
+    await page.goto('/');
+    await expect(page.locator('#f-consent')).not.toBeChecked();
+  });
+
+  test('never over the intro: it comes once the intro has gone', async ({ page }) => {
+    test.slow();
+    await page.route('**/journey/pack/**', async (route) => {
+      await new Promise((done) => setTimeout(done, 2500));
+      await route.continue().catch(() => {});
+    });
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-walk-gate', 'open');
+    await page.waitForTimeout(1500);
+    const banner = page.getByRole('region', { name: 'Cookie choice' });
+    await expect(banner).toHaveCount(0);
+    await expect(page.locator('html')).not.toHaveAttribute('data-walk-gate', 'open', {
+      timeout: 30_000,
+    });
+    await expect(banner).toBeVisible();
+  });
+
+  test('in Arabic, right to left', async ({ page }) => {
+    test.skip(!ARABIC_ENABLED, 'Arabic is off');
+    await page.goto('/ar/privacy');
+    const banner = page.getByRole('region', { name: 'اختيار ملفات تعريف الارتباط' });
+    await expect(banner).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'الأساسية فقط' })).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'قبول' })).toBeVisible();
+    await expect(banner.getByRole('link', { name: 'الخصوصية' })).toHaveAttribute(
+      'href',
+      '/ar/privacy#cookies',
+    );
+  });
 });
 
 test('no promises the product cannot back', async ({ page }) => {
