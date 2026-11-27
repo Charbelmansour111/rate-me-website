@@ -66,10 +66,6 @@ export const en = {
     title: 'What you get',
     note: 'Rate Me has not launched yet. Features tagged “Coming soon” arrive after the first release.',
     soon: 'Coming soon',
-    cta: {
-      title: 'Get Rate Me when it launches.',
-      text: 'Pre-register and we will email you about the launch.',
-    },
     controls: {
       label: 'Feature cards',
       carousel: 'carousel',
@@ -107,7 +103,7 @@ export const en = {
       },
       squad: {
         title: 'Squad and player cards',
-        photo: 'A coach crouching on the touchline, explaining something to his players',
+        photo: 'The Squad screen in the app: the goalkeepers, each with a shirt number',
         text: 'Kit numbers, positions and a card for each player, shared only when the coach decides.',
         benefit: 'Every player in your squad gets a card.',
         bullets: [
@@ -118,7 +114,8 @@ export const en = {
       },
       parentReport: {
         title: 'Monthly player report',
-        photo: 'People watching a match from behind the fence',
+        photo:
+          'The player screen in the app: the card at 89 out of 100 and a coach rating of 7.0, published to the player',
         text: 'Each month the coach publishes a PDF report for each player: attendance, match stats, the coach’s rating and notes. Players can share it with their parents.',
         benefit: 'Each player gets a PDF of their month to share.',
         bullets: [
@@ -213,9 +210,8 @@ export const en = {
       example: 'Example',
       name: 'Your player',
       position: 'Midfielder',
-      positionLetter: 'M',
+      positionCode: 'MID',
       tier: 'Regular',
-      outOf: '/100',
       label: 'Example player card: a midfielder, number 8, rated 72 out of 100.',
       stats: {
         pace: 'Speed',
@@ -324,18 +320,23 @@ export const en = {
       { title: 'Get early access', text: 'We email you when there is a version for you to try.' },
       { title: 'Share feedback', text: 'Use it with your team and tell us what you need.' },
     ],
-    coaches: 'Made for coaches like you',
+    coaches: 'Photos for illustration',
     match: {
-      label: 'Match request',
-      example: 'An example of what is coming',
-      from: 'Cedars FC',
-      to: 'Pinewood Academy',
-      versus: 'vs',
-      team: 'U16',
-      when: 'Saturday, 10:00',
-      format: '7v7 friendly',
-      where: 'Home or away',
-      status: 'Request sent',
+      label: 'A match request in the app (example)',
+      example: 'Example',
+      team: 'Pinewood Academy',
+      meta: 'Beirut · U16 · Competitive',
+      status: 'Your answer',
+      counters: '2 counters left',
+      caption: 'Their proposal',
+      when: 'Sat 6 Dec · 10:00',
+      where: 'Home · Main pitch',
+      accept: 'Accept',
+      counter: 'Counter',
+      decline: 'Decline',
+      safety: 'Contact is between coaches only. No player details are shared.',
+      description:
+        'Example of a match request in the app: Pinewood Academy, U16, proposes Saturday 6 December at 10:00, at home. You can accept, counter or decline.',
     },
   },
   faq: {

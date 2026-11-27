@@ -720,7 +720,7 @@ test('cards: a light and a lean follow the mouse; touch screens only get the rev
   // Every feature card has its photo in the same shape (the carousel: tests/e2e/chrome.spec.ts)
   for (const art of await page.locator('#features .feature-photo').all()) {
     const box = (await art.boundingBox())!;
-    expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
+    expect(box.width / box.height).toBeCloseTo(16 / 10, 1);
   }
   const card = why.nth(1);
   await card.scrollIntoViewIfNeeded();
@@ -820,7 +820,7 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       await expect(phones.locator('img')).toHaveCount(await phones.count());
       await expect(phones.locator('.phone-sketch')).toHaveCount(0);
     }
-    await expect(page.locator('#view-player .player-card')).toHaveCount(1);
+    await expect(page.locator('#view-player .shield-card')).toHaveCount(1);
     const roles = page.locator('.phone img[src*="coach-whiteboard-roles.png"]');
     for (const role of ['Press', 'Cover', 'Mark', 'Intercept']) {
       await expect(roles).toHaveAttribute('alt', new RegExp(role));
@@ -860,10 +860,13 @@ test('inside the app: big phones with a glow, big tabs, and the pill glides', as
     // One big phone at a time, the next one peeking in
     expect(Math.max(...widths)).toBeGreaterThan(screen * 0.6);
   } else {
-    // About 300px each, three side by side
-    // About 340px each, three side by side
-    expect(Math.max(...widths)).toBeGreaterThanOrEqual(320);
+    // Three side by side, each sized so its height stays under 72% of the screen (WEBSITE 15)
+    expect(Math.max(...widths)).toBeGreaterThanOrEqual(250);
     expect(Math.max(...widths)).toBeLessThanOrEqual(350);
+    const heights = await phones.evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect().height),
+    );
+    expect(Math.max(...heights)).toBeLessThanOrEqual(page.viewportSize()!.height * 0.72);
     const boxes = await phones.evaluateAll((els) => els.map((el) => el.getBoundingClientRect()));
     for (const box of boxes) expect(box.right).toBeLessThanOrEqual(screen);
   }
@@ -943,20 +946,33 @@ test('inside the app: the player card, as the app draws it, leaning like the pho
 }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.locator('#tab-player').click();
-  const card = page.locator('#view-player .player-card');
+  // The app's shield card (rate-me: features/cards/shield-card.tsx), shown whole
+  const card = page.locator('#view-player .shield-card');
   await expect(card).toBeVisible();
   await expect(card).toHaveAttribute('role', 'img');
   await expect(card).toHaveAttribute('aria-label', /example/i);
-  // Inside React Bits' TiltedCard, with a ring, a position badge, six bars and a stock photo
+  // Inside React Bits' TiltedCard: the crest, the overall, six stats in two columns, the photo
   await expect(card.locator('xpath=ancestor::*[@data-tilt]')).toHaveCount(1);
-  await expect(card.locator('.player-card-ring circle')).toHaveCount(2);
-  await expect(card.locator('.player-card-badge')).toHaveCount(1);
-  await expect(card.locator('.player-card-bars li')).toHaveCount(6);
+  await expect(card.locator('.shield-ground path')).toHaveCount(2);
+  await expect(card.locator('.shield-overall')).toHaveText('72');
+  await expect(card.locator('.shield-column li')).toHaveCount(6);
+  await expect(card.locator('.shield-column span')).toHaveText([
+    'SPE',
+    'FIN',
+    'VIS',
+    'CON',
+    'TAC',
+    'STR',
+  ]);
+  await expect(page.locator('#view-player .shield-example')).toHaveText(/example/i);
   await card.scrollIntoViewIfNeeded();
+  // Whole: nothing of it is cut off by the panel or the screen's side
+  const box = (await card.boundingBox())!;
+  const panel = (await page.locator('#inside .panel').boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(panel.x);
+  expect(box.x + box.width).toBeLessThanOrEqual(panel.x + panel.width);
   await expect
-    .poll(() =>
-      card.locator('.player-card-photo').evaluate((el) => (el as HTMLImageElement).naturalWidth),
-    )
+    .poll(() => card.locator('img').evaluate((el) => (el as HTMLImageElement).naturalWidth))
     .toBeGreaterThan(0);
   await expect(page.locator('body')).not.toContainText(/FIFA/i);
 });
@@ -1077,7 +1093,8 @@ test('inside the app: undistorted phones, the one in front larger, tilting to th
       const img = el as HTMLImageElement;
       return { shown: img.offsetHeight / img.offsetWidth, own: 2532 / 1170 };
     });
-  expect(shot.shown).toBeCloseTo(shot.own, 2);
+  // Within a pixel of its own shape (rounding at small sizes)
+  expect(Math.abs(shot.shown - shot.own)).toBeLessThan(0.01);
   const width = (i: number) =>
     slides
       .nth(i)

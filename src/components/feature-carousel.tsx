@@ -54,10 +54,12 @@ export function FeatureCarousel({
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const [first, setFirst] = useState(0);
   const [atEnd, setAtEnd] = useState(false);
+  /** The last card wholly in view: the dots fill up to it, the counter says it. */
+  const [lastSeen, setLastSeen] = useState(0);
   const [opened, setOpened] = useState<{ card: FeatureCard; from: HTMLElement } | null>(null);
   const last = cards.length - 1;
 
-  // Which card is first in view, and whether the row has reached its end: read from the scroll
+  // Which cards are in view, and whether the row has reached its end: read from the scroll
   // position the browser already keeps, once a frame at most.
   useEffect(() => {
     const list = track.current!;
@@ -71,8 +73,15 @@ export function FeatureCarousel({
         const box = slide.getBoundingClientRect();
         return rtl ? box.right <= edge.right + 4 : box.left >= edge.left - 4;
       });
+      const whole = slides.map((slide) => {
+        const box = slide.getBoundingClientRect();
+        return box.left >= edge.left - 4 && box.right <= edge.right + 4;
+      });
+      const end = Math.abs(list.scrollLeft) + list.clientWidth >= list.scrollWidth - 4;
       setFirst(Math.max(0, start));
-      setAtEnd(Math.abs(list.scrollLeft) + list.clientWidth >= list.scrollWidth - 4);
+      setAtEnd(end);
+      // At the end the last card counts as seen even if a phone shows only most of it
+      setLastSeen(end ? slides.length - 1 : Math.max(0, whole.lastIndexOf(true)));
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(read);
@@ -145,29 +154,35 @@ export function FeatureCarousel({
     setTimeout(() => list.removeEventListener('click', swallow, { capture: true }), 0);
   }
 
-  const arrow = (direction: 1 | -1) => (
-    <button
-      type="button"
-      aria-label={direction === 1 ? t.next : t.previous}
-      aria-controls="feature-track"
-      disabled={direction === 1 ? atEnd : first === 0}
-      onClick={() => show(first + direction)}
-      className="carousel-arrow"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className={`size-5 ${direction === 1 ? 'rtl:-scale-x-100' : '-scale-x-100 rtl:scale-x-100'}`}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
+  // At either end its arrow stays in the Tab order, dimmed and saying it does nothing (aria-disabled)
+  const arrow = (direction: 1 | -1) => {
+    const off = direction === 1 ? atEnd : first === 0 && !atEnd;
+    return (
+      <button
+        type="button"
+        aria-label={direction === 1 ? t.next : t.previous}
+        aria-controls="feature-track"
+        aria-disabled={off}
+        onClick={() => {
+          if (!off) show(first + direction);
+        }}
+        className="carousel-arrow"
       >
-        <path d="M9 5l7 7-7 7" />
-      </svg>
-    </button>
-  );
+        <svg
+          viewBox="0 0 24 24"
+          className={`size-5 ${direction === 1 ? 'rtl:-scale-x-100' : '-scale-x-100 rtl:scale-x-100'}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    );
+  };
 
   return (
     <div
@@ -219,7 +234,7 @@ export function FeatureCarousel({
         {/* One dot a card: a button on a computer, a mark on a phone (too many 44px targets) */}
         <div className="carousel-dots" data-small aria-hidden="true">
           {cards.map((card, i) => (
-            <span key={card.id} data-on={i === first || undefined} />
+            <span key={card.id} data-on={i <= lastSeen || undefined} />
           ))}
         </div>
         <div className="carousel-dots" data-large>
@@ -230,6 +245,7 @@ export function FeatureCarousel({
               aria-label={fill(t.show, { title: card.title })}
               aria-current={i === first || undefined}
               aria-controls="feature-track"
+              data-on={i <= lastSeen || undefined}
               onClick={() => show(i)}
             >
               <span />
@@ -237,6 +253,10 @@ export function FeatureCarousel({
           ))}
         </div>
         {arrow(1)}
+        {/* How far along: "4 of 7", "7 of 7" at the end */}
+        <p className="carousel-count" data-count>
+          {fill(t.position, { n: lastSeen + 1, total: cards.length })}
+        </p>
       </div>
       <FeatureDialog
         opened={opened}

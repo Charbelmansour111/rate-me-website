@@ -125,10 +125,15 @@
   display: none;
 }
 
+/* Nothing of the phones' glow reaches past the panel */
+#inside > .wrap > .panel {
+  overflow-x: clip;
+}
 /* The phones: one big one at a time on a phone (swipe, it snaps), three side by side on a computer,
    each about 300px wide there. --phone is a phone's width; a slide is a little wider. */
 .showcase-track {
-  --phone: min(66vw, 18rem);
+  /* A phone is about 2.3 times as tall as it is wide: 31vh keeps it under 72% of the screen */
+  --phone: min(66vw, 18rem, calc(31vh - 0.5rem));
   --slide: calc(var(--phone) + 0.75rem);
   display: flex;
   gap: 0.75rem;
@@ -156,7 +161,7 @@
 }
 @media (min-width: 40rem) {
   .showcase-track {
-    --phone: 17rem;
+    --phone: min(17rem, calc(31vh - 0.5rem));
     gap: 1.25rem;
   }
 }
@@ -164,7 +169,9 @@
    edges so three fit. */
 @media (min-width: 64rem) {
   .showcase-track {
-    --phone: clamp(15.5rem, 23.5vw, 21.25rem);
+    /* Three side by side, each no taller than 72% of the screen: they fit 1440 x 900 and
+       1280 x 720 whole */
+    --phone: clamp(12rem, min(23.5vw, calc(31vh - 0.5rem)), 21.25rem);
     --slide: var(--phone);
     justify-content: center;
     gap: clamp(1rem, 2.5vw, 2.5rem);
@@ -393,157 +400,165 @@ html:not([data-js]) .phone {
   border-radius: 2.8rem;
 }
 
-/* --- The player card (src/components/player-card.tsx), as the app draws it --- */
+/* --- The player card (src/components/player-card.tsx): the app's shield card, shown whole --- */
 .card-tilt {
-  border-radius: 1rem;
+  border-radius: 0;
 }
-.player-card {
+/* The glare stays on the crest */
+.card-tilt .tilted-card-glare {
+  border-radius: 0;
+  clip-path: polygon(
+    14% 0,
+    86% 0,
+    100% 7.1%,
+    100% 74.3%,
+    93% 82.9%,
+    54% 98.6%,
+    50% 100%,
+    46% 98.6%,
+    7% 82.9%,
+    0 74.3%,
+    0 7.1%
+  );
+}
+.shield-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+.shield-card {
   position: relative;
-  width: min(var(--phone, 18rem), 20rem);
+  width: min(var(--phone, 17rem), 17.5rem);
+  aspect-ratio: 100 / 140;
   color: #fff;
   font-family: var(--font-sans);
+  container-type: inline-size;
 }
-.player-card-ground {
+.shield-ground {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.player-card-body {
+.shield-body {
   position: relative;
   display: grid;
-  gap: 0.85rem;
-  padding: 1.4rem 1.4rem 1.7rem;
+  gap: 4cqw;
+  padding: 10cqw 9cqw 0;
 }
-.player-card-top {
+.shield-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  align-items: flex-start;
+  gap: 4cqw;
 }
-.player-card-tier {
+.shield-badge {
   display: grid;
-  justify-items: start;
-  gap: 0.5rem;
+  width: 26cqw;
+  justify-items: center;
+  gap: 0.5cqw;
+  padding-top: 1.5cqw;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.45);
 }
-.player-card-chip {
-  padding: 0.1rem 0.5rem;
-  border-radius: 0.35rem;
-  font-size: 0.8125rem;
+.shield-overall {
+  font-size: 18cqw;
+  font-weight: 900;
+  line-height: 1;
+}
+.shield-position {
+  font-size: 7cqw;
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
 }
-.player-card-ring {
-  position: relative;
-  display: grid;
-  place-items: center;
+.shield-rule {
+  width: 11cqw;
+  height: 1px;
+  margin-block: 1.2cqw;
+  background: var(--card-line);
 }
-.player-card-ring svg {
-  position: absolute;
-  inset: 0;
-}
-.player-card-overall {
-  position: relative;
-  font-size: 1.9rem;
-  font-weight: 800;
-}
-.player-card-overall small {
+.shield-kit {
   color: var(--card-label);
-  font-size: 0.75rem;
+  font-size: 5.6cqw;
   font-weight: 700;
 }
-.player-card-portrait {
-  position: relative;
-  display: block;
+.shield-tier {
+  color: var(--card-accent);
+  font-size: 3.8cqw;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.player-card-photo {
-  width: 7rem;
-  height: 7rem;
-  border: 3px solid var(--card-accent);
+:lang(ar) .shield-tier,
+:lang(ar) .shield-position {
+  letter-spacing: 0;
+}
+.shield-photo {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 1;
+  overflow: hidden;
   border-radius: 50%;
+  background: rgb(255 255 255 / 0.12);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.35);
+}
+.shield-photo img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
-/* The position badge, in layers: a shadow under it, a white rim, the position colour as its face
-   (shaded at the bottom), a soft shine at the top. */
-.player-card-badge {
-  position: absolute;
-  inset-inline-end: -0.35rem;
-  bottom: -0.2rem;
+.shield-band {
   display: grid;
-  width: 2.35rem;
-  height: 2.35rem;
   place-items: center;
-  border: 2.5px solid #fff;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.55) 0 14%, rgb(255 255 255 / 0) 46%),
-    radial-gradient(circle at 50% 120%, rgb(0 0 0 / 0.22), rgb(0 0 0 / 0) 60%), var(--card-position);
-  box-shadow:
-    0 4px 0 -1px rgb(0 0 0 / 0.28),
-    0 6px 10px rgb(0 0 0 / 0.35),
-    inset 0 -2px 0 rgb(0 0 0 / 0.18);
-  font-size: 1.05rem;
-  font-weight: 800;
+  padding-block: 2.4cqw;
+  border-block: 1px solid var(--card-line);
+  font-size: 7cqw;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
-.player-card-perforation {
-  border-top: 1.5px dashed rgb(255 255 255 / 0.28);
+:lang(ar) .shield-band {
+  letter-spacing: 0;
 }
-.player-card-identity {
+.shield-stats {
   display: grid;
-  gap: 0.15rem;
+  grid-template-columns: 1fr 1fr;
+  padding-inline: 1.6cqw;
 }
-.player-card-name {
-  font-size: 1.35rem;
-  font-weight: 800;
+.shield-column {
+  display: grid;
+  gap: 1.6cqw;
+  padding-inline: 3.2cqw;
 }
-.player-card-meta {
+.shield-column + .shield-column {
+  border-inline-start: 1px solid var(--card-line);
+}
+.shield-column li {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2.4cqw;
+  direction: ltr;
+}
+.shield-column b {
+  width: 12cqw;
+  font-size: 7cqw;
+  font-weight: 900;
+  text-align: right;
+}
+.shield-column span {
+  width: 13.6cqw;
   color: var(--card-label);
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: 5.6cqw;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
-.player-card-bars {
-  display: grid;
-  gap: 0.7rem;
-}
-.player-card-bars li {
-  display: grid;
-  grid-template-columns: 6.2rem 1fr 1.8rem;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-}
-.player-card-stat {
-  color: var(--card-label);
-  font-weight: 600;
-}
-.player-card-track {
-  height: 0.5rem;
-  overflow: hidden;
-  border-radius: 0.25rem;
-  background: rgb(255 255 255 / 0.16);
-}
-.player-card-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--card-accent);
-}
-.player-card-value {
-  font-weight: 800;
-  text-align: end;
-}
-.player-card-example {
-  justify-self: center;
-  color: var(--card-label);
-  font-size: 0.8125rem;
+.shield-example {
+  color: var(--muted);
+  font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-:lang(ar) .player-card-example {
+:lang(ar) .shield-example {
   letter-spacing: 0;
 }
 
@@ -644,11 +659,11 @@ html:not([data-js]) .phone {
 
 /* --- What you get (src/components/feature-carousel.tsx): a carousel of paper cards --- */
 .feature-track {
-  --gap: 1.25rem;
+  --gap: 1rem;
   --card: 67%;
   display: flex;
   gap: var(--gap);
-  margin-top: 3rem;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
   /* Out to the panel's edges on a phone, so the next card peeks in */
   margin-inline: calc(-1 * clamp(1.5rem, 4vw, 3.5rem));
   padding: 0.5rem clamp(1.5rem, 4vw, 3.5rem) 1rem;
@@ -677,10 +692,28 @@ html:not([data-js]) .phone {
     --card: calc((100% - 2 * var(--gap)) / 2.2);
   }
 }
+/* On a computer the row stops at the content's edges: whole cards only, a clear start and end.
+   A few pixels of room keep focus rings and the hover lift inside. */
 @media (min-width: 64rem) {
   .feature-track {
     --card: calc((100% - 2 * var(--gap)) / 3);
+    margin-inline: -6px;
+    padding: 6px 6px 0.75rem;
+    scroll-padding-inline: 6px;
   }
+}
+@media (min-width: 80rem) {
+  .feature-track {
+    --card: calc((100% - 3 * var(--gap)) / 4);
+  }
+}
+/* The last card stops at the end of the row, not past it */
+.feature-slide:last-child {
+  scroll-snap-align: end;
+}
+/* "What you get" fits one screen at 1440 x 900 and 1280 x 720: less air round it */
+#features > .wrap > .panel {
+  padding-block: clamp(1.5rem, 4vh, 2.75rem);
 }
 /* A card: one photo shape for all, the icon, the title, one line of what it gives you, More */
 .feature-card {
@@ -712,7 +745,7 @@ html:not([data-js]) .phone {
 .feature-photo {
   position: relative;
   display: block;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
   background: var(--softer);
 }
@@ -752,28 +785,39 @@ html:not([data-js]) .phone {
   display: grid;
   flex: 1;
   align-content: start;
-  gap: 0.6rem;
-  padding: 1.25rem 1.35rem 1.4rem;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem 1rem;
 }
 .feature-icon {
   display: block;
-  margin-top: -2.9rem;
+  margin-top: -2.2rem;
 }
 .feature-icon > span {
+  width: 2.75rem;
+  height: 2.75rem;
   border: 1px solid #0b0b0c;
   background: #fffcf7;
 }
+.feature-icon svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
 .feature-title {
   display: block;
+  font-size: clamp(1.35rem, 1.1rem + 0.5vw, 1.6rem);
+}
+:lang(ar) .feature-title {
+  font-size: 1.125rem;
 }
 .feature-benefit {
   color: var(--muted);
-  font-size: 1.0625rem;
+  font-size: 1rem;
+  line-height: 1.45;
 }
 .feature-more {
   display: inline-flex;
   margin-top: auto;
-  padding-top: 0.6rem;
+  padding-top: 0.4rem;
   align-items: center;
   gap: 0.4rem;
   color: var(--accent-text);
@@ -790,7 +834,7 @@ html:not([data-js]) .phone {
 }
 .carousel-controls {
   display: flex;
-  margin-top: 1.25rem;
+  margin-top: 0.75rem;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
@@ -808,10 +852,17 @@ html:not([data-js]) .phone {
   border-color: var(--accent);
   color: var(--accent-text);
 }
-.carousel-arrow:disabled {
+.carousel-arrow[aria-disabled='true'] {
   border-color: var(--line);
   color: var(--edge);
   cursor: default;
+}
+.carousel-count {
+  min-width: 4.5rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 .carousel-dots {
   display: flex;
@@ -828,8 +879,8 @@ html:not([data-js]) .phone {
   border-radius: 50%;
   background: var(--edge);
 }
-.carousel-dots [data-on],
-.carousel-dots [aria-current] span {
+.carousel-dots span[data-on],
+.carousel-dots [data-on] > span {
   width: 1.5rem;
   border-radius: 999px;
   background: var(--brand-orange);

@@ -170,19 +170,21 @@ for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
       const card = el.querySelector('.feature-slide')!.getBoundingClientRect().width;
       return (track.getBoundingClientRect().width - start + gap) / (card + gap);
     }, rtl);
+    // Four whole cards a view on a computer (1280 wide here), one and a half on a phone
     if (isMobile) expect(shown).toBeGreaterThan(1.4);
-    else expect(shown).toBeGreaterThan(2.95);
+    else expect(shown).toBeGreaterThan(3.9);
     if (isMobile) expect(shown).toBeLessThan(1.65);
-    else expect(shown).toBeLessThan(3.3);
+    else expect(shown).toBeLessThan(4.1);
 
     // The arrows: back is off at the start, next moves the row on
     const back = region.locator('.carousel-arrow').first();
     const next = region.locator('.carousel-arrow').last();
-    await expect(back).toBeDisabled();
+    // At the start the back arrow says it does nothing (dimmed, still in the Tab order)
+    await expect(back).toHaveAttribute('aria-disabled', 'true');
     const scroll = () => region.locator('.feature-track').evaluate((el) => Math.abs(el.scrollLeft));
     await next.click();
     await expect.poll(scroll).toBeGreaterThan(50);
-    await expect(back).toBeEnabled();
+    await expect(back).toHaveAttribute('aria-disabled', 'false');
 
     // The dots on a computer: the chosen one is marked, a click goes there
     if (!isMobile) {
@@ -237,7 +239,9 @@ test('coming soon stays on what is not released, and every card has a photo', as
   await page.goto('/');
   const cards = page.locator('.feature-card');
   await expect(cards.locator('.feature-photo img')).toHaveCount(7);
-  await expect(cards.filter({ hasText: 'Coming soon' })).toHaveCount(3);
+  // Match requests are released: two left (tournaments, the assistant)
+  await expect(cards.filter({ hasText: 'Coming soon' })).toHaveCount(2);
+  await expect(cards.filter({ hasText: 'Match requests' })).not.toContainText('Coming soon');
   await expect(cards.filter({ hasText: 'Coach assistant' }).locator('img')).toHaveAttribute(
     'alt',
     /portrait/,
@@ -374,10 +378,12 @@ test('the player card: a raised position badge that moves more than the card', a
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.getByRole('tab', { name: 'Player view' }).click();
   const card = page.locator('.card-tilt');
+  await expect(card.locator('.shield-card')).toHaveCount(1);
   await card.scrollIntoViewIfNeeded();
-  const badge = card.locator('.player-card-badge');
-  await expect(badge).toHaveText('M');
-  expect(await badge.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none');
+  // The overall and position stand off the card: a shadow, and more parallax than the card
+  const badge = card.locator('.shield-badge');
+  await expect(badge.locator('.shield-overall')).toHaveText('72');
+  expect(await badge.evaluate((el) => getComputedStyle(el).textShadow)).not.toBe('none');
   await page.mouse.move(10, 10);
   await page.waitForTimeout(800);
   const box = (await card.boundingBox())!;
@@ -385,4 +391,128 @@ test('the player card: a raised position badge that moves more than the card', a
   await expect
     .poll(() => badge.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41))
     .toBeGreaterThan(3);
+});
+
+test.describe('WEBSITE 15: sizes that fit the screen', () => {
+  test.skip(({ isMobile }) => isMobile, 'screen sizes of a computer');
+  for (const [width, height] of [
+    [1440, 900],
+    [1280, 720],
+  ] as const) {
+    test(`at ${width}x${height}: What you get fits one screen; three phones fit, none taller than 72vh`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/');
+      // The whole section (heading, four cards, controls) under the 72px header
+      const features = await page.locator('#features .panel').boundingBox();
+      expect(features!.height).toBeLessThanOrEqual(height - 72);
+      // Four whole cards
+      const whole = await page.locator('.feature-track').evaluate((track) => {
+        const edge = track.getBoundingClientRect();
+        return [...track.children].filter((slide) => {
+          const box = slide.getBoundingClientRect();
+          return box.left >= edge.left - 1 && box.right <= edge.right + 1;
+        }).length;
+      });
+      expect(whole).toBe(4);
+      // Inside the app: three phones side by side, inside the panel, each under 72% of the screen
+      const phones = page.locator('#view-coach .phone');
+      await expect(phones).toHaveCount(3);
+      const panel = (await page.locator('#inside .panel').boundingBox())!;
+      for (const phone of await phones.all()) {
+        const box = (await phone.boundingBox())!;
+        expect(box.height).toBeLessThanOrEqual(height * 0.72);
+        expect(box.x).toBeGreaterThanOrEqual(panel.x);
+        expect(box.x + box.width).toBeLessThanOrEqual(panel.x + panel.width);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
+    });
+  }
+});
+
+for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
+  test(`${path}: the carousel's end: next dimmed, every dot full, 7 of 7; and back at the start`, async ({
+    page,
+  }) => {
+    const rtl = path === '/ar';
+    await page.goto(path);
+    const region = page.locator('.feature-carousel');
+    await region.scrollIntoViewIfNeeded();
+    const [back, next] = [
+      region.locator('.carousel-arrow').first(),
+      region.locator('.carousel-arrow').last(),
+    ];
+    const count = region.locator('[data-count]');
+    // To the end, with the next arrow
+    for (let i = 0; i < 8; i++) {
+      if ((await next.getAttribute('aria-disabled')) === 'true') break;
+      await next.dispatchEvent('click');
+      await page.waitForTimeout(450);
+    }
+    await expect(next).toHaveAttribute('aria-disabled', 'true');
+    await expect(count).toHaveText(rtl ? '7 من 7' : '7 of 7');
+    await expect(region.locator('.carousel-dots:visible [data-on]')).toHaveCount(7);
+    // The last card stops at the end of the row: nothing of the row past it
+    const gap = await region.locator('.feature-track').evaluate((track) => {
+      const last = track.lastElementChild!.getBoundingClientRect();
+      const edge = track.getBoundingClientRect();
+      return document.dir === 'rtl' ? last.left - edge.left : edge.right - last.right;
+    });
+    expect(gap).toBeLessThan(80);
+    // A dimmed arrow does nothing, and stays reachable (Playwright will not click it: dispatch)
+    await expect(next).toBeVisible();
+    await next.dispatchEvent('click');
+    await expect(count).toHaveText(rtl ? '7 من 7' : '7 of 7');
+    // Back to the start: the back arrow is the dimmed one
+    for (let i = 0; i < 8; i++) {
+      if ((await back.getAttribute('aria-disabled')) === 'true') break;
+      await back.dispatchEvent('click');
+      await page.waitForTimeout(450);
+    }
+    await expect(back).toHaveAttribute('aria-disabled', 'true');
+    await expect(next).toHaveAttribute('aria-disabled', 'false');
+  });
+}
+
+test('the tactics paint: behind solid ground, drawn in, still under reduced motion', async ({
+  browser,
+}) => {
+  const page = await browser.newPage();
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const svg = page.locator('[data-brush]');
+  await expect(svg).toHaveAttribute('aria-hidden', 'true');
+  await expect(svg.locator('[data-brush-stroke]')).not.toHaveCount(0);
+  // No filter or blur anywhere in it
+  expect(await svg.evaluate((el) => el.querySelectorAll('filter, [filter]').length)).toBe(0);
+  // The words and the board stand on the panel's own solid colour, in front of the paint
+  const grounds = await page.evaluate(() => {
+    const panel = getComputedStyle(document.querySelector('.tactics-pin .panel')!).backgroundColor;
+    return ['.tactics-copy', '.tactics-board'].map((s) => [
+      getComputedStyle(document.querySelector(s)!).backgroundColor,
+      panel,
+    ]);
+  });
+  for (const [ground, panel] of grounds) expect(ground).toBe(panel);
+  // With motion: rolled on as the section comes in
+  await page.mouse.move(300, 300);
+  await page.mouse.move(320, 320);
+  await expect(page.locator('html')).toHaveAttribute('data-stages', 'live');
+  await page.locator('#tactics').evaluate((el) => el.scrollIntoView());
+  const offsets = () =>
+    svg
+      .locator('[data-brush-stroke]')
+      .evaluateAll((els) =>
+        els.map((el) => parseFloat(getComputedStyle(el).strokeDashoffset) || 0),
+      );
+  await expect.poll(async () => Math.max(...(await offsets()))).toBeLessThan(0.01);
+  await page.close();
+  // Reduced motion: already painted, nothing moves
+  const calm = await browser.newPage({ reducedMotion: 'reduce' });
+  await calm.goto('/');
+  const still = await calm
+    .locator('[data-brush] [data-brush-stroke]')
+    .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).strokeDashoffset) || 0));
+  expect(Math.max(...still)).toBe(0);
+  await calm.close();
 });

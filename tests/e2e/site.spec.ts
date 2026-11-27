@@ -131,17 +131,17 @@ test('follows the system preference until the visitor chooses', async ({ page, i
   await expect(html).toHaveAttribute('data-theme', 'dark');
 });
 
-test('community: a strip of stock portraits, and a match request that says what it is', async ({
+test('community: three stock portraits, and the app’s match request, said to be an example', async ({
   page,
-  isMobile,
 }) => {
   await page.goto('/');
   const section = page.locator('#community');
   const photos = section.locator('.coach-photo');
-  await expect(photos).toHaveCount(8);
-  // Six in a row on a phone, all eight on a computer
+  // Three at most, on every screen, with a caption that claims nothing about who they are
+  await expect(photos).toHaveCount(3);
   const shown = section.locator('.coach-photo:visible');
-  await expect(shown).toHaveCount(isMobile ? 6 : 8);
+  await expect(shown).toHaveCount(3);
+  await expect(section.locator('figcaption').first()).toHaveText('Photos for illustration');
   for (const photo of await shown.all()) {
     const box = (await photo.boundingBox())!;
     expect(box.width).toBeCloseTo(box.height, 0);
@@ -149,13 +149,13 @@ test('community: a strip of stock portraits, and a match request that says what 
   }
   // Placeholders say nothing to screen readers; real photos come in black and white
   await expect(section.locator('.coach-photo [data-placeholder]')).toHaveCount(
-    8 - (await section.locator('.coach-photo img').count()),
+    3 - (await section.locator('.coach-photo img').count()),
   );
   for (const img of await section.locator('.coach-photo img').all()) {
     await expect(img).toHaveCSS('filter', /grayscale\(1\)/);
   }
   // Stock photos: they load, and nothing says who they are (alt="": decorative, no names)
-  await expect(section.locator('.coach-photo img')).toHaveCount(8);
+  await expect(section.locator('.coach-photo img')).toHaveCount(3);
   for (const img of await section.locator('.coach-photo:visible img').all()) {
     await expect(img).toHaveAttribute('alt', '');
     await img.scrollIntoViewIfNeeded();
@@ -164,13 +164,18 @@ test('community: a strip of stock portraits, and a match request that says what 
       .toBeGreaterThan(0);
   }
   await expect(section).not.toContainText(/founding coach/i);
+  // The app's match request, as it is now (released): an example, one description for
+  // screen readers, the app's parts drawn in the site's colours, nothing coming soon
   const card = section.locator('.match-card');
-  await expect(card).toContainText('An example of what is coming');
-  await expect(card).toContainText('Match request');
-  await expect(card).toContainText('Cedars FC');
-  await expect(card).toContainText('Pinewood Academy');
-  await expect(card.locator('.status-chip')).toHaveText('Request sent');
-  await expect(card).toContainText('Coming soon');
+  await expect(card).toHaveAttribute('role', 'img');
+  await expect(card).toHaveAttribute('aria-label', /Example of a match request/);
+  await expect(card.locator('.match-example')).toHaveText('Example');
+  await expect(card.locator('.match-chip')).toHaveText('Your answer');
+  await expect(card.locator('.match-accept')).toHaveText('Accept');
+  await expect(card.locator('.match-text-action')).toHaveText(['Counter', 'Decline']);
+  await expect(card.locator('.match-safety')).toContainText('No player details are shared');
+  await expect(card).not.toContainText(/Coming soon/);
+  await expect(card.locator('button, a')).toHaveCount(0);
 });
 
 test('feature cards: a photo on every card, the same shape, each saying what it shows', async ({
@@ -188,7 +193,7 @@ test('feature cards: a photo on every card, the same shape, each saying what it 
       .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
       .toBeGreaterThan(0);
     const box = (await art.boundingBox())!;
-    expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
+    expect(box.width / box.height).toBeCloseTo(16 / 10, 1);
   }
 });
 

@@ -166,16 +166,6 @@ export function HomePage({ locale }: { locale: Locale }) {
                   label={t.features.controls.label}
                   preRegister="#pre-register"
                 />
-                <CtaSplit
-                  className="mt-12"
-                  title={t.features.cta.title}
-                  text={t.features.cta.text}
-                  action={
-                    <a className="btn btn-dark" href="#pre-register">
-                      {t.nav.preRegister}
-                    </a>
-                  }
-                />
               </div>
             </div>
           </section>
@@ -217,7 +207,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   />
                 </div>
                 <div>
-                  <MatchRequestCard t={t.community} soon={t.features.soon} />
+                  <MatchRequestCard t={t.community} />
                   <h3 data-reveal className="mt-12 text-lg font-semibold">
                     {t.community.stepsTitle}
                   </h3>
