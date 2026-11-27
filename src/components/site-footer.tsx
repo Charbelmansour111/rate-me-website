@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { site } from '@/config/site';
@@ -22,7 +23,19 @@ export function SiteFooter({ locale, path }: { locale: Locale; path: PagePath })
   return (
     <footer className="site-footer" data-stage="field" data-footer>
       <MotionLoader />
-      <PitchOutline className="footer-pitch" />
+      {/* Turf and balls under the drawn pitch: atmosphere only, no one in it (docs/PHOTO-CREDITS.md) */}
+      <div className="footer-pitch-wrap">
+        <Image
+          src="/footer/pitch.webp"
+          alt=""
+          aria-hidden="true"
+          width={1600}
+          height={414}
+          sizes="100vw"
+          className="footer-photo"
+        />
+        <PitchOutline className="footer-pitch" />
+      </div>
       <div className="wrap footer-grid">
         <div data-rise>
           <Wordmark className="h-7 w-auto" onBlack />

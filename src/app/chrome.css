@@ -243,7 +243,22 @@
   background: var(--page);
   color: var(--text);
 }
+.footer-pitch-wrap {
+  position: relative;
+}
+/* The turf photo behind the drawn pitch: faint, faded at its edges, never under text */
+.footer-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+  mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent);
+  pointer-events: none;
+}
 .footer-pitch {
+  position: relative;
   display: block;
   width: min(76rem, 100%);
   height: auto;
