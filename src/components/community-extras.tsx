@@ -85,62 +85,91 @@ function Icon({ d, className = 'size-4' }: { d: string; className?: string }) {
   );
 }
 
+/** The app's ball mark on the Friendly chip: a ball, drawn as geometry. */
+function Ball() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-3.5" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 7.5l4.3 3.1-1.6 5h-5.4l-1.6-5z" fill="currentColor" />
+    </svg>
+  );
+}
+
 /**
- * A match request as the app shows it (rate-me: app/(app)/friendlies/[id].tsx and
- * features/friendlies/friendly-ui.tsx), in this site's colours: the other team with its shield
- * tile, the status chip and the counters left, their proposal (when, where), Accept, Counter and
- * Decline, and the app's safety line. An example: made-up teams. A picture of the app, so its
- * buttons are drawn, not real; screen readers get one description.
+ * Match requests as the app shows them (rate-me: features/friendlies), in this site's colours and
+ * its card: the one you sent, as it sits in the Coaches Channel (Friendly, Open, the dates, who it
+ * is for, Cancel request), and one you received (the team, your answer and the counters left,
+ * their proposal, Accept, Counter or Decline, the safety line). Demo teams only. A picture of the
+ * app, so nothing in it is a real button; screen readers get one description. "Example" is said
+ * under the card, never on it.
  */
 export function MatchRequestCard({ t }: { t: Community }) {
   const m = t.match;
   return (
-    <figure data-reveal className="match-card look-paper" role="img" aria-label={m.description}>
-      <div aria-hidden="true">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-muted">{m.label}</span>
-          <span className="match-example">{m.example}</span>
-        </div>
-        <div className="mt-4 flex items-center gap-3">
-          <span className="match-tile">
-            <Icon d={ICON.shield} className="size-5" />
-          </span>
-          <span className="min-w-0">
-            <span className="flex items-center gap-1 font-bold">
-              {m.team}
-              <svg viewBox="0 0 512 512" className="match-verified size-4" aria-hidden="true">
-                <path d={CHECK_FILLED} fill="currentColor" />
-              </svg>
+    <div data-reveal className="match-card" role="img" aria-label={m.description}>
+      <div className="match-board look-paper" aria-hidden="true">
+        <p className="match-state">{m.sent}</p>
+        <div className="match-sent">
+          <span className="flex items-center justify-between gap-3">
+            <span className="match-chip">
+              <Ball />
+              {m.friendly}
             </span>
-            <span className="block text-sm text-muted">{m.meta}</span>
+            <span className="text-sm font-semibold text-accent-text">{m.open}</span>
+          </span>
+          <span className="mt-2 block font-bold">{m.sentWhen}</span>
+          <span className="block text-sm text-muted">{m.sentMeta}</span>
+          <span className="match-ghost mt-3">{m.cancel}</span>
+        </div>
+
+        <p className="match-state mt-5">{m.received}</p>
+        <div className="match-received">
+          <span className="flex items-center gap-3">
+            <span className="match-tile">
+              <Icon d={ICON.shield} className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-1 font-bold">
+                {m.team}
+                <svg viewBox="0 0 512 512" className="match-verified size-4" aria-hidden="true">
+                  <path d={CHECK_FILLED} fill="currentColor" />
+                </svg>
+              </span>
+              <span className="block text-sm text-muted">{m.meta}</span>
+            </span>
+            <span className="text-sm text-muted">{m.kind}</span>
+          </span>
+          <span className="mt-3 flex flex-wrap items-center gap-3">
+            <span className="match-chip">{m.status}</span>
+            <span className="text-sm text-muted">{m.counters}</span>
+          </span>
+          <span className="match-proposal mt-3">
+            <span className="text-sm font-bold text-accent-text">{m.caption}</span>
+            <span className="match-line font-bold">
+              <Icon d={ICON.calendar} />
+              {m.when}
+            </span>
+            <span className="match-line">
+              <Icon d={ICON.location} />
+              {m.where}
+            </span>
+          </span>
+          <span className="match-accept mt-3">{m.accept}</span>
+          <span className="flex justify-center gap-6">
+            <span className="match-text-action">{m.counter}</span>
+            <span className="match-text-action">{m.decline}</span>
+          </span>
+          <span className="match-safety">
+            <Icon d={ICON.safety} />
+            {m.safety}
           </span>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <span className="match-chip">{m.status}</span>
-          <span className="text-sm text-muted">{m.counters}</span>
-        </div>
-        <div className="match-proposal mt-4">
-          <span className="text-sm font-bold text-accent-text">{m.caption}</span>
-          <span className="match-line font-bold">
-            <Icon d={ICON.calendar} />
-            {m.when}
-          </span>
-          <span className="match-line">
-            <Icon d={ICON.location} />
-            {m.where}
-          </span>
-        </div>
-        <span className="match-accept mt-4">{m.accept}</span>
-        <span className="mt-1 flex justify-center gap-6">
-          <span className="match-text-action">{m.counter}</span>
-          <span className="match-text-action">{m.decline}</span>
-        </span>
-        <span className="match-safety mt-3">
-          <Icon d={ICON.safety} />
-          {m.safety}
-        </span>
       </div>
-    </figure>
+      <p className="match-caption" aria-hidden="true">
+        <span className="match-example">{m.example}</span>
+        {m.label}
+      </p>
+    </div>
   );
 }
 

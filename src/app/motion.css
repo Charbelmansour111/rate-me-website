@@ -104,14 +104,62 @@ html.lenis {
 }
 .match-card {
   position: relative; /* above the corner arc */
-  padding: 1.25rem 1.25rem 1rem;
+}
+/* The card: the same as the feature cards (1px ink, 1.25rem, no shadow); the app's own pieces
+   inside keep the app's 0.75rem corners (app-md) */
+.match-board {
+  padding: 1.25rem;
   border-radius: 1.25rem;
 }
-/* The app's match request, in this site's colours (src/components/community-extras.tsx) */
+.match-state {
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:lang(ar) .match-state {
+  letter-spacing: 0;
+}
+/* The request you sent, as it sits in the channel */
+.match-sent {
+  display: block;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgb(255 90 0 / 0.35);
+  border-radius: 0.75rem;
+  background: var(--tint);
+}
+.match-ghost {
+  display: grid;
+  min-height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--page);
+  font-weight: 700;
+}
+/* The request you received */
+.match-received {
+  display: block;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+/* Under the card, never on it: Example and what it is */
 .match-example {
   padding: 0.1rem 0.6rem;
-  border: 1px solid var(--edge);
   border-radius: 999px;
+  background: #0b0b0c;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.match-caption {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
   color: var(--muted);
   font-size: 0.875rem;
   font-weight: 600;
@@ -130,6 +178,9 @@ html.lenis {
   color: var(--accent-text);
 }
 .match-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
   background: var(--tint);
@@ -170,6 +221,7 @@ html.lenis {
   font-weight: 700;
 }
 .match-safety {
+  margin-top: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -308,6 +360,8 @@ html:not([data-js]) .faq-panel > * {
 .tactics-pin {
   padding-block: clamp(1.5rem, 4vw, 3.5rem);
 }
+/* Three steps, 40vh apart from the section's top: the first starts a quarter of a screen after the
+   section comes in (src/motion/tactics.ts watches a line at 75% of the screen) */
 .tactics-marker {
   position: absolute;
   top: calc(var(--i) * 40vh);
@@ -360,8 +414,6 @@ html:not([data-js]) .tactics-try + p {
   display: none;
 }
 .tactics-role-lines > * {
-/* Three steps, 40vh apart from the section's top: the first starts a quarter of a screen after the
-   section comes in (src/motion/tactics.ts watches a line at 75% of the screen) */
   opacity: 0;
   transition: opacity 300ms;
 }
@@ -422,6 +474,8 @@ html:not([data-js]) .tactics-try + p {
 @media (prefers-reduced-motion: no-preference) {
   /* Pinned on large screens. data-js is set before paint, so nothing shifts later. */
   @media (min-width: 64rem) and (min-height: 44rem) {
+    /* As long as the steps need: the last starts as the pin takes hold, then the play runs for
+       the rest of the pinned scroll (about 0.8 of a screen). No stretch where nothing moves. */
     [data-js] .tactics {
       height: 170vh;
     }
@@ -474,8 +528,6 @@ html:not([data-js]) .tactics-try + p {
     .tactics-ball {
       transition: opacity 400ms;
     }
-    /* As long as the steps need: the last starts as the pin takes hold, then the play runs for
-       the rest of the pinned scroll (about 0.8 of a screen). No stretch where nothing moves. */
     .tactics-trail,
     .tactics-arrow,
     .tactics-ring,
