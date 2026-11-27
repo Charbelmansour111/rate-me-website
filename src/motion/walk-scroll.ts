@@ -29,7 +29,7 @@ const JUMP = 40;
  */
 const GLIDE = 330;
 /** A scroll that has not moved for this long (ms) has stopped. */
-const STOPPED = 60;
+const STOPPED = 150;
 /**
  * How long (ms) the picture waits for frames still coming before it settles for those further
  * apart: at first it holds on the last one it has rather than jump a gap; over HOLD it takes a

@@ -174,15 +174,16 @@ on the field. Thin pitch lines (a centre circle, corner arcs, a box corner, a da
 pieces to football. The mood is a calm, premium sports product, with orange used for what you act
 on. Not brutalist, not loud, no confetti.
 
-The walk moves like film, never like a slideshow (WEBSITE 22). After the first paint a worker fetches
-the whole set in use in the background (every second frame on phones, slow connections and to save
-data; nothing ahead of need when saving data), keeps the bytes in memory and in the Cache API (the
-frames are served immutable, their addresses carry the render's `rev`), and decodes only a window
-round the walk. The picture never jumps across frames it does not have: it holds on the last one,
-then moves through the nearest it has; a fast scroll keeps it under half a second behind, and it
-glides to where the page is in a third of a second. Two frames fade into each other only by how
-far their picture moves (`src/config/walk-pairs.ts`, from `scripts/walk-pairs.mjs`): a long fade
-where little moves, a cut where edges would show twice; at rest one frame shows alone.
+The walk moves like film, never like a slideshow (WEBSITE 22). Once the visitor starts (or 6 s
+on), a worker fetches the whole set in use in the background (every second frame on phones, slow
+connections and to save data; nothing ahead of need when saving data), keeps the bytes in memory
+and in the Cache API (the frames are served immutable, their addresses carry the render's `rev`),
+and decodes only a window round the walk. The picture never jumps across frames it does not have:
+it holds on the last one, then moves through the nearest it has; a fast scroll keeps it under half
+a second behind, and it glides to where the page is in a third of a second. Two frames fade into
+each other only by how far their picture moves (`src/config/walk-pairs.ts`, from
+`scripts/walk-pairs.mjs`): a long fade where little moves, a cut where edges would show twice; at
+rest one frame shows alone.
 
 ## Colors
 

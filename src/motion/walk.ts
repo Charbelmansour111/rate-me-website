@@ -407,8 +407,18 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
         mark(canvas, 'stride', String(reel.stride));
         markReady(reel);
         pump(reel);
-        // The rest of the set when it is quiet again, behind the frames round the position
-        idle(() => fetchAll(reel));
+        // The rest of the set once the visitor is under way (or a while on), when it is quiet, so
+        // it never competes with the page settling
+        let begun = false;
+        const begin = () => {
+          if (begun || signal.aborted) return;
+          begun = true;
+          idle(() => fetchAll(reel));
+        };
+        for (const type of ['scroll', 'pointerdown', 'keydown', 'wheel', 'touchstart']) {
+          addEventListener(type, begin, { once: true, passive: true, signal });
+        }
+        setTimeout(begin, loading.backgroundAfter);
       }),
     );
   };

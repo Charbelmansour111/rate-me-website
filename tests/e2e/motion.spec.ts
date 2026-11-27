@@ -377,10 +377,12 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
       lags: number[];
       steps: number[];
       blends: [string, number][];
+      times: number[];
       recording: boolean;
     };
     w.steps = [];
     w.blends = [];
+    w.times = [];
     w.jumps = [];
     w.frames = [];
     w.lags = [];
@@ -389,7 +391,8 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
     const range = main.offsetTop + main.offsetHeight - innerHeight;
     let last: Uint8ClampedArray | undefined;
     let before = Number(canvas.dataset.at);
-    const sample = () => {
+    let then = performance.now();
+    const sample = (now: number) => {
       context.drawImage(canvas, 0, 0, 64, 36);
       const data = context.getImageData(0, 0, 64, 36).data;
       if (last) {
@@ -405,9 +408,12 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
         // How far the walk went since the last painted frame, in frames
         w.steps.push(Math.abs(shown - before));
         w.blends.push([canvas.dataset.blend!, shown]);
+        // How long the painted frame took: a slow one may carry the walk further
+        w.times.push(now - then);
         before = shown;
       }
       last = data;
+      then = now;
       if (w.recording) requestAnimationFrame(sample);
     };
     requestAnimationFrame(sample);
@@ -438,17 +444,25 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
     }
   }
   await page.waitForTimeout(1500);
-  const { jumps, frames, lags, steps, blends } = await page.evaluate(() => {
+  const { jumps, frames, lags, steps, blends, times } = await page.evaluate(() => {
     const w = window as unknown as {
       jumps: number[];
       frames: string[];
       lags: number[];
       steps: number[];
       blends: [string, number][];
+      times: number[];
       recording: boolean;
     };
     w.recording = false;
-    return { jumps: w.jumps, frames: w.frames, lags: w.lags, steps: w.steps, blends: w.blends };
+    return {
+      jumps: w.jumps,
+      frames: w.frames,
+      lags: w.lags,
+      steps: w.steps,
+      blends: w.blends,
+      times: w.times,
+    };
   });
   // Two frames blend only over their pair's window, narrow where the picture moves a lot
   // (WEBSITE 22), or, at rest, one shows alone
@@ -469,9 +483,12 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   // the old 48-frame set measured 41 here; neighbours in the 191-frame set up to 23.
   jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(30 * Math.max(1, steps[i])));
   // Like film (WEBSITE 17): the picture eases after the scroll, never more than one frame of its
-  // set per painted frame, and has caught up once the scroll stops
+  // set per painted frame at a hand's pace, and has caught up once the scroll stops
   const stride = await strideOf(page);
-  expect(Math.max(...steps)).toBeLessThanOrEqual(stride * 1.001);
+  // (per sixtieth of a second: a painted frame that took longer may carry it that much further)
+  steps.forEach((step, i) =>
+    expect(step).toBeLessThanOrEqual(stride * 1.001 * Math.max(1, times[i] / (1000 / 60))),
+  );
   expect(lags[lags.length - 1]).toBeLessThan(0.05);
 });
 

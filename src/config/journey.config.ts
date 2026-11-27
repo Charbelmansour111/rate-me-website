@@ -53,8 +53,9 @@ export function pairWindow({ count }: Sequence, from: number, to: number) {
 /**
  * How the frames are loaded (src/motion/walk.ts, src/motion/frames.worker.ts), in two parts.
  *
- * The files: after the page has loaded and painted, and when it is quiet, a worker fetches every
- * frame of the set in use, `fetchers` at a time (fewer on a phone), at low priority, from where the
+ * The files: once the page has loaded and painted, at the visitor's first scroll, tap or key, or
+ * `backgroundAfter` ms later if there is none, and when it is quiet, a worker fetches every frame
+ * of the set in use, `fetchers` at a time (fewer on a phone), at low priority, from where the
  * walk is outward. It keeps their compressed bytes in memory and in the Cache API (`cache`, one
  * cache per name, the frames' addresses carrying the render), so a return visit needs no network.
  * To save data only the frames the walk comes to are fetched.
@@ -75,6 +76,7 @@ export const loading = {
   fetchers: 6,
   phoneFetchers: 4,
   decoders: 4,
+  backgroundAfter: 6000,
   cache: 'walk-frames',
 };
 

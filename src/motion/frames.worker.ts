@@ -7,7 +7,7 @@
  *   `parallel` at a time at low priority, after any frame asked for to decode.
  * - `cache` (name): the Cache API cache to keep the bytes in; older ones of the walk go.
  * It answers `decode` with the bitmap (or nothing, if the frame failed) and reports `stored`, how
- * many files it holds, as they come in.
+ * many files it holds, every 16 files and when the list is done.
  */
 type Message =
   | { type: 'decode'; id: number; url: string }
@@ -64,7 +64,10 @@ function get(url: string, priority: 'high' | 'low'): Promise<Blob> {
         store?.put(url, new Response(blob, { headers: response.headers })).catch(() => {});
       }
       bytes.set(url, blob);
-      scope.postMessage({ type: 'stored', count: bytes.size });
+      // Told now and then, not for every file: each message is a task on the page
+      if (bytes.size % 16 === 0 || !queue.length) {
+        scope.postMessage({ type: 'stored', count: bytes.size });
+      }
       return blob;
     })().finally(() => coming.delete(url));
     coming.set(url, pending);
