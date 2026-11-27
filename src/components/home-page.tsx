@@ -1,3 +1,4 @@
+import { appShots } from '@/config/app-shots';
 import { features, type FeatureId } from '@/config/features.config';
 import { site } from '@/config/site';
 import { getDictionary, localePath, type Locale } from '@/i18n';
@@ -22,29 +23,34 @@ import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
 import { TacticsSection } from './tactics-section';
 
-/** The feature cards whose pictures are the app's own screens, with sample data. */
-const SCREENSHOTS = new Set(['squad', 'parentReport', 'matchRequests']);
-
 /** A walk from the locker room (top) to the pitch (end), with the sections as panels in front. */
 export function HomePage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   /** What each feature's photo shows, where it has one. */
   const photos: Partial<Record<string, { title: string; photo?: string; detail?: string }>> =
     t.features.items;
-  const cards = features.map(({ id, released }) => ({
-    id,
-    title: t.features.items[id].title,
-    benefit: t.features.items[id].benefit,
-    bullets: t.features.items[id].bullets,
-    alt: photos[id]?.photo ?? '',
-    src: publicFile('features', id),
-    // The dialog's bigger picture: its own file where there is one (an app screen), else the card's
-    detail: publicFile('features', `${id}-detail`) ?? publicFile('features', id),
-    detailAlt: photos[id]?.detail ?? photos[id]?.photo ?? '',
-    soon: released ? null : t.features.soon,
-    // App screens with sample data say so
-    example: SCREENSHOTS.has(id) ? t.features.example : null,
-  }));
+  const cards = features.map(({ id, released }) => {
+    // The app's own screens, with demo data (src/config/app-shots.ts)
+    const shot = appShots[id] ?? null;
+    return {
+      id,
+      title: t.features.items[id].title,
+      benefit: t.features.items[id].benefit,
+      bullets: t.features.items[id].bullets,
+      alt: photos[id]?.photo ?? '',
+      src: shot?.face.src ?? publicFile('features', id),
+      shot,
+      // The dialog's bigger picture, where it is a photo: the card's own
+      detail: publicFile('features', id),
+      detailAlt: photos[id]?.detail ?? photos[id]?.photo ?? '',
+      soon: released ? null : t.features.soon,
+      // App screens with sample data say so, outside the picture; the report says it is the PDF
+      example: shot ? t.features.example : null,
+      caption: shot?.frame === 'paper' ? t.features.report : null,
+      inEnglish: shot ? t.features.inEnglish || null : null,
+    };
+  });
+
   return (
     <>
       <SiteHeader locale={locale} path="/" />

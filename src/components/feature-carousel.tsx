@@ -11,8 +11,11 @@ import {
   type ReactNode,
 } from 'react';
 
+import type { AppShot } from '@/config/app-shots';
 import type { Dictionary } from '@/i18n';
 import { trapTab } from '@/lib/dialog';
+
+import { PhoneFrame } from './phone-frame';
 
 export type FeatureCard = {
   id: string;
@@ -26,8 +29,14 @@ export type FeatureCard = {
   /** The dialog's bigger picture, and what it shows. */
   detail: string | null;
   detailAlt: string;
-  /** "Example" on app screens with sample data. */
+  /** The app's own screens (src/config/app-shots.ts): the dialog shows them whole. */
+  shot: AppShot | null;
+  /** "Example" on app screens with sample data, said under the picture, never on it. */
   example: string | null;
+  /** What the pages are: "Monthly report (PDF)". */
+  caption: string | null;
+  /** Arabic only: the screens are of the app in English. */
+  inEnglish: string | null;
 };
 type Controls = Dictionary['features']['controls'];
 
@@ -354,19 +363,21 @@ function FeatureDialog({
               />
             </svg>
           </button>
-          <div className="feature-dialog-photo" data-screen={card.example ? '' : undefined}>
-            {card.detail && (
-              <Image
-                src={card.detail}
-                alt={card.detailAlt}
-                fill
-                sizes="(min-width: 48rem) 26rem, 90vw"
-                // An app screen is shown whole, on the app's white; a photo fills its frame
-                className={card.example ? 'object-contain' : 'object-cover'}
-              />
-            )}
-            {card.example && <span className="feature-example">{card.example}</span>}
-          </div>
+          {card.shot ? (
+            <AppShotFigure card={card} shot={card.shot} />
+          ) : (
+            <div className="feature-dialog-photo">
+              {card.detail && (
+                <Image
+                  src={card.detail}
+                  alt={card.detailAlt}
+                  fill
+                  sizes="(min-width: 48rem) 26rem, 90vw"
+                  className="object-cover"
+                />
+              )}
+            </div>
+          )}
           <div className="feature-dialog-text">
             {card.soon && <span className="feature-soon static">{card.soon}</span>}
             <h3 id="feature-dialog-title" className="display h3 mt-3">
@@ -389,5 +400,47 @@ function FeatureDialog({
         </div>
       )}
     </dialog>
+  );
+}
+
+/**
+ * The app's own screens, whole: in the site's phone frame, or for the monthly report (a PDF) as
+ * two sheets of paper, the first on top. Under them, never on them: Example, and what they are.
+ */
+function AppShotFigure({ card, shot }: { card: FeatureCard; shot: AppShot }) {
+  const [first, ...rest] = shot.pages;
+  const page = (p: AppShot['pages'][number], alt: string, sizes: string) => (
+    <Image
+      src={p.src}
+      alt={alt}
+      width={p.width}
+      height={p.height}
+      sizes={sizes}
+      className="block h-auto w-full"
+    />
+  );
+  return (
+    <figure className="feature-dialog-shot" data-frame={shot.frame}>
+      {shot.frame === 'paper' ? (
+        <div className="paper-stack">
+          {/* The second page under the first: the alt of the first says both */}
+          {rest.map((p) => (
+            <div key={p.src} className="paper-sheet" data-under>
+              {page(p, '', '(min-width: 48rem) 17rem, 60vw')}
+            </div>
+          ))}
+          <div className="paper-sheet">
+            {page(first, card.detailAlt, '(min-width: 48rem) 17rem, 60vw')}
+          </div>
+        </div>
+      ) : (
+        <PhoneFrame>{page(first, card.detailAlt, '(min-width: 48rem) 16rem, 50vw')}</PhoneFrame>
+      )}
+      <figcaption className="feature-dialog-caption">
+        {card.example && <span className="feature-example">{card.example}</span>}
+        {card.caption && <span>{card.caption}</span>}
+        {card.inEnglish && <span>{card.inEnglish}</span>}
+      </figcaption>
+    </figure>
   );
 }

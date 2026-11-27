@@ -197,6 +197,74 @@ test('feature cards: a photo on every card, the same shape, each saying what it 
   }
 });
 
+for (const path of ARABIC_ENABLED ? ['/', '/ar'] : ['/']) {
+  test(`${path}: the app's own screens on three cards, whole in their dialogs (WEBSITE 18)`, async ({
+    page,
+  }) => {
+    const ar = path === '/ar';
+    await page.goto(path);
+    for (const [id, frame, file] of [
+      ['squad', 'phone', 'squad-detail'],
+      ['parentReport', 'paper', 'parentReport-detail'],
+      ['matchRequests', 'phone', 'matchRequests-detail'],
+    ] as const) {
+      const card = page
+        .locator('.feature-card')
+        .filter({ has: page.locator(`#feature-${id}-title`) });
+      // Example is said off the picture, in the card's body, and covers none of it
+      const tag = card.locator('.feature-example');
+      await expect(tag).toHaveText(ar ? 'مثال' : 'Example');
+      await expect(card.locator('.feature-photo .feature-example')).toHaveCount(0);
+      await card.scrollIntoViewIfNeeded();
+      const photo = (await card.locator('.feature-photo').boundingBox())!;
+      const box = (await tag.boundingBox())!;
+      expect(box.y).toBeGreaterThanOrEqual(photo.y + photo.height);
+      // The face has its size set and waits until it is near
+      const face = card.locator('.feature-photo img');
+      await expect(face).toHaveAttribute('width', /\d+/);
+      await expect(face).toHaveAttribute('loading', 'lazy');
+
+      await card.locator('.feature-card-hit').dispatchEvent('click');
+      const shot = page.locator('.feature-dialog-shot');
+      await expect(shot).toHaveAttribute('data-frame', frame);
+      const pages = shot.locator('img');
+      await expect(pages.first()).toHaveAttribute('src', new RegExp(file));
+      const caption = shot.locator('figcaption');
+      await expect(caption.locator('.feature-example')).toHaveText(ar ? 'مثال' : 'Example');
+      if (ar) await expect(caption).toContainText('التطبيق معروض بالإنجليزية');
+      else await expect(caption).not.toContainText(/English/);
+      if (frame === 'paper') {
+        // A PDF: two sheets of paper, no phone, and it says so
+        await expect(shot.locator('.paper-sheet')).toHaveCount(2);
+        await expect(shot.locator('.phone')).toHaveCount(0);
+        await expect(caption).toContainText(ar ? 'التقرير الشهري (PDF)' : 'Monthly report (PDF)');
+        // The page on top describes both; the one under it adds nothing for screen readers
+        await expect(shot.locator('.paper-sheet:not([data-under]) img')).toHaveAttribute(
+          'alt',
+          /PDF/,
+        );
+        await expect(shot.locator('.paper-sheet[data-under] img')).toHaveAttribute('alt', '');
+      } else {
+        // The whole screen in the site's phone frame, its status bar drawn
+        await expect(shot.locator('.phone .phone-status')).toContainText('9:41');
+        await expect(pages).toHaveCount(1);
+        expect(((await pages.getAttribute('alt')) ?? '').length).toBeGreaterThan(30);
+        // Not stretched: drawn at the file's own shape
+        const img = (await pages.boundingBox())!;
+        const ratio =
+          Number(await pages.getAttribute('height')) / Number(await pages.getAttribute('width'));
+        expect(img.height / img.width).toBeCloseTo(ratio, 1);
+      }
+      await page.keyboard.press('Escape');
+      await expect(shot).toHaveCount(0);
+    }
+    // Inside the app: the Arabic page says the screens are in English
+    const note = page.locator('#inside .showcase-lang');
+    if (ar) await expect(note).toHaveText('التطبيق معروض بالإنجليزية');
+    else await expect(note).toHaveCount(0);
+  });
+}
+
 for (const [path, title, question] of [
   ['/', 'Monthly player report', 'Do parents see their child’s progress?'],
   ['/ar', 'تقرير شهري للاعب', 'هل يرى الأهل تقدّم أولادهم؟'],

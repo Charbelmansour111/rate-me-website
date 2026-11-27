@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import type { ReactNode } from 'react';
 
+import type { AppShot } from '@/config/app-shots';
+
 import { BoxCorner } from './pitch-lines';
 
 /**
@@ -19,6 +21,7 @@ export function FeatureCardFace({
     benefit: string;
     alt: string;
     src: string | null;
+    shot: AppShot | null;
     soon: string | null;
     example: string | null;
   };
@@ -27,23 +30,50 @@ export function FeatureCardFace({
 }) {
   return (
     <>
-      <span className="feature-photo">
-        {c.src && (
+      <span className="feature-photo" data-frame={c.shot?.frame}>
+        {c.shot?.frame === 'paper' ? (
+          // The report is a PDF: its first page lies as a sheet of paper, running off the bottom
+          <span className="feature-sheet">
+            <Image
+              src={c.shot.face.src}
+              alt={c.alt}
+              width={c.shot.face.width}
+              height={c.shot.face.height}
+              sizes="(min-width: 64rem) 18rem, (min-width: 40rem) 35vw, 52vw"
+              className="block h-auto w-full"
+              draggable={false}
+            />
+          </span>
+        ) : c.shot ? (
+          // An app screen, cut to 16:10 in the file itself, so every width shows the same part
           <Image
-            src={c.src}
+            src={c.shot.face.src}
             alt={c.alt}
-            fill
+            width={c.shot.face.width}
+            height={c.shot.face.height}
             sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 42vw, 62vw"
-            className="object-cover"
+            className="absolute inset-0 size-full object-cover"
             draggable={false}
           />
+        ) : (
+          c.src && (
+            <Image
+              src={c.src}
+              alt={c.alt}
+              fill
+              sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 42vw, 62vw"
+              className="object-cover"
+              draggable={false}
+            />
+          )
         )}
         <BoxCorner />
         {c.soon && <span className="feature-soon">{c.soon}</span>}
-        {c.example && <span className="feature-example">{c.example}</span>}
       </span>
       <span className="feature-body">
         <span className="feature-icon">{icon}</span>
+        {/* Example sits level with the icon, off the picture */}
+        {c.example && <span className="feature-example">{c.example}</span>}
         <span id={`feature-${c.id}-title`} className="display h3 feature-title">
           {c.title}
         </span>
