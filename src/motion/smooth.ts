@@ -27,6 +27,8 @@ export function startSmooth(signal: AbortSignal) {
     event.preventDefault();
     history.pushState(null, '', url.hash);
     lenis.scrollTo(target, {
+      // Quick, so the walk behind it is there in the same time (src/motion/walk-scroll.ts)
+      duration: 0.5,
       onComplete: () => {
         if (!target.matches('a[href], button, input, select, textarea, [tabindex]')) {
           target.tabIndex = -1;

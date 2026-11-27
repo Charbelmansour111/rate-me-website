@@ -549,9 +549,11 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
   });
   expect(progress).toBeGreaterThan(0.1);
   await ready(page);
+  // It plays there at a frame a screen frame at most (WEBSITE 24): some 200 frames take seconds
   await expect(page.locator('[data-walk]')).toHaveAttribute(
     'data-frame',
     String(frameAt(sequence, progress)),
+    { timeout: 15_000 },
   );
 });
 

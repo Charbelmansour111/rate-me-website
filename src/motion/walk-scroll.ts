@@ -1,6 +1,8 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import { loading } from '@/config/journey.config';
+
 import type { Walk } from './walk';
 
 /**
@@ -10,46 +12,30 @@ import type { Walk } from './walk';
 const DAMP = 0.12;
 
 /**
- * The speed limit while a hand scrolls: one frame of the walk per screen frame, or, once it has
- * fallen more than BEHIND frames behind, enough to cover the gap in CATCH ms: however fast the
- * scroll, the picture is never far behind it, whatever the screen's frame rate.
- */
-const CATCH = 400;
-/** Behind by more than this many frames, the speed limit lifts (a hand at its fastest: 0.5 s). */
-const BEHIND = 30;
-
-/**
- * A jump, not a scroll: the scroll's target moved this many frames in one update (a link, End, a
- * page opened half way down). A hand, even a fast one through smooth scrolling, moves it a few.
+ * A jump, not a scroll: the scroll's target moved this many frames (of the 381) in one update (End,
+ * a page opened half way down). A hand, even a fast flick through smooth scrolling, moves it a few.
  */
 const JUMP = 40;
+/** A jump (and a link within the page) glides to its frame in this many ms. */
+const GLIDE = 500;
 /**
- * After a jump, or a fast scroll that has stopped, the walk plays through at a steady speed and
- * arrives in this many ms.
+ * During a link's glide, until the page has stopped (no scroll for SETTLED ms), the walk is where the
+ * page is, without the speed limit: the page's own glide is eased.
  */
-const GLIDE = 330;
-/** A scroll that has not moved for this long (ms) has stopped. */
-const STOPPED = 150;
-/**
- * How long (ms) the picture waits for frames still coming before it settles for those further
- * apart: at first it holds on the last one it has rather than jump a gap; over HOLD it takes a
- * frame up to ANCHOR frames of the walk away (the frames kept for a jump, src/config/journey.config),
- * then any.
- */
-const HOLD = 400;
-const ANCHOR = 8;
+const SETTLED = 200;
 
 /**
- * The walk follows the scroll like a video: ScrollTrigger reads the page's scroll (under smooth
+ * The walk plays like a video (WEBSITE 24): ScrollTrigger reads the page's scroll (under smooth
  * scrolling, Lenis' animated one) as the target, and on GSAP's ticker, the loop Lenis runs in, the
- * picture eases toward it, damped, one frame of its set per screen frame at most while a hand
- * scrolls at a normal pace. Between two frames the walk blends them (src/motion/walk.ts).
+ * picture moves toward it through the frames in order, damped, never more than `loading.pace`
+ * frames of the 381 per screen frame (one frame: two steps once the in-between frames are in; half a
+ * step on a phone's thinned set, blending the two), and only onto frames that are decoded: when the next is not,
+ * it waits on the one it has. So a flick never skips, cuts or shows a frame twice blended; the
+ * scroll itself stays free, and the picture catches up the same way once it stops.
  *
- * WEBSITE 22: it never jumps across a gap of frames it does not have. Where the next position has
- * no decoded frame near it, the picture holds on the last one until it comes in (milliseconds, from
- * the bytes the worker keeps), then moves on at its steady rate. A fast scroll keeps the picture at
- * most CATCH ms of its travel behind; once the scroll stops, and after a jump, it glides there at a
- * steady speed in GLIDE ms.
+ * A jump is the one exception: End, a page opened half way down, or a link within the page (a menu
+ * item) goes there in about GLIDE ms through the frames it has on the way: a jump in one glide, a
+ * link by keeping close to the page, which glides there in the same time.
  */
 export function scrubWalk(
   picture: Walk,
@@ -59,16 +45,21 @@ export function scrubWalk(
 ) {
   let target = picture.progress();
   let at = target;
-  /** After a jump: how far the walk moves each ms until it has arrived (0: no jump). */
+  /** A jump under way: where it goes and how far it moves each ms (0: none). */
+  let jumpTo = 0;
   let glide = 0;
-  /** When the target last moved, and how long the picture has held for a frame. */
+  /** A link's jump under way, until the page stops; when the scroll last moved. */
+  let linked = false;
   let moved = 0;
-  let held = 0;
+  const steps = innerWidth < loading.phoneWidth ? loading.phonePace : loading.pace;
+
+  const jump = (to: number) => {
+    jumpTo = Math.min(1, Math.max(0, to));
+    glide = Math.abs(jumpTo - at) / GLIDE;
+  };
   const aim = (progress: number) => {
-    // A jump sets a steady speed from its whole length, so it arrives in GLIDE ms
-    if (Math.abs(progress - target) > JUMP * picture.step()) {
-      glide = Math.abs(progress - at) / GLIDE;
-    }
+    // (A link's glide moves the page fast at first: the walk follows it instead, below)
+    if (!linked && Math.abs(progress - target) > JUMP * picture.frame()) jump(progress);
     if (progress !== target) moved = performance.now();
     target = progress;
   };
@@ -83,45 +74,62 @@ export function scrubWalk(
     onUpdate: (self) => aim(self.progress),
     onRefresh: (self) => aim(self.progress),
   });
+  // Opened half way down, or scrolled far before this code loaded: a jump there
   aim(trigger.progress);
 
+  /**
+   * A link within the page (the menu, the hero's button): the page glides there (smooth scrolling
+   * or the browser's own), and the walk keeps up with it rather than play every frame on the way.
+   */
+  function onClick(event: MouseEvent) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
+    const link = (event.target as Element | null)?.closest?.<HTMLAnchorElement>('a[href*="#"]');
+    if (!link || link.target) return;
+    const url = new URL(link.href);
+    if (url.origin !== location.origin || url.pathname !== location.pathname || !url.hash) return;
+    if (!document.getElementById(decodeURIComponent(url.hash.slice(1)))) return;
+    linked = true;
+    glide = 0;
+    moved = performance.now();
+  }
+  addEventListener('click', onClick, { capture: true, signal });
+
   const tick = (_time: number, deltaTime: number) => {
-    const gap = target - at;
-    if (gap === 0) return;
-    const frame = picture.step();
     // A long pause (a hidden tab) counts as one screen frame
     const dt = Math.min(deltaTime, 100);
-    // The scroll has stopped well short of where the picture is: glide there at a steady speed
-    if (!glide && Math.abs(gap) > 2 * frame && performance.now() - moved > STOPPED) {
-      glide = Math.abs(gap) / GLIDE;
-    }
-    let next: number;
     if (glide) {
-      // Straight there at its speed, the frames blending as they pass
-      next = Math.abs(gap) <= glide * dt ? target : at + Math.sign(gap) * glide * dt;
-    } else {
-      // A hand: damped, within the speed limit
-      let move = gap * (1 - Math.exp(-dt / 1000 / DAMP));
-      const limit =
-        Math.abs(gap) > BEHIND * frame ? Math.max(frame, (Math.abs(gap) * dt) / CATCH) : frame;
-      if (Math.abs(move) > limit) move = Math.sign(move) * limit;
-      // Close enough to show the frame it is on: stop there
-      next = Math.abs(gap - move) < frame * 0.02 ? target : at + move;
-    }
-    // No frame near where it would go (still coming): hold on the one it has, for a while. Only
-    // close to where the page is: far behind (a jump, a fast scroll) it keeps its steady speed
-    // through the frames it has, so it arrives on time however slowly frames decode
-    const reach = Math.max(frame, Math.abs(next - at)) + (held / HOLD) * ANCHOR * frame;
-    const near = picture.covers(next, reach);
-    const close = Math.abs(target - next) <= BEHIND * frame;
-    if (!near && close && held < HOLD) {
-      held += dt;
+      // A jump: straight there at its speed, through the frames it has
+      const gap = jumpTo - at;
+      at = Math.abs(gap) <= glide * dt ? jumpTo : at + Math.sign(gap) * glide * dt;
+      if (at === jumpTo) glide = 0;
+      seek(at, at === target);
       return;
     }
-    // Waited long enough: it moves on with what there is, until frames are near again
-    if (near) held = 0;
+    const gap = target - at;
+    if (linked) {
+      // A link's glide: the page itself glides there in GLIDE ms (src/motion/smooth.ts); the picture
+      // is where the page is, through the frames it has, until it stops
+      if (gap === 0) {
+        if (performance.now() - moved > SETTLED) linked = false;
+        return;
+      }
+      at = target;
+      seek(at, true);
+      return;
+    }
+    if (gap === 0) return;
+    const step = picture.step();
+    // Damped toward the scroll, within the speed limit
+    let move = gap * (1 - Math.exp(-dt / 1000 / DAMP));
+    const limit = steps * picture.frame();
+    if (Math.abs(move) > limit) move = Math.sign(move) * limit;
+    // Close enough to show the frame it is on: stop there
+    const wanted = Math.abs(gap - move) < step * 0.02 ? target : at + move;
+    // Only as far as the frames are decoded: else it waits on the one it has
+    const next = picture.reach(at, wanted);
+    if (next === at) return;
     at = next;
-    if (at === target) glide = 0;
     seek(at, at === target);
   };
   gsap.ticker.add(tick);

@@ -57,14 +57,15 @@ export const frameList = ({ count }: Sequence, stride = 1) =>
  * The frames worth having decoded with the walk at `at` (a frame number): those within
  * `loading.window`, or, while it moves (`direction` 1 or -1), `loading.ahead` in front and
  * `loading.behind` behind; every `loading.anchorEvery`-th one so a jump lands near one; the last.
- * Moving fast (`speed`, frames per screen frame, above the list's spacing) the walk passes frames it
- * never shows: it reaches further ahead, the same number of screen frames, and takes only every
+ * Jumping (`speed`, frames per screen frame, above the walk's speed limit) the walk passes frames
+ * it never shows: it reaches further ahead, the same number of screen frames, and takes only every
  * frame it lands near, so decoding keeps up. `scale` narrows the reach where the list is denser than
  * its set's stride (tier 2 in), so about as many frames stay decoded (WEBSITE 23: memory).
  */
 export const wanted = (all: readonly number[], at: number, direction = 0, speed = 0, scale = 1) => {
   const stride = spacingOf(all);
-  const fast = direction && speed > stride;
+  // Faster than the walk's speed limit (loading.pace frames a screen frame): only a jump is
+  const fast = direction && speed > Math.max(loading.pace + 1, stride);
   const ahead = loading.ahead * scale;
   const reach = fast ? Math.max(ahead, Math.ceil(speed * 20)) : ahead;
   // Fast, a frame decoded just behind it still serves: it arrives a screen frame or two late
@@ -99,6 +100,23 @@ export function apart(all: readonly number[], a: number, b: number) {
     else hi = mid;
   }
   return lo < all.length && all[lo] < b;
+}
+
+/** The frames of a sorted list either side of `x` (the same one twice when `x` is on it). */
+export function bracket(
+  all: readonly number[],
+  x: number,
+): [number | undefined, number | undefined] {
+  let lo = 0;
+  let hi = all.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (all[mid] < x) lo = mid + 1;
+    else hi = mid;
+  }
+  // all[lo] is the first at or past x
+  if (all[lo] === x) return [x, x];
+  return [all[lo - 1], all[lo]];
 }
 
 /** Two sorted lists as one, sorted. */

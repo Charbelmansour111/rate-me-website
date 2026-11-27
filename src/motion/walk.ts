@@ -12,7 +12,7 @@ import {
 import {
   apart,
   blend,
-  covered,
+  bracket,
   frameList,
   merge,
   nearest,
@@ -23,7 +23,19 @@ import {
   wanted,
 } from './walk-frames';
 
-export { blend, covered, frameList, nearest, strideFor, wanted };
+export { blend, frameList, nearest, strideFor, wanted };
+
+/** Where a visit notes that it held a set whole (its render and stride): the next needs no gate. */
+const heldKey = ({ sequence, stride }: { sequence: Sequence; stride: number }) =>
+  `walk-held ${sequence.path} ${sequence.rev} ${stride}`;
+
+function remember(reel: { sequence: Sequence; stride: number }) {
+  try {
+    localStorage.setItem(heldKey(reel), '1');
+  } catch {
+    // Private windows, storage off: the gate shows again next time
+  }
+}
 
 const idle = (run: () => void) => {
   if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 1000 });
@@ -144,13 +156,25 @@ export type Walk = {
   seek(progress: number, resting?: boolean): void;
   /** Where it is now, 0 to 1. */
   progress(): number;
-  /** One frame of the set on show, in progress (0 to 1): the most the walk moves in a frame. */
+  /** One frame of the set's 381 (whatever is in use), in progress (0 to 1). */
+  frame(): number;
+  /**
+   * One step of the list in use, in progress: an in-between frame once tier 2 is in, else a frame
+   * of the set at its stride. The walk moves a few of these a screen frame at most.
+   */
   step(): number;
   /**
-   * Whether the picture can be at `progress` without jumping across a gap: a decoded frame lies
-   * within `reach` (in progress) of it.
+   * How far from `from` toward `to` (progress) the picture can go on decoded frames alone: `to` if
+   * the frames either side of it are decoded, else the furthest decoded frame of the list on the
+   * way, else `from` (it waits).
    */
-  covers(progress: number, reach: number): boolean;
+  reach(from: number, to: number): number;
+  /** The set's files the worker holds, of how many; whether the frames round the walk are in. */
+  held(): { held: number; total: number; ready: boolean };
+  /** Fetches the rest of the set now, not at the first scroll (the first visit's gate). */
+  fetchNow(): void;
+  /** Whether this browser held the whole set on an earlier visit (in its Cache API). */
+  known(): boolean;
   /** Where the walk ends: the scroll position of its last frame. */
   end(): number;
 };
@@ -224,13 +248,21 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
           grew = true;
         }
       }
-      if (grew)
+      if (grew) {
         one.all = merge(
           one.tier1,
           [...one.held2].sort((a, b) => a - b),
         );
+        // New frames round the walk: decode them (the walk may be waiting on one)
+        if (one === reel) {
+          markReady(one);
+          pump(one);
+        }
+      }
       if (one === reel) {
         canvas.dataset.dense = String(one.held2.size);
+        // Held whole: a later visit finds it in the Cache API and needs no gate
+        if (one.held1.size === one.tier1.length) remember(one);
         // The set is held: now tier 2, from where the walk is
         if (one.tier2.length && one.held1.size === one.tier1.length && !one.held2.size && !grew) {
           fetchAll(one);
@@ -482,6 +514,19 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     }
   }
 
+  /** The rest of the set: at the first sign of use, a while after load, or now (the gate). */
+  let begun = false;
+  let eager = false;
+  function begin() {
+    if (begun || !started || signal.aborted) return;
+    begun = true;
+    idle(() => fetchAll(reel));
+  }
+  function fetchNow() {
+    eager = true;
+    begin();
+  }
+
   pick();
   // The first frame is the canvas' CSS background: the rest waits until the page has loaded,
   // painted and gone quiet, so fetching and decoding never compete with the first paint.
@@ -497,12 +542,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
         pump(reel);
         // The rest of the set once the visitor is under way (or a while on), when it is quiet, so
         // it never competes with the page settling
-        let begun = false;
-        const begin = () => {
-          if (begun || signal.aborted) return;
-          begun = true;
-          idle(() => fetchAll(reel));
-        };
+        if (eager) begin();
         for (const type of ['scroll', 'pointerdown', 'keydown', 'wheel', 'touchstart']) {
           addEventListener(type, begin, { once: true, passive: true, signal });
         }
@@ -566,13 +606,43 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       follow();
     },
     progress: () => position,
-    step: () => shown.stride / Math.max(1, shown.sequence.count - 1),
-    covers(progress, reach) {
+    frame: () => 1 / Math.max(1, shown.sequence.count - 1),
+    step: () => spacingOf(shown.all) / Math.max(1, shown.sequence.count - 1),
+    reach(from, to) {
       // Nothing decoded yet: the first frame (the canvas' CSS background) stands
-      if (!shown.images.size) return true;
-      const count = shown.sequence.count - 1;
-      return covered(shown.images.keys(), progress * count, reach * count);
+      if (!shown.images.size) return to;
+      const count = Math.max(1, shown.sequence.count - 1);
+      const ok = (i: number | undefined) =>
+        i === undefined || shown.images.has(i) || shown.broken.has(i);
+      const [lo, hi] = bracket(shown.all, to * count);
+      if (ok(lo) && ok(hi)) return to;
+      // The frames it waits on: asked for now, ahead of anything else
+      for (const i of [lo, hi]) {
+        if (i !== undefined && !ok(i) && !shown.pending.has(i) && shown === reel) {
+          void load(shown, i);
+        }
+      }
+      // The furthest frame of the list between the two that is decoded
+      const a = from * count;
+      const b = to * count;
+      const way = shown.all.filter((i) => (b > a ? i > a && i < b : i < a && i > b));
+      if (b > a) way.reverse();
+      const stop = way.find((i) => shown.images.has(i));
+      return stop === undefined ? from : stop / count;
     },
+    known: () => {
+      try {
+        return localStorage.getItem(heldKey(reel)) === '1';
+      } catch {
+        return false;
+      }
+    },
+    held: () => ({
+      held: reel.held1.size,
+      total: reel.tier1.length,
+      ready: canvas.dataset.ready === 'true',
+    }),
+    fetchNow,
     end,
   };
 }

@@ -105,6 +105,10 @@ export const loading = {
   fetchers: 6,
   phoneFetchers: 4,
   decoders: 4,
+  // The walk's speed limit (WEBSITE 24): frames of the set's 381 per screen frame (one frame: two
+  // steps once the in-between frames are in)
+  pace: 1,
+  phonePace: 1,
   firstDecoders: 2,
   backgroundAfter: 6000,
   cache: 'walk-frames',

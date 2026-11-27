@@ -14,8 +14,17 @@ import {
   stillAt,
 } from '@/config/journey.config';
 import { hasFrames } from '@/lib/journey-files';
-import { blend, covered, frameList, nearest, shapeFor, strideFor, wanted } from '@/motion/walk';
-import { apart, betweenList, merge, outward, spacingOf, tierTwo } from '@/motion/walk-frames';
+import { blend, frameList, nearest, shapeFor, strideFor, wanted } from '@/motion/walk';
+import {
+  apart,
+  betweenList,
+  bracket,
+  covered,
+  merge,
+  outward,
+  spacingOf,
+  tierTwo,
+} from '@/motion/walk-frames';
 import { halfMotion, pairMotion } from '@/config/walk-pairs';
 
 const { landscape, portrait } = journey;
@@ -241,6 +250,10 @@ describe('the walk', () => {
     expect(apart(all, 0, 1)).toBe(true);
     expect(apart(all, 1, 2)).toBe(false);
     expect(apart(all, 0.5, 1)).toBe(false);
+    // The frames either side of a position: the walk moves only where both are decoded
+    expect(bracket(all, 0.75)).toEqual([0.5, 1]);
+    expect(bracket(all, 2)).toEqual([2, 2]);
+    expect(bracket(all, 3.5)).toEqual([3, undefined]);
     expect(spacingOf(frameList(landscape))).toBe(1);
     const dense = merge(frameList(landscape), betweenList(landscape));
     expect(spacingOf(dense)).toBe(0.5);
