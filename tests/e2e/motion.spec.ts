@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 import { frameAt, journey, pairWindow, type Sequence } from '../../src/config/journey.config';
-import { frameList, nearest, wanted } from '../../src/motion/walk-frames';
+import { frameList, nearest, tierTwo, wanted } from '../../src/motion/walk-frames';
 import { ROLE_SHAPES } from '../../src/motion/tactics-data';
 import { ARABIC_ENABLED } from '../../src/config/site';
 import { hasFrames } from '../../src/lib/journey-files';
@@ -315,10 +315,21 @@ test('the walk: at rest one frame alone, never two blended', async ({ page, isMo
       return Math.abs(a - (await walk.evaluate((el) => Number((el as HTMLElement).dataset.at))));
     })
     .toBeLessThan(0.001);
-  await expect(walk).toHaveAttribute('data-blend', new RegExp(`^10 ${10 + s} (0|1)\\.000$`));
+  // One frame on show (all of one, none of the other), the one nearest where the walk is: a frame
+  // of the set or, once tier 2 is in, an in-between one (WEBSITE 23)
+  const alone = () =>
+    walk.evaluate((el) => {
+      const { blend, at } = (el as HTMLElement).dataset;
+      const [from, to, alpha] = blend!.split(' ').map(Number);
+      const shown = alpha >= 0.5 ? to : from;
+      return { one: alpha === 0 || alpha === 1, off: Math.abs(shown - Number(at)), from };
+    });
+  await expect.poll(async () => (await alone()).one).toBe(true);
+  expect((await alone()).off).toBeLessThanOrEqual(s / 2 + 0.001);
+  expect((await alone()).from).toBeGreaterThanOrEqual(10);
   // A whole frame shows alone
   await to(20, Math.ceil);
-  await expect(walk).toHaveAttribute('data-blend', new RegExp(`^20 (20|${20 + s}) 0\\.000$`));
+  await expect(walk).toHaveAttribute('data-blend', /^20 \d+(\.5)? 0\.000$/);
 });
 
 test('the walk: the very bottom of the page shows the last frame', async ({ page, isMobile }) => {
@@ -588,7 +599,7 @@ test('the walk: saving data loads every second frame', async ({ page, isMobile }
   expect(asked.length).toBeLessThanOrEqual(wanted(frameList(sequence, 2), 0).length);
 });
 
-test('the walk: frames wait for the first paint, then the whole set comes in the background, once', async ({
+test('the walk: frames wait for the first paint, then the whole set, then tier 2, each once', async ({
   page,
   isMobile,
 }) => {
@@ -610,30 +621,44 @@ test('the walk: frames wait for the first paint, then the whole set comes in the
   const later = () => asked.filter(({ frame }) => frame !== 0);
   expect(later().length).toBeGreaterThan(0);
   expect(Math.min(...later().map(({ at }) => at))).toBeGreaterThan(painted);
+  const mids: { frame: number; at: number }[] = [];
   // The frames round the top come first
   expect(
     later()
+    const mid = request.url().match(/\/journey\/mid\/f(\d+)-1\./);
+    if (mid) mids.push({ frame: Number(mid[1]) + 0.5, at: Date.now() });
       .slice(0, 8)
       .every(({ frame }) => frame <= 24 * stride),
   ).toBe(true);
   // Then every frame of the set at its stride, each fetched once, kept by the worker
   const all = frameList(sequence, stride);
   await expect
-    .poll(() => new Set(later().map(({ frame }) => frame)).size, { timeout: 60_000 })
+    .poll(() => new Set(tier1().map(({ frame }) => frame)).size, { timeout: 60_000 })
     .toBe(wholeSet(sequence, stride));
-  expect(later().length).toBe(wholeSet(sequence, stride));
-  expect(later().every(({ frame }) => all.includes(frame))).toBe(true);
-  await expect(page.locator('[data-walk]')).toHaveAttribute('data-stored', String(all.length), {
+  expect(tier1().length).toBe(wholeSet(sequence, stride));
+  // Then tier 2 (WEBSITE 23), on this good connection, each once, only after the set: on a phone
+  // the frames its thinned set skips, on a computer the in-between frames
+  const tier2 = () => (isMobile ? later().filter(({ frame }) => !all.includes(frame)) : mids);
+  const expected = tierTwo(sequence, stride, isMobile).length;
+  await expect.poll(() => tier2().length, { timeout: 60_000 }).toBe(expected);
+  expect(new Set(tier2().map(({ frame }) => frame)).size).toBe(expected);
+  expect(Math.min(...tier2().map(({ at }) => at))).toBeGreaterThanOrEqual(
+    Math.max(...tier1().map(({ at }) => at)),
+  );
+  const walk = page.locator('[data-walk]');
+  await expect(walk).toHaveAttribute('data-stored', String(all.length + expected), {
     timeout: 20_000,
   });
-  // Only a window is decoded: further down, the window moves with it and the frames it left are
-  // let go
+  await expect(walk).toHaveAttribute('data-dense', String(expected));
+  // Only a window is decoded, about 150 MB of pictures at most: further down, the window moves
+  // with it and the frames it left are let go
   await page.evaluate(() =>
     scrollTo({ top: document.documentElement.scrollHeight / 2, behavior: 'instant' }),
   );
   await ready(page);
-  const kept = Number(await page.locator('[data-walk]').getAttribute('data-loaded'));
-  expect(kept).toBeLessThanOrEqual(all.length / 3);
+  const kept = Number(await walk.getAttribute('data-loaded'));
+  expect(kept * ((960 * 540 * 4) / 1e6)).toBeLessThanOrEqual(150);
+  const tier1 = () => later().filter(({ frame }) => all.includes(frame));
 });
 
 /** Serves the page as it is built with a portrait set, whether or not there is one yet. */
@@ -709,10 +734,11 @@ test('the walk: falls back to landscape when the portrait set fails', async ({ p
   await page.setViewportSize({ width: 412, height: 839 });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
-  // A phone's width: every second frame of the dense landscape set
+  // A phone's width: every second frame of the dense landscape set, then (tier 2, WEBSITE 23) the
+  // frames it skipped, each once: the whole set in the end
   await expect
-    .poll(() => asked('landscape'), { timeout: 20_000 })
-    .toBe(wholeSet(journey.landscape, 2));
+    .poll(() => asked('landscape'), { timeout: 40_000 })
+    .toBe(wholeSet(journey.landscape, 1));
 });
 
 test('the walk: without a portrait folder nothing asks for it', async ({ page }) => {

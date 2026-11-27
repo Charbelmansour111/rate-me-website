@@ -10,13 +10,16 @@ import {
 } from '@/config/journey.config';
 
 import {
-  betweenList,
+  apart,
   blend,
   covered,
   frameList,
+  merge,
   nearest,
   outward,
+  spacingOf,
   strideFor,
+  tierTwo,
   wanted,
 } from './walk-frames';
 
@@ -50,7 +53,7 @@ const fromBitmap = (bitmap: ImageBitmap): Frame => ({
  * receives whole bitmaps. Without workers or createImageBitmap, or if the worker cannot start, the
  * frames are decoded here instead, and nothing is fetched ahead.
  */
-function frameDecoder(onStored: (count: number) => void) {
+function frameDecoder(onStored: (count: number, urls: string[]) => void) {
   const waiting = new Map<
     number,
     { url: string; resolve: (frame: Frame) => void; reject: () => void }
@@ -70,9 +73,10 @@ function frameDecoder(onStored: (count: number) => void) {
     ({
       data,
     }: MessageEvent<
-      { type: 'decoded'; id: number; bitmap?: ImageBitmap } | { type: 'stored'; count: number }
+      | { type: 'decoded'; id: number; bitmap?: ImageBitmap }
+      | { type: 'stored'; count: number; urls: string[] }
     >) => {
-      if (data.type === 'stored') return onStored(data.count);
+      if (data.type === 'stored') return onStored(data.count, data.urls);
       const job = waiting.get(data.id);
       waiting.delete(data.id);
       if (!job) return data.bitmap?.close();
@@ -111,15 +115,20 @@ export const shapeFor = (width: number, height: number, hasPortrait: boolean): S
   hasPortrait && height > width ? 'portrait' : 'landscape';
 
 /**
- * A sequence: the frames it can show at its stride (with the in-between ones, tier 2, where they
- * are used), those decoded and those on their way.
+ * A sequence: the frames it can show (its set at its stride, and those of tier 2 already held),
+ * those decoded and those on their way.
  */
 type Reel = {
   sequence: Sequence;
   stride: number;
   all: number[];
-  /** The frames themselves (tier 1), and the in-between ones (tier 2), for the background. */
-  tiers: number[][];
+  /** The set at its stride (tier 1) and tier 2 (src/motion/walk-frames.ts, tierTwo). */
+  tier1: number[];
+  tier2: number[];
+  /** Which files the worker holds: of tier 1 how many, of tier 2 which (by address). */
+  held1: Set<string>;
+  held2: Set<number>;
+  byUrl: Map<string, { tier: 1 | 2; at: number }>;
   images: Map<number, Frame>;
   pending: Set<number>;
   /** Frames that failed: not asked for again; their neighbours stand in. */
@@ -169,6 +178,14 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   const saveData = Boolean(connection?.saveData);
   /** Below 4G: the thinned set, as on a phone. */
   const slow = ['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '');
+  /**
+   * Tier 2 only on 4G or better, never to save data. A browser that does not say (Safari, Firefox)
+   * is taken to be on a good connection: it gets tier 2 after the whole set, as Chrome on 4G does.
+   */
+  const good = !saveData && (connection?.effectiveType ?? '4g') === '4g';
+  /** Until the first window round the walk is in, it is decoded a few at a time when quiet. */
+  let warmed = false;
+  let quiet = false;
   /** Nothing is fetched until the page has loaded and painted (see `afterPaint` below). */
   let started = false;
   /** The frame the kept window was last centred on, which way and how fast the walk was going. */
@@ -189,7 +206,38 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   /** Along the walk, 0 to 1: until the scroll drives it, where the page was opened. */
   let position = Math.min(1, Math.max(0, scrollY / end()));
   let resting = true;
-  const decoder = frameDecoder((count) => (canvas.dataset.stored = String(count)));
+  const decoder = frameDecoder(stored);
+
+  /**
+   * Files the worker has come to hold: tier 2 frames join the walk as they arrive, and once the
+   * whole set is held, tier 2 is asked for.
+   */
+  function stored(count: number, urls: string[]) {
+    canvas.dataset.stored = String(count);
+    for (const one of reels.values()) {
+      let grew = false;
+      for (const url of urls) {
+        const found = one.byUrl.get(url);
+        if (found?.tier === 1) one.held1.add(url);
+        else if (found && !one.held2.has(found.at)) {
+          one.held2.add(found.at);
+          grew = true;
+        }
+      }
+      if (grew)
+        one.all = merge(
+          one.tier1,
+          [...one.held2].sort((a, b) => a - b),
+        );
+      if (one === reel) {
+        canvas.dataset.dense = String(one.held2.size);
+        // The set is held: now tier 2, from where the walk is
+        if (one.tier2.length && one.held1.size === one.tier1.length && !one.held2.size && !grew) {
+          fetchAll(one);
+        }
+      }
+    }
+  }
 
   /** What is on the canvas: the set, its two frames and the fade in 255ths (the finest shown). */
   let drawn = '';
@@ -214,13 +262,14 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   function draw() {
     if (reel.images.size) shown = reel;
     const { sequence, images } = shown;
-    const mix = blend(
-      images.keys(),
-      position * (sequence.count - 1),
-      resting ? 0 : (from, to) => pairWindow(sequence, from, to),
-      shown.stride,
-    );
+    const at = position * (sequence.count - 1);
+    let mix = blend(images.keys(), at, resting ? 0 : (from, to) => pairWindow(sequence, from, to));
     if (!mix) return;
+    // Never across a frame of the set between the two, decoded or not: the nearest alone
+    if (mix.from !== mix.to && apart(shown.all, mix.from, mix.to)) {
+      const only = at - mix.from <= mix.to - at ? mix.from : mix.to;
+      mix = { from: only, to: only, alpha: 0 };
+    }
     const below = images.get(mix.from)!;
     // Sized to the frames, not the screen: a turn or a resize redraws nothing.
     if (canvas.width !== below.width || canvas.height !== below.height) {
@@ -251,7 +300,15 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
 
   /** Where the walk is on a reel, in frames. */
   const frameOf = (from: Reel) => position * (from.sequence.count - 1);
-  const want = (from: Reel) => wanted(from.all, frameOf(from), direction, speed);
+  /** Narrower where tier 2 makes the frames denser than the set's stride: as many stay decoded. */
+  const want = (from: Reel) =>
+    wanted(
+      from.all,
+      frameOf(from),
+      direction,
+      speed,
+      Math.min(1, spacingOf(from.all) / from.stride),
+    );
 
   /** Says, for the tests, whether every frame around the walk's position is in. */
   function markReady(from: Reel) {
@@ -313,25 +370,44 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     pick();
   }
 
-  /** Keeps `loading.decoders` frames decoding, the nearest first. */
+  /**
+   * Keeps `loading.decoders` frames decoding, the nearest first. Until the first window is in (and
+   * the walk has not moved), `loading.firstDecoders` at a time, each batch in a quiet moment, so the
+   * page's own first work never waits behind them (WEBSITE 23: Lighthouse).
+   */
   function pump(from: Reel) {
     if (!started || signal.aborted || from !== reel) return;
+    if (!warmed && canvas.dataset.ready === 'true' && from.images.size) warmed = true;
+    if (!warmed) {
+      if (quiet) return;
+      quiet = true;
+      idle(() => {
+        quiet = false;
+        if (signal.aborted || from !== reel) return;
+        const room = Math.max(0, loading.firstDecoders - from.pending.size);
+        for (const i of toLoad(from).slice(0, room)) void load(from, i);
+      });
+      return;
+    }
     for (const i of toLoad(from).slice(0, Math.max(0, loading.decoders - from.pending.size))) {
       void load(from, i);
     }
   }
 
   /**
-   * The files of the set to fetch in the background, from where the walk is outward: the frames
-   * themselves first, the in-between ones after. Not when saving data: only what the walk shows.
+   * The files of the set to fetch in the background, from where the walk is outward; once they are
+   * all held, tier 2 the same way, on a good connection. Not when saving data: only what the walk
+   * shows.
    */
   function fetchAll(from: Reel) {
     if (!started || saveData) return;
     const at = frameOf(from);
     fetchedFrom = at;
-    const urls = from.tiers.flatMap((tier) =>
-      outward(tier, at).map((i) => frameUrl(from.sequence, i)),
-    );
+    const whole = from.held1.size === from.tier1.length;
+    const urls = [
+      ...outward(from.tier1, at),
+      ...(whole && good ? outward(from.tier2, at) : []),
+    ].map((i) => frameUrl(from.sequence, i));
     decoder.fetch(urls, innerWidth < loading.phoneWidth ? loading.phoneFetchers : loading.fetchers);
   }
 
@@ -346,6 +422,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     if (Math.abs(at - centre) < 4) return;
     // Which way it goes: the next frames are decoded in front of it
     direction = centre === -Infinity ? 0 : Math.sign(at - centre);
+    // Under way: decoding at full pace from now
+    if (centre !== -Infinity) warmed = true;
     centre = at;
     const keep = new Set(want(from));
     for (const [i, frame] of from.images) {
@@ -368,14 +446,24 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       const sequence = journey[shape];
       const phone = innerWidth < loading.phoneWidth;
       const stride = strideFor(sequence, { phone, saveData, slow });
-      const frames = frameList(sequence, stride);
-      // In-between frames only where every frame is used: a wide screen on a good connection
-      const between = stride === 1 && !phone ? betweenList(sequence) : [];
+      const tier1 = frameList(sequence, stride);
+      // Tier 2 on a good connection, and on a phone only where the phone thinned the set
+      const tier2 =
+        good && (phone ? stride === loading.phoneStride : stride === 1)
+          ? tierTwo(sequence, stride, phone)
+          : [];
+      const byUrl = new Map<string, { tier: 1 | 2; at: number }>();
+      for (const at of tier1) byUrl.set(frameUrl(sequence, at), { tier: 1, at });
+      for (const at of tier2) byUrl.set(frameUrl(sequence, at), { tier: 2, at });
       next = {
         sequence,
         stride,
-        all: [...frames, ...between].sort((a, b) => a - b),
-        tiers: [frames, between],
+        all: tier1,
+        tier1,
+        tier2,
+        held1: new Set(),
+        held2: new Set(),
+        byUrl,
         images: new Map(),
         pending: new Set(),
         broken: new Set(),
@@ -446,7 +534,17 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
 
   signal.addEventListener('abort', () => {
     decoder.stop();
-    for (const key of ['loaded', 'ready', 'stride', 'stored', 'wanted', 'frame', 'blend', 'at']) {
+    for (const key of [
+      'loaded',
+      'ready',
+      'stride',
+      'stored',
+      'dense',
+      'wanted',
+      'frame',
+      'blend',
+      'at',
+    ]) {
       delete canvas.dataset[key];
     }
     delete canvas.dataset.shape;

@@ -6,8 +6,8 @@
  * - `fetch` (urls, parallel): the files to have, in order; replaces the list before. Fetched
  *   `parallel` at a time at low priority, after any frame asked for to decode.
  * - `cache` (name): the Cache API cache to keep the bytes in; older ones of the walk go.
- * It answers `decode` with the bitmap (or nothing, if the frame failed) and reports `stored`, how
- * many files it holds, every 16 files and when the list is done.
+ * It answers `decode` with the bitmap (or nothing, if the frame failed) and reports `stored`: how
+ * many files it holds and which came in since, every 16 files and when the list is done.
  */
 type Message =
   | { type: 'decode'; id: number; url: string }
@@ -23,6 +23,8 @@ const scope = self as unknown as Scope;
 /** The files held, by address, and those on their way. */
 const bytes = new Map<string, Blob>();
 const coming = new Map<string, Promise<Blob>>();
+/** Files come in since the page was last told. */
+let fresh: string[] = [];
 let cache: Promise<Cache | undefined> = Promise.resolve(undefined);
 /** The background list, and how many of its fetches are running. */
 let queue: string[] = [];
@@ -65,8 +67,10 @@ function get(url: string, priority: 'high' | 'low'): Promise<Blob> {
       }
       bytes.set(url, blob);
       // Told now and then, not for every file: each message is a task on the page
-      if (bytes.size % 16 === 0 || !queue.length) {
-        scope.postMessage({ type: 'stored', count: bytes.size });
+      fresh.push(url);
+      if (fresh.length >= 16 || !queue.length) {
+        scope.postMessage({ type: 'stored', count: bytes.size, urls: fresh });
+        fresh = [];
       }
       return blob;
     })().finally(() => coming.delete(url));

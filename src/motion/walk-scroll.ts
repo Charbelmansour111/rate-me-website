@@ -108,10 +108,13 @@ export function scrubWalk(
       // Close enough to show the frame it is on: stop there
       next = Math.abs(gap - move) < frame * 0.02 ? target : at + move;
     }
-    // No frame near where it would go (still coming): hold on the one it has, for a while
+    // No frame near where it would go (still coming): hold on the one it has, for a while. Only
+    // close to where the page is: far behind (a jump, a fast scroll) it keeps its steady speed
+    // through the frames it has, so it arrives on time however slowly frames decode
     const reach = Math.max(frame, Math.abs(next - at)) + (held / HOLD) * ANCHOR * frame;
     const near = picture.covers(next, reach);
-    if (!near && held < HOLD) {
+    const close = Math.abs(target - next) <= BEHIND * frame;
+    if (!near && close && held < HOLD) {
       held += dt;
       return;
     }

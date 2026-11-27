@@ -17,16 +17,31 @@ export function strideFor(
 }
 
 /**
- * The in-between frames (tier 2) of a set, as positions with a fraction: `factor - 1` between each
- * two of its frames. None when the set has none.
+ * The in-between frames of a set, as positions with a fraction: `factor - 1` between each two of
+ * its frames, but for the pairs in `skip` (an in-between dropped for an artefact: the real
+ * neighbours stand in). None when the set has none.
  */
 export function betweenList({ count, between }: Sequence) {
   if (!between || between.factor < 2) return [];
+  const skip = new Set(between.skip ?? []);
   const list: number[] = [];
   for (let i = 0; i < count - 1; i++) {
+    if (skip.has(i)) continue;
     for (let k = 1; k < between.factor; k++) list.push(i + k / between.factor);
   }
   return list;
+}
+
+/**
+ * Tier 2, fetched after the set in use is held, on a good connection (4G, not saving data): on a
+ * wide screen the in-between frames; on a phone the real frames its thinned set skips.
+ */
+export function tierTwo(sequence: Sequence, stride: number, phone: boolean) {
+  if (phone) {
+    const used = new Set(frameList(sequence, stride));
+    return frameList(sequence, 1).filter((i) => !used.has(i));
+  }
+  return stride === 1 ? betweenList(sequence) : [];
 }
 
 /** The frames in the order to fetch them in the background: from `at` outward, both ways. */
@@ -42,17 +57,22 @@ export const frameList = ({ count }: Sequence, stride = 1) =>
  * The frames worth having decoded with the walk at `at` (a frame number): those within
  * `loading.window`, or, while it moves (`direction` 1 or -1), `loading.ahead` in front and
  * `loading.behind` behind; every `loading.anchorEvery`-th one so a jump lands near one; the last.
- * Moving fast (`speed`, frames per screen frame, above one) the walk passes frames it never shows:
- * it reaches further ahead, the same number of screen frames, and takes only every frame it lands
- * near, so decoding keeps up.
+ * Moving fast (`speed`, frames per screen frame, above the list's spacing) the walk passes frames it
+ * never shows: it reaches further ahead, the same number of screen frames, and takes only every
+ * frame it lands near, so decoding keeps up. `scale` narrows the reach where the list is denser than
+ * its set's stride (tier 2 in), so about as many frames stay decoded (WEBSITE 23: memory).
  */
-export const wanted = (all: readonly number[], at: number, direction = 0, speed = 0) => {
-  const stride = all.length > 1 ? all[1] - all[0] : 1;
+export const wanted = (all: readonly number[], at: number, direction = 0, speed = 0, scale = 1) => {
+  const stride = spacingOf(all);
   const fast = direction && speed > stride;
-  const reach = fast ? Math.max(loading.ahead, Math.ceil(speed * 20)) : loading.ahead;
+  const ahead = loading.ahead * scale;
+  const reach = fast ? Math.max(ahead, Math.ceil(speed * 20)) : ahead;
   // Fast, a frame decoded just behind it still serves: it arrives a screen frame or two late
-  const behind = fast ? Math.max(loading.behind, Math.ceil(speed * 3)) : loading.behind;
-  const [back, front] = direction ? [behind, reach] : [loading.window, loading.window];
+  const behind = fast
+    ? Math.max(loading.behind * scale, Math.ceil(speed * 3))
+    : loading.behind * scale;
+  const around = loading.window * scale;
+  const [back, front] = direction ? [behind, reach] : [around, around];
   // Every how many of the list: as many frames as the walk passes in a screen frame
   const every = fast ? Math.floor(speed / stride) : 1;
   return all.filter((i, n) => {
@@ -61,6 +81,37 @@ export const wanted = (all: readonly number[], at: number, direction = 0, speed 
     return near || i % loading.anchorEvery === 0 || i === all[all.length - 1];
   });
 };
+
+/** The average distance between two frames of a list (1 for every frame, 0.5 with tier 2 in). */
+export const spacingOf = (all: readonly number[]) =>
+  all.length > 1 ? (all[all.length - 1] - all[0]) / (all.length - 1) : 1;
+
+/**
+ * Whether a frame of the list lies strictly between `a` and `b` (sorted list): then the two are no
+ * neighbours, and are never blended across it, decoded or not.
+ */
+export function apart(all: readonly number[], a: number, b: number) {
+  let lo = 0;
+  let hi = all.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (all[mid] <= a) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo < all.length && all[lo] < b;
+}
+
+/** Two sorted lists as one, sorted. */
+export function merge(a: readonly number[], b: readonly number[]) {
+  const out: number[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length || j < b.length) {
+    if (j >= b.length || (i < a.length && a[i] <= b[j])) out.push(a[i++]);
+    else out.push(b[j++]);
+  }
+  return out;
+}
 
 /** The one closest to `frame`; the earlier one when two are as close. */
 export const nearest = (frames: Iterable<number>, frame: number) => {
