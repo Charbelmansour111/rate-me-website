@@ -325,9 +325,10 @@ test('the walk: between two frames both are drawn, crossfaded by how far along i
     },
     [20, sequence.count],
   );
+  // To the scroll's whole pixel: a hair past it, so the next frame shows a trace at most
   await expect(walk).toHaveAttribute(
     'data-blend',
-    new RegExp(`^20 (20 0\\.000|${20 + s} 0\\.00\\d)$`),
+    new RegExp(`^20 (20 0\\.000|${20 + s} 0\\.0[0-3]\\d)$`),
   );
   // A quarter of the way either side of the midpoint: one frame alone, never a double image
   const window = fadeWindow(sequence.count);
@@ -480,9 +481,11 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   // No step: the picture changes only as far as the walk moved. A hard cut between two frames of
   // the old 48-frame set measured 41 here; neighbours in the 191-frame set up to 23.
   jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(30 * Math.max(1, steps[i])));
-  // The picture and the page move in the same frame: it never trails behind. On touch the browser
-  // scrolls on its own thread, so the walk may read it one display frame later (about 10px).
-  expect(Math.max(...lags)).toBeLessThan(isMobile ? 0.15 : 0.01);
+  // Like film (WEBSITE 17): the picture eases after the scroll, never more than one frame of its
+  // set per painted frame, and has caught up once the scroll stops
+  const stride = await strideOf(page);
+  expect(Math.max(...steps)).toBeLessThanOrEqual(stride * 1.001);
+  expect(lags[lags.length - 1]).toBeLessThan(0.05);
 });
 
 test('the walk: under smooth scrolling the frame still follows the page', async ({

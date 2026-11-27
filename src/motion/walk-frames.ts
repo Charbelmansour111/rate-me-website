@@ -22,15 +22,18 @@ export const frameList = ({ count }: Sequence, stride = 1) =>
 
 /**
  * The frames worth having decoded with the walk at `at` (a frame number): those within
- * `loading.window`, every `loading.anchorEvery`-th one so a jump lands near one, and the last.
+ * `loading.window`, or, while it moves (`direction` 1 or -1), `loading.ahead` in front and
+ * `loading.behind` behind; every `loading.anchorEvery`-th one so a jump lands near one; the last.
  */
-export const wanted = (all: readonly number[], at: number) =>
-  all.filter(
-    (i) =>
-      Math.abs(i - at) <= loading.window ||
-      i % loading.anchorEvery === 0 ||
-      i === all[all.length - 1],
-  );
+export const wanted = (all: readonly number[], at: number, direction = 0) => {
+  const [back, front] = direction
+    ? [loading.behind, loading.ahead]
+    : [loading.window, loading.window];
+  return all.filter((i) => {
+    const d = (i - at) * (direction || 1);
+    return (d >= -back && d <= front) || i % loading.anchorEvery === 0 || i === all[all.length - 1];
+  });
+};
 
 /** The one closest to `frame`; the earlier one when two are as close. */
 export const nearest = (frames: Iterable<number>, frame: number) => {
@@ -47,8 +50,10 @@ export const nearest = (frames: Iterable<number>, frame: number) => {
  * The two loaded frames either side of `at` (a frame number with a fraction, 0 to count - 1) and
  * how much of the upper one shows. One frame alone when `at` is on it or past the loaded ones.
  * The upper one fades in only within `window` of the midpoint between them (0.5: all the way).
+ * Two frames more than `gap` apart (a frame between them still loading) never blend: the nearest
+ * shows alone, so there is no double image and never a blank.
  */
-export function blend(frames: Iterable<number>, at: number, window = 0.5) {
+export function blend(frames: Iterable<number>, at: number, window = 0.5, gap = Infinity) {
   let below: number | undefined;
   let above: number | undefined;
   for (const i of frames) {
@@ -58,6 +63,10 @@ export function blend(frames: Iterable<number>, at: number, window = 0.5) {
   if (below === undefined || above === undefined || below === above) {
     const only = below ?? above;
     return only === undefined ? undefined : { from: only, to: only, alpha: 0 };
+  }
+  if (above - below > gap) {
+    const only = at - below <= above - at ? below : above;
+    return { from: only, to: only, alpha: 0 };
   }
   const along = (at - below) / (above - below);
   const alpha = Math.min(1, Math.max(0, (along - (0.5 - window)) / (2 * window)));

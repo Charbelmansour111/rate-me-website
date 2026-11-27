@@ -17,7 +17,19 @@ async function scrollToShare(page: Page, share: number) {
     const max = document.documentElement.scrollHeight - innerHeight;
     scrollTo({ top: max * s, behavior: 'instant' });
   }, share);
+  // The motion may still be loading; then the walk eases after the scroll
+  // (src/motion/walk-scroll.ts): wait until it has arrived
   await page.waitForTimeout(700);
+  await page.waitForFunction(
+    () =>
+      new Promise<boolean>((done) => {
+        const at = () => document.querySelector<HTMLElement>('[data-walk]')?.dataset.at;
+        const before = at();
+        setTimeout(() => done(at() === before), 250);
+      }),
+    undefined,
+    { timeout: 10_000 },
+  );
 }
 
 /** Where the walk is (0 to 1) and the panels' surface colour, as the page has them. */

@@ -113,6 +113,8 @@ export type Walk = {
   seek(progress: number): void;
   /** Where it is now, 0 to 1. */
   progress(): number;
+  /** One frame of the set on show, in progress (0 to 1): the most the walk moves in a frame. */
+  step(): number;
   /** Where the walk ends: the scroll position of its last frame. */
   end(): number;
 };
@@ -134,8 +136,9 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   const saveData = Boolean(connection?.saveData);
   /** Nothing is fetched until the page has loaded and painted (see `afterPaint` below). */
   let started = false;
-  /** The frame the kept window was last centred on. */
+  /** The frame the kept window was last centred on, and which way the walk was going. */
   let centre = -Infinity;
+  let direction = 0;
   /** Both are kept, so turning the phone back loads nothing twice. */
   const reels = new Map<Shape, Reel>();
   let hasPortrait = canvas.dataset.portrait !== undefined;
@@ -169,7 +172,12 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   function draw() {
     if (reel.images.size) shown = reel;
     const { sequence, images } = shown;
-    const mix = blend(images.keys(), position * (sequence.count - 1), fadeWindow(sequence.count));
+    const mix = blend(
+      images.keys(),
+      position * (sequence.count - 1),
+      fadeWindow(sequence.count),
+      shown.stride,
+    );
     if (!mix) return;
     const below = images.get(mix.from)!;
     // Sized to the frames, not the screen: a turn or a resize redraws nothing.
@@ -204,7 +212,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
 
   /** Says, for the tests, whether every frame around the walk's position is in. */
   function markReady(from: Reel) {
-    const missing = wanted(from.all, frameOf(from)).some((i) => !from.images.has(i));
+    const missing = wanted(from.all, frameOf(from), direction).some((i) => !from.images.has(i));
     mark(canvas, 'ready', missing ? 'false' : 'true');
     canvas.dataset.loaded = String(from.images.size);
   }
@@ -221,7 +229,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     }
     if (signal.aborted) return frame.close?.();
     // Left behind while it was on its way: not needed now
-    if (!wanted(from.all, frameOf(from)).includes(i)) return frame.close?.();
+    if (!wanted(from.all, frameOf(from), direction).includes(i)) return frame.close?.();
     from.images.set(i, frame);
     if (from !== reel) return;
     // Drawn only if it is one of the two on show, or the first: the rest wait for the scroll.
@@ -232,7 +240,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   function toLoad(from: Reel) {
     const at = frameOf(from);
     const close = (i: number) => Math.abs(i - at) <= loading.window;
-    return wanted(from.all, at)
+    return wanted(from.all, at, direction)
       .filter((i) => !from.images.has(i) && !from.pending.has(i))
       .sort((a, b) => Number(close(b)) - Number(close(a)) || Math.abs(a - at) - Math.abs(b - at));
   }
@@ -277,8 +285,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     const from = reel;
     const at = frameOf(from);
     if (Math.abs(at - centre) < 4) return;
+    // Which way it goes: the next frames are fetched in front of it
+    direction = centre === -Infinity ? 0 : Math.sign(at - centre);
     centre = at;
-    const keep = new Set(wanted(from.all, at));
+    const keep = new Set(wanted(from.all, at, direction));
     for (const [i, frame] of from.images) {
       if (!keep.has(i)) {
         frame.close?.();
@@ -376,6 +386,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       follow();
     },
     progress: () => position,
+    step: () => shown.stride / Math.max(1, shown.sequence.count - 1),
     end,
   };
 }

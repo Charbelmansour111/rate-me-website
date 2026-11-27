@@ -11,13 +11,12 @@ export const journey: Record<Shape, Sequence> = {
 };
 
 /**
- * How two neighbouring frames blend between them. A crossfade of two frames far apart is a double
- * image (two jerseys where there is one), so in a dense set the nearest frame shows alone and the
- * next one fades in only within `window` of a frame either side of the midpoint. A set with fewer
- * than `denseFrom` frames fades over the whole gap (a window of 0.5): with 48 frames a cut would
- * jump. The 191-frame set already showed a double "9" with a full fade, so it counts as dense.
+ * How two neighbouring frames blend: by the fraction between them, all the way (a window of 0.5),
+ * like a film between its frames (WEBSITE 17). Only true neighbours blend, frames one stride apart:
+ * across a gap left by a frame still loading the nearest one shows alone, since a crossfade of two
+ * frames far apart is a double image. `window` and `denseFrom` are kept so a set can narrow it.
  */
-export const crossfade = { denseFrom: 150, window: 0.15 };
+export const crossfade = { denseFrom: 150, window: 0.5 };
 
 /**
  * How the frames are loaded (src/motion/walk.ts). Only the frames within `window` of where the walk
@@ -26,7 +25,14 @@ export const crossfade = { denseFrom: 150, window: 0.15 };
  * by. On phones (screens under `phoneWidth` px) a dense set uses every `phoneStride`-th frame.
  * Nothing is fetched before the page has loaded and painted.
  */
-export const loading = { window: 24, anchorEvery: 16, phoneStride: 2, phoneWidth: 768 };
+export const loading = {
+  window: 24,
+  anchorEvery: 16,
+  phoneStride: 2,
+  phoneWidth: 768,
+  ahead: 40,
+  behind: 8,
+};
 
 /** The fade window for a set of `count` frames. */
 export const fadeWindow = (count: number) =>

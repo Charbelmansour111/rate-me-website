@@ -114,18 +114,30 @@ describe('the walk', () => {
       alpha: 0.5,
     });
   });
-  it('in a dense set shows one frame, crossfading only near the midpoint', () => {
-    const frames = [10, 11];
-    const w = crossfade.window;
-    expect(fadeWindow(crossfade.denseFrom)).toBe(w);
-    expect(fadeWindow(crossfade.denseFrom - 1)).toBe(0.5);
-    // Up to the window: the lower frame alone; past it: the upper one alone
-    expect(blend(frames, 10.25, w)!.alpha).toBe(0);
-    expect(blend(frames, 10.5 - w, w)!.alpha).toBe(0);
-    expect(blend(frames, 10.5, w)!.alpha).toBeCloseTo(0.5);
-    expect(blend(frames, 10.5 + w, w)!.alpha).toBe(1);
-    expect(blend(frames, 10.75, w)!.alpha).toBe(1);
-    // A sparse set fades all the way, as before
-    expect(blend(frames, 10.25)!.alpha).toBeCloseTo(0.25);
+  it('blends neighbours by the fraction, like film, and never across a gap', () => {
+    // All the way: the upper frame shows by how far along it is (WEBSITE 17)
+    expect(crossfade.window).toBe(0.5);
+    expect(fadeWindow(crossfade.denseFrom)).toBe(0.5);
+    expect(blend([10, 11], 10.25, fadeWindow(381), 1)!.alpha).toBeCloseTo(0.25);
+    expect(blend([10, 12], 11.5, fadeWindow(381), 2)!.alpha).toBeCloseTo(0.75);
+    // A frame still loading between them: the nearest shows alone, no double image, no blank
+    expect(blend([10, 14], 11, 0.5, 2)).toEqual({ from: 10, to: 10, alpha: 0 });
+    expect(blend([10, 14], 13, 0.5, 2)).toEqual({ from: 14, to: 14, alpha: 0 });
+  });
+  it('keeps more frames ahead of the walk than behind it while it moves', () => {
+    const all = frameList({ ...landscape, count: 381 });
+    const { ahead, behind } = loading;
+    // Going forward: up to `ahead` in front, `behind` behind (199 and 241 are no anchors)
+    const forward = wanted(all, 200, 1);
+    expect(forward).toContain(200 + ahead);
+    expect(forward).not.toContain(200 + ahead + 1);
+    expect(forward).toContain(200 - behind);
+    expect(forward).not.toContain(200 - behind - 1);
+    // Going back: the other way round
+    const back = wanted(all, 200, -1);
+    expect(back).toContain(200 - ahead);
+    expect(back).not.toContain(200 - ahead - 1);
+    expect(back).toContain(200 + behind);
+    expect(back).not.toContain(200 + behind + 1);
   });
 });
