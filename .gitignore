@@ -50,3 +50,6 @@ next-env.d.ts
 .playwright-cli/
 # Agent skills (installed per project with `npx skills`; skills-lock.json records them)
 .claude/skills/
+
+# Photos and pictures dropped in to be prepared for the site (WEBSITE 15): never committed
+/incoming/
