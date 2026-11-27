@@ -5,6 +5,7 @@ import { startMagnets } from '@/components/react-bits/magnet.motion';
 import { startTilts } from '@/components/react-bits/tilted-card.motion';
 
 import { startCardReveals, startParallax, startSpotlights } from './cards';
+import { startBrush } from './brush';
 import { startChrome } from './chrome';
 import { startReveals } from './reveal';
 import { startSmooth } from './smooth';
@@ -19,6 +20,7 @@ gsap.registerPlugin(ScrollTrigger);
 export function startScroll(signal: AbortSignal, walk: Walk | undefined) {
   if (walk) scrubWalk(walk, signal, [followStages(signal)]);
   startChrome(signal);
+  startBrush(signal);
   startReveals(signal);
 }
 

@@ -234,3 +234,38 @@
     padding-top: max(clamp(1.5rem, 4vw, 3.5rem), 2.75rem);
   }
 }
+
+/* --- The tactics section's paint (src/components/brush-strokes.tsx) --- */
+/* Behind everything in the panel; the panel clips it to its rounded edges */
+.tactics-pin .panel {
+  overflow: clip;
+  isolation: isolate;
+}
+.brush-strokes {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* Drawn by default: the motion code rolls it on only where it can (src/motion/brush.ts) */
+.brush-strokes path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+/* Solid ground under the words and the board, in the panel's own colour, so no paint is ever
+   under text or under the moves */
+.tactics-copy,
+.tactics-board {
+  position: relative;
+  border-radius: 1rem;
+  background: var(--page);
+}
+.tactics-copy {
+  padding: 1rem 1.25rem 1.25rem;
+  margin: -1rem -1.25rem;
+}
+.tactics-board {
+  padding: 0.5rem;
+}

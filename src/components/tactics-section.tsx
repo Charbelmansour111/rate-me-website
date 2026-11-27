@@ -16,6 +16,7 @@ import {
   type Point,
 } from '@/motion/tactics-data';
 
+import { BrushStrokes } from './brush-strokes';
 import { PanelLines } from './pitch-lines';
 import { TacticsRoles } from './tactics-roles';
 
@@ -46,7 +47,9 @@ export function TacticsSection({ locale }: { locale: Locale }) {
         <div className="wrap">
           <div className="panel grid items-center gap-x-14 gap-y-10 lg:grid-cols-[1fr_1.25fr]">
             <PanelLines />
-            <div>
+            <BrushStrokes />
+            {/* The words and the board stand on solid ground, in front of the paint */}
+            <div className="tactics-copy">
               <p data-reveal className="kicker">
                 {t.tactics.kicker}
               </p>
@@ -93,7 +96,7 @@ export function TacticsSection({ locale }: { locale: Locale }) {
                 className="tactics-photo mt-8"
               />
             </div>
-            <div data-stage className="relative mx-auto w-full max-w-[46rem]">
+            <div data-stage className="tactics-board relative mx-auto w-full max-w-[46rem]">
               <p className="sr-only">{t.tactics.description}</p>
               <svg
                 viewBox="0 0 480 420"
