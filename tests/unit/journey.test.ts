@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -6,6 +6,8 @@ import {
   frameAt,
   framePath,
   frameUrl,
+  heldKey,
+  INTRO_SCRIPT,
   journey,
   loading,
   pairWindow,
@@ -26,6 +28,7 @@ import {
   tierTwo,
 } from '@/motion/walk-frames';
 import { halfMotion, pairMotion } from '@/config/walk-pairs';
+import { introPack } from '@/config/walk-pack';
 
 const { landscape, portrait } = journey;
 
@@ -262,5 +265,61 @@ describe('the walk', () => {
     const tiered = wanted(dense, 200, 1, 0, 0.5).length;
     expect(tiered).toBeLessThanOrEqual(plain + 2);
     expect(Math.max(plain, tiered) * ((960 * 540 * 4) / 1e6)).toBeLessThanOrEqual(150);
+  });
+});
+
+describe("the first visit's intro (WEBSITE 25)", () => {
+  it('fetches every introEvery-th frame and the last, as one file, in order', () => {
+    expect(introPack.every).toBe(loading.introEvery);
+    const last = landscape.count - 1;
+    const want = frameList(landscape).filter((i) => i % loading.introEvery === 0 || i === last);
+    expect(introPack.frames).toEqual(want);
+    expect(introPack.sizes).toHaveLength(want.length);
+  });
+
+  it("holds exactly the frames' bytes, end to end (run scripts/walk-pack.mjs after a render)", () => {
+    const file = readFileSync(`public${introPack.path}`);
+    let at = 0;
+    introPack.frames.forEach((frame, n) => {
+      const own = readFileSync(`public${framePath(landscape, frame)}`);
+      expect(introPack.sizes[n]).toBe(own.length);
+      expect(file.subarray(at, at + own.length).equals(own)).toBe(true);
+      at += own.length;
+    });
+    expect(statSync(`public${introPack.path}`).size).toBe(at);
+  });
+
+  it('is decided before the first paint by the same key the walk notes', () => {
+    // The script reads the key the walk writes (src/motion/walk.ts, remember)
+    expect(INTRO_SCRIPT).toContain(JSON.stringify(heldKey(landscape, 0).slice(0, -1)));
+    expect(INTRO_SCRIPT).toContain('prefers-reduced-motion: reduce');
+    expect(INTRO_SCRIPT).toContain('saveData');
+    expect(INTRO_SCRIPT).toContain(`innerWidth<${loading.phoneWidth}`);
+  });
+
+  it("gives the phone's set the same frames, since its stride divides introEvery", () => {
+    expect(loading.introEvery % loading.phoneStride).toBe(0);
+    const phone = new Set(frameList(landscape, loading.phoneStride));
+    for (const frame of introPack.frames) expect(phone.has(frame)).toBe(true);
+  });
+
+  it('runs the script without error, and opens only when nothing is noted', () => {
+    const run = (stored: Record<string, string>, width: number, reduce = false) => {
+      const root = { dataset: {} as Record<string, string> };
+      const env = {
+        document: { documentElement: root },
+        navigator: {},
+        innerWidth: width,
+        matchMedia: () => ({ matches: reduce }),
+        localStorage: { getItem: (key: string) => stored[key] ?? null },
+      };
+      new Function(...Object.keys(env), INTRO_SCRIPT)(...Object.values(env));
+      return root.dataset.walkGate;
+    };
+    expect(run({}, 1440)).toBe('open');
+    expect(run({ [heldKey(landscape, 1)]: '1' }, 1440)).toBeUndefined();
+    expect(run({ [heldKey(landscape, 1)]: '1' }, 390)).toBe('open');
+    expect(run({ [heldKey(landscape, 2)]: '1' }, 390)).toBeUndefined();
+    expect(run({}, 1440, true)).toBeUndefined();
   });
 });

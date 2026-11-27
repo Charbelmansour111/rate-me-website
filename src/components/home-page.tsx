@@ -18,6 +18,7 @@ import { PreRegisterForm } from './pre-register-form';
 import { RunningLine } from './running-line';
 import { spotlightStops } from './react-bits/spotlight-card';
 import { WalkCanvas, WalkDim, WalkGap, WalkGroup } from './journey-walk';
+import { WalkIntro } from './walk-intro';
 import { WhyCards } from './why-cards';
 import { Showcase } from './showcase';
 import { SiteFooter } from './site-footer';
@@ -54,6 +55,8 @@ export function HomePage({ locale }: { locale: Locale }) {
 
   return (
     <>
+      {/* A first visit's intro while the walk loads (src/motion/walk-gate.ts) */}
+      <WalkIntro t={t.hero.gate} />
       <SiteHeader locale={locale} path="/" />
       <main id="main" className="relative overflow-x-clip">
         <WalkCanvas />
@@ -72,29 +75,6 @@ export function HomePage({ locale }: { locale: Locale }) {
             />
           </svg>
         </p>
-        {/* A first visit's short wait while the walk loads (src/motion/walk-gate.ts): shown by
-            the motion code only, so never under reduced motion, and never in the first paint */}
-        <div className="walk-gate" data-walk-wait hidden>
-          <p className="walk-gate-title">{t.hero.gate.title}</p>
-          <div className="walk-gate-row">
-            <div
-              className="walk-gate-bar"
-              role="progressbar"
-              aria-label={t.hero.gate.label}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={0}
-            >
-              <span />
-            </div>
-            <span className="walk-gate-pct" aria-hidden="true">
-              0%
-            </span>
-          </div>
-          <button type="button" className="walk-gate-skip" data-walk-gate-skip>
-            {t.hero.gate.skip}
-          </button>
-        </div>
         <WalkGroup scene="locker">
           <section className="walk-hero">
             <div className="wrap">

@@ -1,6 +1,7 @@
 import {
   frameAt,
   frameUrl,
+  heldKey,
   journey,
   loading,
   pairWindow,
@@ -8,6 +9,7 @@ import {
   type Sequence,
   type Shape,
 } from '@/config/journey.config';
+import { introPack } from '@/config/walk-pack';
 
 import {
   apart,
@@ -25,13 +27,10 @@ import {
 
 export { blend, frameList, nearest, strideFor, wanted };
 
-/** Where a visit notes that it held a set whole (its render and stride): the next needs no gate. */
-const heldKey = ({ sequence, stride }: { sequence: Sequence; stride: number }) =>
-  `walk-held ${sequence.path} ${sequence.rev} ${stride}`;
-
-function remember(reel: { sequence: Sequence; stride: number }) {
+/** Notes that this visit held a set whole: the next has no intro (journey.config.ts, heldKey). */
+function remember({ sequence, stride }: { sequence: Sequence; stride: number }) {
   try {
-    localStorage.setItem(heldKey(reel), '1');
+    localStorage.setItem(heldKey(sequence, stride), '1');
   } catch {
     // Private windows, storage off: the gate shows again next time
   }
@@ -65,7 +64,7 @@ const fromBitmap = (bitmap: ImageBitmap): Frame => ({
  * receives whole bitmaps. Without workers or createImageBitmap, or if the worker cannot start, the
  * frames are decoded here instead, and nothing is fetched ahead.
  */
-function frameDecoder(onStored: (count: number, urls: string[]) => void) {
+function frameDecoder(onStored: (count: number, urls: string[]) => void, signal: AbortSignal) {
   const waiting = new Map<
     number,
     { url: string; resolve: (frame: Frame) => void; reject: () => void }
@@ -115,9 +114,65 @@ function frameDecoder(onStored: (count: number, urls: string[]) => void) {
     fetch(urls: string[], parallel: number) {
       worker?.postMessage({ type: 'fetch', urls, parallel });
     },
+    /**
+     * Several frames in one file (src/config/walk-pack.ts), fetched here, where it can start before
+     * the worker's own code is in: each frame goes to the worker as its bytes come in, kept under
+     * its own address. Not when most of them are in the cache already.
+     */
+    async pack(url: string, files: { url: string; size: number }[]) {
+      if (!worker) return;
+      const urls = files.map((file) => file.url);
+      worker.postMessage({ type: 'expect', urls });
+      let next = 0;
+      try {
+        const store = await caches.open(loading.cache);
+        const kept = await Promise.all(urls.map((one) => store.match(one)));
+        if (kept.filter(Boolean).length > urls.length / 2) throw new Error('held');
+      } catch (error) {
+        if ((error as Error).message === 'held') return worker?.postMessage({ type: 'drop', urls });
+      }
+      try {
+        const response = await fetch(url, { priority: 'high' } as RequestInit);
+        if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
+        const reader = response.body.getReader() as ReadableStreamDefaultReader<
+          Uint8Array<ArrayBuffer>
+        >;
+        let parts: BlobPart[] = [];
+        let partsFrom = 0;
+        let received = 0;
+        let start = 0;
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (value) {
+            parts.push(value);
+            received += value.length;
+          }
+          // Every frame whose bytes are all in
+          while (next < files.length && start + files[next].size <= received) {
+            const { url: frame, size } = files[next];
+            const all = new Blob(parts);
+            const blob = all.slice(start - partsFrom, start - partsFrom + size, 'image/webp');
+            start += size;
+            next++;
+            worker?.postMessage({ type: 'put', url: frame, blob });
+            // What is left of the file from here on
+            parts = [all.slice(start - partsFrom)];
+            partsFrom = start;
+          }
+          if (done || signal.aborted) break;
+        }
+        if (next < files.length && !signal.aborted) throw new Error('short');
+      } catch {
+        worker?.postMessage({ type: 'drop', urls: urls.slice(next) });
+      }
+    },
     stop() {
       worker?.terminate();
       waiting.clear();
+    },
+    /** Whether files are fetched ahead (a worker runs). */
+    get fetches() {
+      return Boolean(worker);
     },
   };
 }
@@ -127,8 +182,9 @@ export const shapeFor = (width: number, height: number, hasPortrait: boolean): S
   hasPortrait && height > width ? 'portrait' : 'landscape';
 
 /**
- * A sequence: the frames it can show (its set at its stride, and those of tier 2 already held),
- * those decoded and those on their way.
+ * A sequence: the frames it can show (its set at its stride, and those of tier 2 already held;
+ * while a first visit's set is still coming, only the frames held), those decoded and those on
+ * their way.
  */
 type Reel = {
   sequence: Sequence;
@@ -137,9 +193,11 @@ type Reel = {
   /** The set at its stride (tier 1) and tier 2 (src/motion/walk-frames.ts, tierTwo). */
   tier1: number[];
   tier2: number[];
-  /** Which files the worker holds: of tier 1 how many, of tier 2 which (by address). */
-  held1: Set<string>;
+  /** The frames of each tier the worker holds. */
+  held1: Set<number>;
   held2: Set<number>;
+  /** Tier 2 asked for (once the set is held). */
+  askedTwo: boolean;
   byUrl: Map<string, { tier: 1 | 2; at: number }>;
   images: Map<number, Frame>;
   pending: Set<number>;
@@ -169,9 +227,16 @@ export type Walk = {
    * way, else `from` (it waits).
    */
   reach(from: number, to: number): number;
-  /** The set's files the worker holds, of how many; whether the frames round the walk are in. */
+  /**
+   * Of the intro's frames (every `loading.introEvery`-th of the set and those round the walk), how
+   * many the worker holds; whether the frames round the walk are decoded.
+   */
   held(): { held: number; total: number; ready: boolean };
-  /** Fetches the rest of the set now, not at the first scroll (the first visit's gate). */
+  /**
+   * The first visit (src/motion/walk-gate.ts): the intro's frames are fetched now, first, then the
+   * rest of the set and tier 2; until the set is whole the walk shows only the frames held, so it
+   * never waits on the network.
+   */
   fetchNow(): void;
   /** Whether this browser held the whole set on an earlier visit (in its Cache API). */
   known(): boolean;
@@ -212,6 +277,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   let quiet = false;
   /** Nothing is fetched until the page has loaded and painted (see `afterPaint` below). */
   let started = false;
+  /** A first visit's set still coming: the walk shows the frames held (see `listOf`). */
+  let filling = false;
+  /** The intro's frames all held: the rest of the set is fetched. */
+  let introIn = false;
   /** The frame the kept window was last centred on, which way and how fast the walk was going. */
   let centre = -Infinity;
   let direction = 0;
@@ -230,7 +299,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   /** Along the walk, 0 to 1: until the scroll drives it, where the page was opened. */
   let position = Math.min(1, Math.max(0, scrollY / end()));
   let resting = true;
-  const decoder = frameDecoder(stored);
+  const decoder = frameDecoder(stored, signal);
 
   /**
    * Files the worker has come to hold: tier 2 frames join the walk as they arrive, and once the
@@ -242,17 +311,16 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       let grew = false;
       for (const url of urls) {
         const found = one.byUrl.get(url);
-        if (found?.tier === 1) one.held1.add(url);
-        else if (found && !one.held2.has(found.at)) {
-          one.held2.add(found.at);
-          grew = true;
-        }
+        if (!found) continue;
+        const held = found.tier === 1 ? one.held1 : one.held2;
+        if (held.has(found.at)) continue;
+        held.add(found.at);
+        // A frame of the set only changes the list while the list is the frames held
+        if (found.tier === 2 || filling) grew = true;
       }
+      const whole = one.held1.size === one.tier1.length;
       if (grew) {
-        one.all = merge(
-          one.tier1,
-          [...one.held2].sort((a, b) => a - b),
-        );
+        one.all = listOf(one);
         // New frames round the walk: decode them (the walk may be waiting on one)
         if (one === reel) {
           markReady(one);
@@ -261,14 +329,43 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       }
       if (one === reel) {
         canvas.dataset.dense = String(one.held2.size);
-        // Held whole: a later visit finds it in the Cache API and needs no gate
-        if (one.held1.size === one.tier1.length) remember(one);
+        // The intro's frames are in: now the rest of the set
+        if (filling && !introIn && introSet(one).every((i) => one.held1.has(i))) {
+          introIn = true;
+          fetchAll(one);
+        }
+        // Held whole: a later visit finds it in the Cache API and has no intro
+        if (whole) remember(one);
         // The set is held: now tier 2, from where the walk is
-        if (one.tier2.length && one.held1.size === one.tier1.length && !one.held2.size && !grew) {
+        if (one.tier2.length && whole && !one.askedTwo) {
+          one.askedTwo = true;
           fetchAll(one);
         }
       }
     }
+  }
+
+  /**
+   * The frames a reel can show: its set and the tier 2 frames held; on a first visit, until the set
+   * is whole, only the frames of it held, so the walk moves on what is here (thinner where the rest
+   * has not come yet) and never waits on the network.
+   */
+  function listOf(one: Reel) {
+    const two = [...one.held2].sort((a, b) => a - b);
+    if (!filling || one.held1.size === one.tier1.length) return merge(one.tier1, two);
+    return merge(
+      [...one.held1].sort((a, b) => a - b),
+      two,
+    );
+  }
+
+  /** The intro's frames: every `loading.introEvery`-th of the set, and those round the walk. */
+  function introSet(one: Reel) {
+    const at = frameOf(one);
+    const last = one.tier1[one.tier1.length - 1];
+    return one.tier1.filter(
+      (i) => i % loading.introEvery === 0 || i === last || Math.abs(i - at) <= loading.introWindow,
+    );
   }
 
   /** What is on the canvas: the set, its two frames and the fade in 255ths (the finest shown). */
@@ -436,11 +533,21 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     const at = frameOf(from);
     fetchedFrom = at;
     const whole = from.held1.size === from.tier1.length;
-    const urls = [
-      ...outward(from.tier1, at),
-      ...(whole && good ? outward(from.tier2, at) : []),
-    ].map((i) => frameUrl(from.sequence, i));
-    decoder.fetch(urls, innerWidth < loading.phoneWidth ? loading.phoneFetchers : loading.fetchers);
+    // A first visit: the intro's frames alone, those round the walk first, so nothing else takes
+    // the connection from them; the rest once they are in (see `stored`)
+    const intro = filling && !whole && !introIn ? outward(introSet(from), at) : [];
+    const urls = (
+      intro.length
+        ? intro
+        : [...outward(from.tier1, at), ...(whole && good ? outward(from.tier2, at) : [])]
+    ).map((i) => frameUrl(from.sequence, i));
+    // The intro waits on these: as many at once as the browser allows one server (HTTP/1.1)
+    const parallel = intro.length
+      ? loading.introFetchers
+      : innerWidth < loading.phoneWidth
+        ? loading.phoneFetchers
+        : loading.fetchers;
+    decoder.fetch(urls, parallel);
   }
 
   /**
@@ -495,6 +602,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
         tier2,
         held1: new Set(),
         held2: new Set(),
+        askedTwo: false,
         byUrl,
         images: new Map(),
         pending: new Set(),
@@ -524,6 +632,22 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   }
   function fetchNow() {
     eager = true;
+    // Saving data, or with no worker, nothing is fetched ahead: the set stays the list
+    if (!saveData && decoder.fetches) {
+      filling = true;
+      for (const one of reels.values()) one.all = listOf(one);
+      // The intro's thin set as one file, at once: the intro is up, nothing else is waiting
+      const { sequence } = reel;
+      if (sequence === journey.landscape && introPack.every === loading.introEvery) {
+        void decoder.pack(
+          `${introPack.path}?v=${sequence.rev}`,
+          introPack.frames.map((i, n) => ({
+            url: frameUrl(sequence, i),
+            size: introPack.sizes[n],
+          })),
+        );
+      }
+    }
     begin();
   }
 
@@ -632,16 +756,19 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     },
     known: () => {
       try {
-        return localStorage.getItem(heldKey(reel)) === '1';
+        return localStorage.getItem(heldKey(reel.sequence, reel.stride)) === '1';
       } catch {
         return false;
       }
     },
-    held: () => ({
-      held: reel.held1.size,
-      total: reel.tier1.length,
-      ready: canvas.dataset.ready === 'true',
-    }),
+    held: () => {
+      const set = introSet(reel);
+      return {
+        held: set.filter((i) => reel.held1.has(i)).length,
+        total: set.length,
+        ready: canvas.dataset.ready === 'true' && reel.images.size > 0,
+      };
+    },
     fetchNow,
     end,
   };

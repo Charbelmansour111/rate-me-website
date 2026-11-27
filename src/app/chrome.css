@@ -382,82 +382,120 @@
     translate 400ms ease-out,
     visibility 0s 400ms;
 }
-/* The first visit's wait for the walk (src/motion/walk-gate.ts), where the scroll cue sits: the
-   cue steps aside while it is open */
+/* The first visit's intro (src/components/walk-intro.tsx, src/motion/walk-gate.ts): over the whole
+   screen, from the first paint, only while <html data-walk-gate="open">. Should the motion code
+   never come, it lets itself go after a while. */
+.intro {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: none;
+  place-items: center;
+  overflow: hidden;
+  background: var(--brand-black);
+  color: #fff;
+  transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+html[data-walk-gate='open'] .intro {
+  display: grid;
+  animation: intro-gone 400ms ease-in 9s forwards;
+}
+.intro[data-closing] {
+  display: grid;
+  opacity: 0;
+  pointer-events: none;
+}
+.intro[hidden] {
+  display: none !important;
+}
+@keyframes intro-gone {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
 html[data-walk-gate='open'] .scroll-cue {
   visibility: hidden;
 }
-.walk-gate {
-  position: fixed;
-  z-index: 6;
-  bottom: 1.25rem;
+/* Held still under it from the first paint, before any script: the scrollbar's place stays kept,
+   so nothing moves sideways when it comes back */
+html:has(.intro) {
+  scrollbar-gutter: stable;
+}
+html[data-walk-gate='open'] {
+  overflow: hidden;
+}
+/* A faint pitch: the mark sits on its centre spot */
+.intro-pitch {
+  position: absolute;
+  top: 50%;
   left: 50%;
+  width: min(80vmin, 34rem);
+  translate: -50% -50%;
+  overflow: visible;
+  stroke: rgb(255 255 255 / 0.07);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.intro-centre {
+  position: relative;
   display: grid;
-  gap: 0.6rem;
-  width: min(22rem, calc(100vw - 2.5rem));
-  padding: 0.9rem 1.1rem 0.8rem;
-  border: 1px solid var(--st-panel-edge);
-  border-radius: 1rem;
-  background: var(--st-surface);
-  color: var(--st-text);
-  translate: -50% 0;
-  transition:
-    opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
-    translate 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  justify-items: center;
+  gap: clamp(1.75rem, 4vh, 2.5rem);
 }
-.walk-gate[hidden] {
-  display: none;
+.intro-mark {
+  display: block;
+  width: clamp(10.5rem, 20vw, 15rem);
+  height: auto;
 }
-.walk-gate[data-closing] {
-  opacity: 0;
-  translate: -50% 0.75rem;
-}
-.walk-gate-title {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  text-wrap: balance;
-}
-.walk-gate-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-.walk-gate-bar {
-  flex: 1;
-  height: 3px;
+.intro-line {
+  width: clamp(7.5rem, 12vw, 10rem);
+  height: 2px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--st-panel-edge);
+  background: rgb(255 255 255 / 0.14);
 }
-.walk-gate-bar > span {
+.intro-line > span {
   display: block;
   height: 100%;
   background: var(--brand-orange);
   transform: scaleX(var(--done, 0));
   transform-origin: left;
-  transition: transform 200ms linear;
+  transition: transform 250ms linear;
 }
-[dir='rtl'] .walk-gate-bar > span {
+[dir='rtl'] .intro-line > span {
   transform-origin: right;
 }
-.walk-gate-pct {
-  min-width: 3ch;
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-  text-align: end;
-}
-.walk-gate-skip {
-  justify-self: start;
+.intro-skip {
+  position: absolute;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  inset-inline-end: clamp(0.75rem, 3vw, 2rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   min-height: 44px;
-  padding-inline: 0.25rem;
-  margin-inline-start: -0.25rem;
+  padding-inline: 0.75rem;
+  border-radius: 999px;
+  color: rgb(255 255 255 / 0.62);
   font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color 150ms ease;
 }
-.walk-gate-skip:hover {
-  color: var(--st-accent-text, var(--accent-text));
+.intro-skip:hover {
+  color: #fff;
+}
+.intro-skip svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[dir='rtl'] .intro-skip svg {
+  scale: -1 1;
 }
 
 /* The language links carry their own padding: line their text up with the links above */

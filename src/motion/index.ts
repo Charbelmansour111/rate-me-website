@@ -30,8 +30,11 @@ function whenStill(start: () => void, signal: AbortSignal) {
 export function startMotion(signal: AbortSignal) {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-walk]');
   const walk = canvas ? startWalk(canvas, signal) : undefined;
-  // A first visit waits a moment for the frames (src/motion/walk-gate.ts)
+  // A first visit's intro while the frames come (src/motion/walk-gate.ts); no walk, no intro
   if (walk) gateWalk(walk, signal);
+  else if (document.documentElement.dataset.walkGate === 'open') {
+    document.documentElement.dataset.walkGate = 'none';
+  }
   const hero = document.querySelector<HTMLElement>('[data-hero-drill]');
   if (hero) startHero(hero, signal);
   const tactics = document.querySelector<HTMLElement>('[data-tactics]');

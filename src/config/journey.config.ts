@@ -112,7 +112,32 @@ export const loading = {
   firstDecoders: 2,
   backgroundAfter: 6000,
   cache: 'walk-frames',
+  // The first visit's intro (WEBSITE 25, src/motion/walk-gate.ts): it waits for every
+  // `introEvery`-th frame of the set and the frames within `introWindow` of the walk, then opens;
+  // never longer than `introCap` ms from the page's start, whatever the connection
+  introEvery: 6,
+  introWindow: 12,
+  introCap: 6500,
+  introFetchers: 6,
 };
+
+/** Where a visit notes that it held a set whole (its render and stride): the next has no intro. */
+export const heldKey = ({ path, rev }: Pick<Sequence, 'path' | 'rev'>, stride: number) =>
+  `walk-held ${path} ${rev} ${stride}`;
+
+/**
+ * Run as the page is parsed, before its first paint (src/components/home-page.tsx): whether this
+ * visit gets the intro, so a return visit never sees it flash. None to save data, under reduced
+ * motion, or when the set at this screen's stride was held whole before (the rule of
+ * src/motion/walk-frames.ts, strideFor). It only sets <html data-walk-gate="open">; the motion code
+ * does the rest, and CSS lets the intro go by itself should that code never come.
+ */
+export const INTRO_SCRIPT = (() => {
+  const { landscape } = journey;
+  const thinned = landscape.count >= crossfade.denseFrom ? loading.phoneStride : 1;
+  const key = JSON.stringify(heldKey(landscape, 0).slice(0, -1));
+  return `(function(){try{var d=document.documentElement,c=navigator.connection||{};if(c.saveData||matchMedia('(prefers-reduced-motion: reduce)').matches)return;var s=innerWidth<${loading.phoneWidth}||/^(slow-2g|2g|3g)$/.test(c.effectiveType||'')?${thinned}:1;if(localStorage.getItem(${key}+s)==='1')return;d.dataset.walkGate='open'}catch(e){}})()`;
+})();
 
 /**
  * Where the panels change colour with the walk (0 to 1 of the walk, so they follow the frame

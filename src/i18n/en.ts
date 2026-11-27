@@ -34,9 +34,8 @@ export const en = {
     join: 'Join the coaches community',
     scroll: 'Scroll',
     gate: {
-      title: 'Setting up the walk to the pitch',
       label: 'Loading the walk',
-      skip: 'Skip the wait',
+      skip: 'Skip',
     },
     drill: {
       plays: ['Rondo', 'Wide overlap', 'Through ball', 'Switch of play', 'Press and win'],
