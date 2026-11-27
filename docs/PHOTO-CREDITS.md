@@ -20,8 +20,8 @@ photo's page.
 | `public/community/coach-6.jpg`       | Arthur Debons                      | https://unsplash.com/photos/Mrql2Og2GU8 | Square on the face, 640 px, black and white                                                                                                                                                               |
 | `public/community/coach-7.jpg`       | Christian Buehner                  | https://unsplash.com/photos/5YpZpFy8zzU | Square on the face, 640 px, black and white                                                                                                                                                               |
 | `public/community/coach-8.jpg`       | Lucas Clarysse                     | https://unsplash.com/photos/yMxLAdXh8Wc | Square on the face, 640 px, black and white                                                                                                                                                               |
-| `public/features/whiteboard.webp`    | Jasper Benning                     | https://unsplash.com/photos/Ri4FXmD7DPM | 16:10, board only, 1200 px, black and white                                                                                                                                                               |
-| `public/features/calendar.webp`      | Alliance Football Club             | https://unsplash.com/photos/g8cK31aYH3E | 16:10, below the shorts (their club name) and away from the child: legs, boots, a cone, 1200 px, black and white                                                                                          |
+| `public/features/whiteboard.webp`    | Jasper Benning                     | https://unsplash.com/photos/Ri4FXmD7DPM | 16:10, board only, 1200 px, colour                                                                                                                                                                        |
+| `public/features/calendar.webp`      | Alliance Football Club             | https://unsplash.com/photos/g8cK31aYH3E | 16:10, below the shorts (their club name) and away from the child: legs, boots, a cone, 1200 px, colour                                                                                                   |
 | `public/community/players.webp`      | Photo by Danylo Suprun on Unsplash | 5CBdeiqh4mI                             | 4:3, the lower half, 960 px, colour                                                                                                                                                                       |
 | `public/footer/pitch.webp`           | Photo by Omar Ramadan on Unsplash  | htGM-eEzsdk                             | the turf band only (no faces), 1600 px, colour                                                                                                                                                            |
 | `public/features/matchRequests.webp` | Jerome                             | https://unsplash.com/photos/nDHp2Z4rCHw | 16:10, the net against the sky, 1200 px, colour (the Match requests card)                                                                                                                                 |
@@ -30,8 +30,8 @@ photo's page.
 
 The colour rule (WEBSITE 17, WEBSITE 19): a photo where a face is visible is black and white, in
 the file itself. A photo with no visible face (from behind, legs, boots, the ball, turf, cones, a
-goal, a net, equipment) has its own tone: in colour, except on the "What you get" cards, where most
-are black and white (WEBSITE 19) and the goal net and the training sheet are in colour (WEBSITE 20). `src/config/photos.ts` lists every photo with
+goal, a net, equipment) is in colour, on the "What you get" cards too (WEBSITE 22: the calendar's
+cones and the whiteboard back in colour; WEBSITE 19 had made them black and white). `src/config/photos.ts` lists every photo with
 `faces` and `tone` (`grey` or `colour`), and `tests/unit/photos.test.ts` checks each file against
 it. App screens are not photos and stay as the app shows them. Every file is under 120 KB and
 loads lazily. The app's own screens are listed under "App screens (WEBSITE 18)" below. The

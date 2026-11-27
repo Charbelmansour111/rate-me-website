@@ -1,8 +1,8 @@
 /**
  * Every photograph on the site: whether a face is visible, and its tone. The rule (WEBSITE 17): a
- * photo with a visible face is black and white. A photo with no face has the tone given here: on
- * the "What you get" cards most are black and white (WEBSITE 19), the goal net and the training
- * sheet in colour (WEBSITE 20). tests/unit/photos.test.ts
+ * photo with a visible face is black and white. A photo with no face has the tone given here: the
+ * "What you get" cards they are in colour (WEBSITE 22), the trophy squad, which shows faces, in black
+ * and white. tests/unit/photos.test.ts
  * checks each file against this list; credits are in docs/PHOTO-CREDITS.md. App screens are not
  * photos (src/config/app-shots.ts): they stay as the app shows them.
  */
@@ -24,14 +24,19 @@ export const photos: Photo[] = [
     tone: 'grey',
     what: 'a squad lifting a trophy, every mark blurred',
   },
-  // The feature cards: black and white, but for the goal net and the training sheet
+  // The feature cards: no face, so colour
   {
     file: 'public/features/calendar.webp',
     faces: false,
-    tone: 'grey',
+    tone: 'colour',
     what: 'legs and boots at a cone',
   },
-  { file: 'public/features/whiteboard.webp', faces: false, tone: 'grey', what: 'a tactics board' },
+  {
+    file: 'public/features/whiteboard.webp',
+    faces: false,
+    tone: 'colour',
+    what: 'a tactics board',
+  },
   { file: 'public/features/matchRequests.webp', faces: false, tone: 'colour', what: 'a goal net' },
   {
     file: 'public/features/assistant.webp',

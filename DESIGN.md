@@ -389,8 +389,8 @@ screen readers.
   left.
 - Show real app screens and real, licensed photographs, credited in `docs/PHOTO-CREDITS.md`.
 - Photos with a visible face are black and white; photos with no face (from behind, legs, the
-  ball, turf, cones, a goal, equipment) keep their own tone: on the feature cards most are black and
-  white, the goal net and the training sheet in colour (`src/config/photos.ts`, `faces` and `tone`, checked by
+  ball, turf, cones, a goal, equipment) are in colour, on the feature cards too; there the trophy
+  squad, which shows faces, is the one in black and white (`src/config/photos.ts`, `faces` and `tone`, checked by
   `tests/unit/photos.test.ts`); app screens stay as the app shows them, with an "Example" tag
   where they show sample data. Any mark on a stock photo (a club's or a tournament's name, a
   sponsor, a league patch) goes under a soft round blur; makers' logos on boots and balls stay.
