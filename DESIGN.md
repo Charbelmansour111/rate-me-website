@@ -166,8 +166,16 @@ describes them; when the two differ, the code wins and this file is updated.
 
 ## Overview
 
-The home page is a walk: a rendered image sequence (`public/journey/seq`, our own Blender renders)
-from the locker room through the tunnel to the pitch, scrubbed by the scroll behind the page.
+The home page is a walk: on a computer and a tablet, a rendered image sequence
+(`public/journey/seq`, our own Blender renders) from the locker room through the tunnel to the
+pitch, scrubbed by the scroll behind the page. On a phone (under 48rem) it is a drawing instead
+(WEBSITE 27, `src/motion/pitch-walk.ts`): the site's tactics board, sharp at any density, driven by
+the scroll. A faint pitch pans slowly behind; over it the hero board's plays, one for each part of
+the page (the locker room, the tunnel, the tactics, the field): as the page goes down the players
+run their routes, the ball is passed and the passes and run lines draw in. White ground with black
+and orange lines; black with white and orange in the dark theme; a still drawing under reduced
+motion or without JavaScript. No photograph of the walk is fetched on a phone, and no intro waits
+for one.
 Everything people read sits on panels in front of it, and the panels take the colours of the part of
 the walk behind them: warm and light in the locker room, charcoal in the tunnel, deep pitch green
 on the field. Thin pitch lines (a centre circle, corner arcs, a box corner, a dashed pass) tie the
@@ -187,13 +195,14 @@ rest one frame shows alone.
 
 The page scrolls freely, natively on touch and through Lenis' glide on a mouse wheel, and the
 picture keeps up with it, one motion (WEBSITE 26): in ordinary scrolling it is where the page is,
-or at most two frames behind on the frames it has; on a fast scroll or a jump it shows the nearest
-frame of a thumbnail track (every sixth frame at 480 px, about 34 MB) at once, and the exact frame
-as soon as it is decoded. One loop runs everything the scroll drives (GSAP's ticker). Nothing is
-fetched in the background, and no in-between frame decoded, while the page moves. At most 72
-frames are held decoded (about 150 MB). A quality governor watches the last 30 frames: slower than
-20 ms on average, the walk drops tier 2, then blending (and the panels' colours change once a
-stage), then half its resolution; it steps back after 2 s of good frames. A software renderer
+or behind on the frames it has decoded; on a jump of more than 40 frames it shows the nearest frame
+of a thumbnail track (every sixth frame at 480 px, about 34 MB) at once, and the exact frame as
+soon as it is decoded. One loop runs everything the scroll drives (GSAP's ticker). Nothing is
+fetched in the background while the page moves, but the in-between frames are decoded, two at a
+time (WEBSITE 27: without them the picture stepped). At most 72 frames are held decoded (about
+150 MB). A quality governor watches the median of the last 90 frames: over 22 ms, the walk drops
+tier 2, then blending (and the panels' colours change once a stage), then half its resolution; it
+steps back after 2 s under 18 ms. A few slow frames never step it down. A software renderer
 (SwiftShader, llvmpipe) and saving data start light.
 
 The panels' colours blend with the walk only where they show: the values go on the panels on the
@@ -272,12 +281,11 @@ sizes are smaller because Readex Pro is wider and taller. Captions and card text
 
 ## Elevation & Depth
 
-Depth comes from the walk behind the panels, not from shadows. On phones the walk is a
-full-screen backdrop (WEBSITE 26), sharp, a little brighter and crisper (brightness 1.12, contrast
-1.06 on the canvas alone); no blur, no wash, nothing over the text; its first frame is drawn on the
-canvas, so the page's largest paint is the hero's text. On a computer every effect stays; on a
-phone what costs smoothness goes (no blended stage colours, no mouse effects, whose code is never
-loaded there). No `backdrop-filter`, and no
+Depth comes from the walk behind the panels, not from shadows. On a computer every effect stays; on
+a phone what costs smoothness goes (WEBSITE 27): its walk is the drawing, nothing over the text; no
+blended stage colours, no smooth scrolling, no words or cards rising in, no brush strokes drawing,
+no mouse effects (whose code is never loaded there); the header's progress line follows the scroll
+in CSS, and the running line is the still one, every node filled. No `backdrop-filter`, and no
 blurred shadow on anything large over the walk: it would be repainted as it moves. Phones float on
 a soft orange glow and stand on a ground shadow, both radial gradients.
 
