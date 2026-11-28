@@ -185,10 +185,21 @@ each other only by how far their picture moves (`src/config/walk-pairs.ts`, from
 `scripts/walk-pairs.mjs`): a long fade where little moves, a cut where edges would show twice; at
 rest one frame shows alone.
 
-Over the walk the page itself goes no faster than the picture can, one frame of 381 per screen
-frame (about 1,900 px/s at 60 Hz), wheel and touch alike, so the text and the picture are one
-motion (WEBSITE 25); links within the page still glide there in half a second. At most 72 frames
-are held decoded (about 150 MB).
+The page scrolls freely, natively on touch and through Lenis' glide on a mouse wheel, and the
+picture keeps up with it, one motion (WEBSITE 26): in ordinary scrolling it is where the page is,
+or at most two frames behind on the frames it has; on a fast scroll or a jump it shows the nearest
+frame of a thumbnail track (every sixth frame at 480 px, about 34 MB) at once, and the exact frame
+as soon as it is decoded. One loop runs everything the scroll drives (GSAP's ticker). Nothing is
+fetched in the background, and no in-between frame decoded, while the page moves. At most 72
+frames are held decoded (about 150 MB). A quality governor watches the last 30 frames: slower than
+20 ms on average, the walk drops tier 2, then blending (and the panels' colours change once a
+stage), then half its resolution; it steps back after 2 s of good frames. A software renderer
+(SwiftShader, llvmpipe) and saving data start light.
+
+The panels' colours blend with the walk only where they show: the values go on the panels on the
+screen and the header, never on `<html>`, whose custom properties restyle every element of the
+page (about 27 ms on a fast computer, whatever the property); 60 steps over the walk. On a phone
+the colours change once, at each boundary.
 
 A first visit opens on a short intro (WEBSITE 25): the wordmark on the brand black, on the centre
 spot of a faint pitch, a 2px orange line filling as the frames come, and a quiet Skip; no sentence.
@@ -255,18 +266,18 @@ sizes are smaller because Readex Pro is wider and taller. Captions and card text
 
 - Content width 76rem with `clamp(1.25rem, 4vw, 2.5rem)` gutters; panel padding
   `clamp(1.5rem, 4vw, 3.5rem)`.
-- Between sections, an open gap of 60 to 70% of the screen shows the walk with nothing written on
-  it; on a phone, a small board in the hero board's style sits at its foot, its play running with
-  the walk.
+- Between sections, an open gap of 60 to 70% of the screen shows the walk with nothing on it.
 - The running line sits outside the content: in the margin on a computer, in the gutter on a phone.
 - Everything mirrors in Arabic (logical properties: `margin-inline`, `inset-inline`).
 
 ## Elevation & Depth
 
-Depth comes from the walk behind the panels, not from shadows. On phones the walk plays whole in a
-full-width 16:9 window under the header (WEBSITE 25), a little brighter and crisper (brightness
-1.12, contrast 1.06 on the canvas alone), on a dark ground in the colour of the frame's own edges
-(`scripts/walk-edges.mjs`); no blur, no wash. No `backdrop-filter`, and no
+Depth comes from the walk behind the panels, not from shadows. On phones the walk is a
+full-screen backdrop (WEBSITE 26), sharp, a little brighter and crisper (brightness 1.12, contrast
+1.06 on the canvas alone); no blur, no wash, nothing over the text; its first frame is drawn on the
+canvas, so the page's largest paint is the hero's text. On a computer every effect stays; on a
+phone what costs smoothness goes (no blended stage colours, no mouse effects, whose code is never
+loaded there). No `backdrop-filter`, and no
 blurred shadow on anything large over the walk: it would be repainted as it moves. Phones float on
 a soft orange glow and stand on a ground shadow, both radial gradients.
 
@@ -329,7 +340,9 @@ phone frame, or, for the monthly report (a PDF), its two pages as white sheets o
 slightly turned, captioned "Monthly report (PDF)". On `/ar` the captions add "التطبيق معروض
 بالإنجليزية": the layout mirrors, the screenshots do not.
 
-The community section shows three portraits at most, captioned "Photos for illustration", and the
+The community section shows three faces at most, however they are added (portraits, a photo, a
+screen): a test counts every photograph with faces in it (`src/config/photos.ts`) and fails above
+three. Its three portraits are captioned "Photos for illustration", and the
 app itself in the site's phone frame (WEBSITE 19): a request received in front, the Coaches
 Channel with a request sent behind it, offset to the far side and inside its column. "Example" and
 what it is go under the phones; on `/ar` also "التطبيق معروض بالإنجليزية".

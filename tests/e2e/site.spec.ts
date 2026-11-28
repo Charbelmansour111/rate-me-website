@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+import { photos } from '../../src/config/photos';
 import { ARABIC_ENABLED } from '../../src/config/site';
 
 /** On a phone the language and theme are in the menu. */
@@ -129,6 +130,20 @@ test('follows the system preference until the visitor chooses', async ({ page, i
   await page.getByRole('button', { name: 'Use the dark theme' }).click();
   await page.reload();
   await expect(html).toHaveAttribute('data-theme', 'dark');
+});
+
+test('community: three faces at most, however they are added (DESIGN.md)', async ({ page }) => {
+  await page.goto('/');
+  const withFaces = photos.filter((photo) => photo.faces).map((photo) => photo.file.slice(6));
+  const sources = await page
+    .locator('#community img')
+    .evaluateAll((imgs) =>
+      imgs.map((img) =>
+        decodeURIComponent((img as HTMLImageElement).currentSrc || (img as HTMLImageElement).src),
+      ),
+    );
+  const faces = sources.filter((src) => withFaces.some((file) => src.includes(file)));
+  expect(faces.length, faces.join(', ')).toBeLessThanOrEqual(3);
 });
 
 test('community: three stock portraits, and the app’s match request, said to be an example', async ({
