@@ -110,6 +110,8 @@ export const loading = {
   pace: 1,
   phonePace: 1,
   firstDecoders: 2,
+  // Frames held decoded or on their way, at most (2 MB each: about 150 MB), WEBSITE 25
+  maxDecoded: 72,
   backgroundAfter: 6000,
   cache: 'walk-frames',
   // The first visit's intro (WEBSITE 25, src/motion/walk-gate.ts): it waits for every

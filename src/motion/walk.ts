@@ -471,10 +471,15 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
 
   /** Says, for the tests, whether every frame around the walk's position is in. */
   function markReady(from: Reel) {
-    const list = want(from);
+    // As many as may be held decoded, the nearest first (loading.maxDecoded)
+    const at = frameOf(from);
+    const list = want(from)
+      .sort((a, b) => Math.abs(a - at) - Math.abs(b - at))
+      .slice(0, loading.maxDecoded);
     const missing = list.some((i) => !from.images.has(i) && !from.broken.has(i));
     mark(canvas, 'ready', missing ? 'false' : 'true');
     canvas.dataset.loaded = String(from.images.size);
+    canvas.dataset.decoded = String(from.images.size + from.pending.size);
     canvas.dataset.wanted = String(list.length);
   }
 
@@ -490,7 +495,35 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       .sort((a, b) => Number(close(b)) - Number(close(a)) || Math.abs(a - at) - Math.abs(b - at));
   }
 
+  /**
+   * Room for one more decoded frame (WEBSITE 25): never more than `loading.maxDecoded` held or on
+   * their way, those the walk waits on included (2 MB each, about 150 MB). When full, the frame
+   * furthest from the walk makes way, if it is further than this one; the two on show never do.
+   */
+  function makeRoom(from: Reel, i: number) {
+    if (from.images.size + from.pending.size < loading.maxDecoded) return true;
+    const at = frameOf(from);
+    const kept = new Set(want(from));
+    // A frame no longer wanted makes way first, then the furthest of the rest
+    let far: number | undefined;
+    let farKept = true;
+    for (const k of from.images.keys()) {
+      if (Math.abs(k - at) <= from.stride) continue;
+      const isKept = kept.has(k);
+      const further = far === undefined || Math.abs(k - at) > Math.abs(far - at);
+      if ((farKept && !isKept) || (isKept === farKept && further)) {
+        far = k;
+        farKept = isKept;
+      }
+    }
+    if (far === undefined || (farKept && Math.abs(far - at) <= Math.abs(i - at))) return false;
+    from.images.get(far)!.close?.();
+    from.images.delete(far);
+    return true;
+  }
+
   async function load(from: Reel, i: number) {
+    if (!makeRoom(from, i)) return;
     from.pending.add(i);
     let frame: Frame | undefined;
     try {
@@ -731,6 +764,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     decoder.stop();
     for (const key of [
       'loaded',
+      'decoded',
       'ready',
       'stride',
       'stored',

@@ -338,3 +338,14 @@ describe("the first visit's intro (WEBSITE 25)", () => {
     expect(run({}, 1440, true)).toBeUndefined();
   });
 });
+
+describe('decoded memory (WEBSITE 25)', () => {
+  it('holds at most 150 MB of decoded frames, and room for what the walk keeps', () => {
+    const frameMB = (960 * 540 * 4) / 1e6;
+    expect(loading.maxDecoded * frameMB).toBeLessThanOrEqual(150);
+    // The window the walk keeps fits under the ceiling, tier 2 in or not
+    const dense = frameList(landscape).flatMap((i) => (i < 380 ? [i, i + 0.5] : [i]));
+    expect(wanted(frameList(landscape), 200, 1).length).toBeLessThanOrEqual(loading.maxDecoded);
+    expect(wanted(dense, 200, 1, 0, 0.5).length).toBeLessThanOrEqual(loading.maxDecoded);
+  });
+});
