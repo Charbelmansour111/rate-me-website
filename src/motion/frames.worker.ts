@@ -4,8 +4,8 @@
  * to costs a few milliseconds and no network. Messages:
  * - `decode` (id, url, width?): the frame as a bitmap, now, at `width` px wide if given (the
  *   thumbnail track, WEBSITE 26); its bytes fetched first if they are not here.
- * - `pause` (on): while the page scrolls, the background list waits (WEBSITE 26): the network and
- *   the decoder are the walk's alone.
+ * - `pause` (on): while the page scrolls only the list's `near` frames (sent with `fetch`, those
+ *   round where the page is) are fetched, two at a time; the rest wait (WEBSITE 29).
  * - `fetch` (urls, parallel): the files to have, in order; replaces the list before. Fetched
  *   `parallel` at a time at low priority, after any frame asked for to decode.
  * - `cache` (name): the Cache API cache to keep the bytes in; older ones of the walk go.
@@ -19,7 +19,8 @@
 type Message =
   | { type: 'decode'; id: number; url: string; width?: number }
   | { type: 'pause'; on: boolean }
-  | { type: 'fetch'; urls: string[]; parallel: number }
+  | { type: 'fetch'; urls: string[]; parallel: number; near?: string[] }
+  | { type: 'near'; urls: string[] }
   | { type: 'cache'; name: string }
   | { type: 'expect'; urls: string[] }
   | { type: 'put'; url: string; blob: Blob }
@@ -80,8 +81,13 @@ function get(url: string, priority: 'high' | 'low'): Promise<Blob> {
       const response = await fetch(url, { priority } as RequestInit);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const blob = await response.blob();
-      // The address carries the render, so the bytes under it never change
-      store?.put(url, new Response(blob, { headers: response.headers })).catch(() => {});
+      // The address carries the render, so the bytes under it never change. Only a whole file is
+      // kept (a cut connection rejects blob(); a short body is checked against its length), so a
+      // later visit never decodes part of a frame (WEBSITE 29)
+      const length = Number(response.headers.get('content-length') ?? blob.size);
+      if (blob.size && (!length || length === blob.size)) {
+        store?.put(url, new Response(blob, { headers: response.headers })).catch(() => {});
+      }
       return keep(url, blob);
     })().finally(() => coming.delete(url));
     coming.set(url, pending);
@@ -116,13 +122,29 @@ function expect(urls: string[]) {
 }
 
 /** Keeps `parallel` background fetches going down the list. */
-/** While the page scrolls the background list waits. */
+/**
+ * While the page scrolls (WEBSITE 29): the frames near where it is still come, MOVING at a time;
+ * only the far ones wait. (A full pause starved a visitor who kept scrolling: the walk stayed thin.)
+ */
 let paused = false;
+/** The frames near the walk, nearest first: all that is fetched while the page moves. */
+let near: string[] = [];
+const MOVING = 4;
 
 function pump() {
-  while (!paused && running < parallel && queue.length) {
-    const url = queue.shift()!;
-    if (bytes.has(url) || coming.has(url)) continue;
+  while (queue.length) {
+    if (running >= (paused ? MOVING : parallel)) return;
+    let url: string;
+    if (paused) {
+      const next = near.find((one) => !bytes.has(one) && !coming.has(one));
+      if (next === undefined) return;
+      url = next;
+      const at = queue.indexOf(next);
+      if (at >= 0) queue.splice(at, 1);
+    } else {
+      url = queue.shift()!;
+      if (bytes.has(url) || coming.has(url)) continue;
+    }
     running++;
     get(url, 'low')
       .catch(() => {}) // A frame that fails is skipped: its neighbours stand in
@@ -144,7 +166,7 @@ scope.onmessage = async ({ data }) => {
     expected.delete(data.url);
     if (bytes.has(data.url)) return;
     keep(data.url, data.blob);
-    const headers = { 'Content-Type': 'image/webp' };
+    const headers = { 'Content-Type': data.blob.type || 'image/webp' };
     void cache.then((store) => store?.put(data.url, new Response(data.blob, { headers })));
     wait?.resolve(data.blob);
     return;
@@ -162,7 +184,14 @@ scope.onmessage = async ({ data }) => {
   }
   if (data.type === 'fetch') {
     queue = data.urls.filter((url) => !bytes.has(url));
+    near = data.near ?? [];
     parallel = data.parallel;
+    pump();
+    return;
+  }
+  // While the page moves (WEBSITE 29): only the frames near it, a short list, not the whole order
+  if (data.type === 'near') {
+    near = data.urls;
     pump();
     return;
   }
