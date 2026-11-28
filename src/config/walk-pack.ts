@@ -1,7 +1,7 @@
 // Written by scripts/walk-pack.mjs: do not edit by hand.
 /**
  * The intro's frames as one file (src/motion/walk-gate.ts): the frames of the landscape set in
- * `frames`, end to end, each `sizes` bytes long, in that order.
+ * `frames`, end to end, each `sizes` bytes long, in that order (and in AVIF: avifPath, avifSizes).
  */
 export const introPack = {
   path: '/journey/pack/thin-6.bin',
@@ -18,5 +18,13 @@ export const introPack = {
     14690, 17522, 21956, 28460, 45322, 77818, 81682, 82428, 84074, 84976, 86412, 88538, 89288,
     96096, 96564, 98034, 98046, 98160, 98028, 99072, 99666, 98880, 98208, 94394, 86456, 95766,
     95844, 94990, 94686, 95528, 95980, 94736, 96172, 92178, 92080,
+  ],
+  avifPath: '/journey/pack/thin-6-avif.bin',
+  avifSizes: [
+    17998, 14658, 14313, 14476, 14673, 14783, 14039, 13413, 11865, 10475, 8960, 8291, 7099, 6876,
+    6931, 7203, 6248, 6756, 7234, 7686, 7768, 7620, 7098, 8171, 8714, 8576, 9014, 8583, 8271, 8678,
+    11507, 12919, 15877, 19192, 28837, 45676, 48047, 47182, 47821, 48047, 47727, 48588, 50492,
+    54281, 55257, 55664, 55873, 55899, 55451, 56923, 56393, 56092, 55434, 53286, 49182, 53885,
+    53434, 53066, 53389, 54333, 55054, 54392, 55106, 53096, 52936,
   ],
 };

@@ -14,27 +14,36 @@ const names = readdirSync('public/journey/seq')
 const last = names.length - 1;
 const frames = names.map((_, i) => i).filter((i) => i % EVERY === 0 || i === last);
 const parts = frames.map((i) => readFileSync(`public/journey/seq/${names[i]}`));
+// The same frames in AVIF (WEBSITE 29, scripts/walk-avif.mjs: run that first), all but the first:
+// the page preloads that one as WebP before a script knows the format (frameUrl)
+const avifParts = frames.map((i, n) =>
+  n === 0 ? parts[0] : readFileSync(`public/journey/seq/${names[i].replace(/\.webp$/, '.avif')}`),
+);
 
 rmSync('public/journey/pack', { recursive: true, force: true });
 mkdirSync('public/journey/pack', { recursive: true });
 const file = `thin-${EVERY}.bin`;
+const avifFile = `thin-${EVERY}-avif.bin`;
 writeFileSync(`public/journey/pack/${file}`, Buffer.concat(parts));
+writeFileSync(`public/journey/pack/${avifFile}`, Buffer.concat(avifParts));
 
 const lines = [
   '// Written by scripts/walk-pack.mjs: do not edit by hand.',
   '/**',
   " * The intro's frames as one file (src/motion/walk-gate.ts): the frames of the landscape set in",
-  ' * `frames`, end to end, each `sizes` bytes long, in that order.',
+  ' * `frames`, end to end, each `sizes` bytes long, in that order (and in AVIF: avifPath, avifSizes).',
   ' */',
   'export const introPack = {',
   `  path: '/journey/pack/${file}',`,
   `  every: ${EVERY},`,
   `  frames: [${frames.join(', ')}],`,
   `  sizes: [${parts.map((part) => part.length).join(', ')}],`,
+  `  avifPath: '/journey/pack/${avifFile}',`,
+  `  avifSizes: [${avifParts.map((part) => part.length).join(', ')}],`,
   '};',
   '',
 ];
 writeFileSync('src/config/walk-pack.ts', lines.join('\n'));
 execSync('npx prettier --write src/config/walk-pack.ts', { stdio: 'ignore' });
-const total = parts.reduce((sum, part) => sum + part.length, 0);
-console.log(`${frames.length} frames, ${(total / 1e6).toFixed(2)} MB`);
+const size = (list) => (list.reduce((sum, part) => sum + part.length, 0) / 1e6).toFixed(2);
+console.log(`${frames.length} frames, WebP ${size(parts)} MB, AVIF ${size(avifParts)} MB`);
