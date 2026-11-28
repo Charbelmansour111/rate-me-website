@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   crossfade,
   frameAt,
+  frameFormat,
   framePath,
   frameUrl,
   heldKey,
@@ -39,7 +40,14 @@ describe('the walk', () => {
       const folder = `public${sequence.path.slice(0, sequence.path.lastIndexOf('/'))}`;
       // The portrait set may be missing, but never half there
       if (sequence === portrait && !existsSync(folder)) continue;
-      expect(readdirSync(folder), folder).toHaveLength(sequence.count);
+      // Its own format, and AVIF beside it where the set has it (WEBSITE 29)
+      const own = readdirSync(folder).filter((name) => name.endsWith(`.${sequence.ext}`));
+      expect(own, folder).toHaveLength(sequence.count);
+      if (sequence.avif) {
+        expect(readdirSync(folder).filter((name) => name.endsWith('.avif'))).toHaveLength(
+          sequence.count,
+        );
+      }
       expect(hasFrames(sequence), folder).toBe(true);
     }
   });
@@ -70,6 +78,16 @@ describe('the walk', () => {
     expect(frameUrl(tiered, 7 + 1 / 3)).toBe(`/journey/mid/f007-1.webp?v=${landscape.rev}`);
     expect(frameUrl(tiered, 7 + 2 / 3)).toBe(`/journey/mid/f007-2.webp?v=${landscape.rev}`);
     expect(frameUrl(tiered, 8)).toBe(`/journey/seq/f008.webp?v=${landscape.rev}`);
+    // AVIF where the browser decodes it (WEBSITE 29), for a set that has it; WebP otherwise
+    frameFormat.avif = true;
+    try {
+      expect(frameUrl(landscape, 7)).toBe(`/journey/seq/f007.avif?v=${landscape.rev}`);
+      expect(frameUrl(landscape, 7.5)).toBe(`/journey/mid/f007-1.avif?v=${landscape.rev}`);
+      expect(frameUrl(landscape, 0)).toBe(`/journey/seq/f000.webp?v=${landscape.rev}`);
+      expect(frameUrl(journey.portrait, 7)).toMatch(/\.webp\?/);
+    } finally {
+      frameFormat.avif = false;
+    }
   });
   it('has scenes that follow on from 0 to 1', () => {
     let end = 0;
@@ -231,7 +249,13 @@ describe('the walk', () => {
     const mids = betweenList(landscape);
     expect(mids).toHaveLength(landscape.count - 1);
     expect(mids.every((at) => at % 1 === 0.5)).toBe(true);
-    expect(readdirSync('public/journey/mid')).toHaveLength(mids.length);
+    for (const ext of ['webp', 'avif']) {
+      const files = readdirSync('public/journey/mid').filter((name) => name.endsWith(`.${ext}`));
+      expect(files, ext).toHaveLength(mids.length);
+    }
+    expect(readdirSync('public/journey/seq').filter((name) => name.endsWith('.avif'))).toHaveLength(
+      landscape.count,
+    );
     for (const at of mids.slice(0, 3)) {
       const file = frameUrl(landscape, at).split('?')[0];
       expect(existsSync(`public${file}`), file).toBe(true);
@@ -289,6 +313,22 @@ describe("the first visit's intro (WEBSITE 25)", () => {
       at += own.length;
     });
     expect(statSync(`public${introPack.path}`).size).toBe(at);
+    // And its AVIF twin, from the files the walk asks for in AVIF (WEBSITE 29: the first frame, which
+    // the page preloads, stays WebP)
+    const avif = readFileSync(`public${introPack.avifPath}`);
+    at = 0;
+    frameFormat.avif = true;
+    try {
+      introPack.frames.forEach((frame, n) => {
+        const own = readFileSync(`public${frameUrl(landscape, frame).split('?')[0]}`);
+        expect(introPack.avifSizes[n]).toBe(own.length);
+        expect(avif.subarray(at, at + own.length).equals(own)).toBe(true);
+        at += own.length;
+      });
+    } finally {
+      frameFormat.avif = false;
+    }
+    expect(avif.length).toBe(at);
   });
 
   it('is decided before the first paint by the same key the walk notes', () => {

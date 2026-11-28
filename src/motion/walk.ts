@@ -1,5 +1,6 @@
 import {
   frameAt,
+  frameFormat,
   frameUrl,
   heldKey,
   journey,
@@ -53,6 +54,31 @@ export function softwareRendering() {
     return /swiftshader|llvmpipe|software|basic render/i.test(renderer);
   } catch {
     return false;
+  }
+}
+
+/** A one-pixel AVIF: decoded, the browser takes the walk's AVIF frames (WEBSITE 29). */
+const AVIF =
+  'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgANogQEAwgMg8f8D///8WfhwB8+ErK42A=';
+
+/** Chooses the walk's file format before it starts: AVIF where it decodes, else WebP. */
+export async function chooseFormat() {
+  // Forced either way with localStorage `walk-format` (`webp` or `avif`), as the tests do
+  let forced: string | null = null;
+  try {
+    forced = localStorage.getItem('walk-format');
+  } catch {}
+  if (forced === 'webp' || forced === 'avif') {
+    frameFormat.avif = forced === 'avif';
+    return;
+  }
+  try {
+    const image = new Image();
+    image.src = AVIF;
+    await image.decode();
+    frameFormat.avif = image.naturalWidth > 0;
+  } catch {
+    frameFormat.avif = false;
   }
 }
 
@@ -135,8 +161,12 @@ function frameDecoder(onStored: (count: number, urls: string[]) => void, signal:
       worker?.postMessage({ type: 'pause', on });
     },
     /** The files to have, in order, fetched in the background. */
-    fetch(urls: string[], parallel: number) {
-      worker?.postMessage({ type: 'fetch', urls, parallel });
+    fetch(urls: string[], parallel: number, near: string[] = []) {
+      worker?.postMessage({ type: 'fetch', urls, parallel, near });
+    },
+    /** Only the frames near the walk, nearest first (while the page moves). */
+    near(urls: string[]) {
+      worker?.postMessage({ type: 'near', urls });
     },
     /**
      * Several frames in one file (src/config/walk-pack.ts), fetched here, where it can start before
@@ -175,7 +205,8 @@ function frameDecoder(onStored: (count: number, urls: string[]) => void, signal:
           while (next < files.length && start + files[next].size <= received) {
             const { url: frame, size } = files[next];
             const all = new Blob(parts);
-            const blob = all.slice(start - partsFrom, start - partsFrom + size, 'image/webp');
+            const type = /\.avif\?/.test(frame) ? 'image/avif' : 'image/webp';
+            const blob = all.slice(start - partsFrom, start - partsFrom + size, type);
             start += size;
             next++;
             worker?.postMessage({ type: 'put', url: frame, blob });
@@ -331,6 +362,8 @@ export function startWalk(
   let last = NaN;
   /** Where the background list was last ordered from. */
   let fetchedFrom = -Infinity;
+  /** Where the whole background list was last ordered from (fetchedFrom: the near list too). */
+  let orderedFrom = -Infinity;
   /** Both are kept, so turning the phone back loads nothing twice. */
   const reels = new Map<Shape, Reel>();
   let hasPortrait = canvas.dataset.portrait !== undefined;
@@ -402,7 +435,7 @@ export function startWalk(
         // Their bytes are here: the thumbnail track, when the page is still
         if (thumbs.size < introPack.frames.length) idle(loadThumbs);
         // The intro's frames are in: now the rest of the set
-        if (filling && !introIn && introSet(one).every((i) => one.held1.has(i))) {
+        if (filling && !introIn && introSet(one).every((i) => heldIn(one, i))) {
           introIn = true;
           fetchAll(one);
         }
@@ -431,13 +464,29 @@ export function startWalk(
     );
   }
 
-  /** The intro's frames: every `loading.introEvery`-th of the set, and those round the walk. */
+  /** A frame of either tier, its bytes held. */
+  const heldIn = (one: Reel, i: number) => (one.held1.has(i) ? true : one.held2.has(i));
+
+  /**
+   * The intro's frames: every `loading.introEvery`-th of the set, those round the walk, and (WEBSITE
+   * 29) on a computer both tiers of the scene ahead, to `loading.introAhead` frames on.
+   */
   function introSet(one: Reel) {
     const at = frameOf(one);
     const last = one.tier1[one.tier1.length - 1];
-    return one.tier1.filter(
-      (i) => i % loading.introEvery === 0 || i === last || Math.abs(i - at) <= loading.introWindow,
-    );
+    const ahead = (i: number) => i >= at - loading.introWindow && i <= at + loading.introAhead;
+    const scene = one.sequence === journey.portrait;
+    const two = good && level < 1 && !scene ? one.tier2.filter(ahead) : [];
+    return [
+      ...one.tier1.filter(
+        (i) =>
+          i % loading.introEvery === 0 ||
+          i === last ||
+          Math.abs(i - at) <= loading.introWindow ||
+          (!scene && ahead(i)),
+      ),
+      ...two,
+    ];
   }
 
   /** What is on the canvas: the set, its two frames and the fade in 255ths (the finest shown). */
@@ -446,6 +495,15 @@ export function startWalk(
   const onShow = new Set<number>();
   /** A phone: its first frame is drawn on the canvas at once (below). */
   const narrow = matchMedia('(max-width: 47.99rem)');
+
+  /**
+   * Where the in-between frames are not in yet (a first visit, WEBSITE 29), two whole frames apart
+   * never cut in one jump: at least a short crossfade (`loading.softGap` of the way either side of the
+   * middle). Half-frame pairs keep their own window.
+   */
+  function soften(window: number, span: number) {
+    return span > 0.99 && span < 2.01 ? Math.max(window, loading.softGap) : window;
+  }
 
   /** Sizes the canvas for a frame (half in light mode); whether it changed. */
   function size(frame: Frame) {
@@ -481,11 +539,12 @@ export function startWalk(
     let mix = blend(
       images.keys(),
       at,
-      resting || level >= 2 ? 0 : (from, to) => pairWindow(sequence, from, to),
+      resting || level >= 2 ? 0 : (from, to) => soften(pairWindow(sequence, from, to), to - from),
     );
     if (!mix) return;
-    // Never across a frame of the set between the two, decoded or not: the nearest alone
-    if (mix.from !== mix.to && apart(shown.all, mix.from, mix.to)) {
+    // Never across a frame of the set between the two, decoded or not, but for one in-between not
+    // decoded yet (WEBSITE 29): the two frames either side blend over it; else the nearest alone
+    if (mix.from !== mix.to && mix.to - mix.from > 1.01 && apart(shown.all, mix.from, mix.to)) {
       const only = at - mix.from <= mix.to - at ? mix.from : mix.to;
       mix = { from: only, to: only, alpha: 0 };
     }
@@ -529,6 +588,7 @@ export function startWalk(
       Math.min(1, spacingOf(from.all) / from.stride) *
         (from.sequence === journey.portrait ? loading.phoneScale : 1),
     );
+
   /** At most this many decoded or on their way: fewer on a phone (WEBSITE 28: iOS Safari). */
   const cap = (from: Reel) =>
     from.sequence === journey.portrait ? loading.phoneMaxDecoded : loading.maxDecoded;
@@ -554,9 +614,17 @@ export function startWalk(
   function toLoad(from: Reel) {
     const at = frameOf(from) + (speed > from.stride ? direction * speed * 4 : 0);
     const close = (i: number) => Math.abs(i - at) <= loading.window;
+    // While the page moves, the frames of the set before the in-betweens (WEBSITE 29): the walk
+    // moves on through those, and tier 2 fills in behind as the lanes allow
+    const between = (i: number) => (moving && i % from.stride !== 0 ? 1 : 0);
     return want(from)
       .filter((i) => !from.images.has(i) && !from.pending.has(i) && !from.broken.has(i))
-      .sort((a, b) => Number(close(b)) - Number(close(a)) || Math.abs(a - at) - Math.abs(b - at));
+      .sort(
+        (a, b) =>
+          between(a) - between(b) ||
+          Number(close(b)) - Number(close(a)) ||
+          Math.abs(a - at) - Math.abs(b - at),
+      );
   }
 
   /**
@@ -664,7 +732,7 @@ export function startWalk(
    * all held, tier 2 the same way, on a good connection. Not when saving data: only what the walk
    * shows.
    */
-  function fetchAll(from: Reel) {
+  function fetchAll(from: Reel, nearOnly = false) {
     if (!started || saveData) return;
     const at = frameOf(from);
     fetchedFrom = at;
@@ -672,13 +740,35 @@ export function startWalk(
     // A first visit: the intro's frames alone, those round the walk first, so nothing else takes
     // the connection from them; the rest once they are in (see `stored`)
     const intro = filling && !whole && !introIn ? outward(introSet(from), at) : [];
+    // Then (WEBSITE 29) the frames near where the walk is, both tiers, more ahead of the way it goes
+    // than behind; then the rest of the set; then the rest of tier 2. While the page moves only the
+    // near ones are fetched (frames.worker.ts), so a visitor who keeps scrolling is never starved
+    // (A phone keeps its own order, WEBSITE 28: tier 2 once the set is whole, nothing while moving)
+    const phoneSet = from.sequence === journey.portrait;
+    const two = good && level < 1 && (!phoneSet || whole) ? from.tier2 : [];
+    const way = direction || 1;
+    const close = (i: number) => {
+      const d = (i - at) * way;
+      return d >= -loading.nearBehind && d <= loading.nearAhead;
+    };
+    const near = intro.length
+      ? intro
+      : phoneSet
+        ? []
+        : // Ahead of the way it goes first, nearest first; then those behind
+          [...from.tier1.filter(close), ...two.filter(close)].sort((i, j) => {
+            const ahead = (k: number) => ((k - at) * way >= 0 ? 0 : 1000) + Math.abs(k - at);
+            return ahead(i) - ahead(j);
+          });
+    if (nearOnly && !intro.length) {
+      // Moving: the near frames not held yet, a short list (the page's work stays small)
+      const missing = near.filter((i) => !from.held1.has(i) && !from.held2.has(i));
+      decoder.near(missing.map((i) => frameUrl(from.sequence, i)));
+      return;
+    }
+    orderedFrom = at;
     const urls = (
-      intro.length
-        ? intro
-        : [
-            ...outward(from.tier1, at),
-            ...(whole && good && level < 1 ? outward(from.tier2, at) : []),
-          ]
+      intro.length ? intro : [...near, ...outward(from.tier1, at), ...outward(two, at)]
     ).map((i) => frameUrl(from.sequence, i));
     // The intro waits on these: as many at once as the browser allows one server (HTTP/1.1)
     const parallel = intro.length
@@ -686,7 +776,11 @@ export function startWalk(
       : innerWidth < loading.phoneWidth
         ? loading.phoneFetchers
         : loading.fetchers;
-    decoder.fetch(urls, parallel);
+    decoder.fetch(
+      urls,
+      parallel,
+      near.map((i) => frameUrl(from.sequence, i)),
+    );
   }
 
   /**
@@ -713,8 +807,9 @@ export function startWalk(
     }
     markReady(from);
     pump(from);
-    // Far from where the background list was ordered: from here outward now
-    if (Math.abs(at - fetchedFrom) > 32) fetchAll(from);
+    // Far from where the background list was ordered: from here outward now (while the page moves,
+    // only the frames near it: the whole list again once it is still)
+    if (Math.abs(at - fetchedFrom) > loading.refetchEvery) fetchAll(from, moving);
   }
 
   /** Takes the sequence for this screen. */
@@ -781,11 +876,13 @@ export function startWalk(
       // The intro's thin set as one file, at once: the intro is up, nothing else is waiting
       const { sequence } = reel;
       if (sequence === journey.landscape && introPack.every === loading.introEvery) {
+        // The pack in the walk's format (AVIF where it decodes, WEBSITE 29)
+        const avif = frameFormat.avif && Boolean(sequence.avif);
         void decoder.pack(
-          `${introPack.path}?v=${sequence.rev}`,
+          `${avif ? introPack.avifPath : introPack.path}?v=${sequence.rev}`,
           introPack.frames.map((i, n) => ({
             url: frameUrl(sequence, i),
-            size: introPack.sizes[n],
+            size: (avif ? introPack.avifSizes : introPack.sizes)[n],
           })),
         );
       }
@@ -827,8 +924,14 @@ export function startWalk(
     clearTimeout(stillTimer);
     stillTimer = window.setTimeout(() => {
       moving = false;
+      // Still: the whole background list again, from here
+      if (started && Math.abs(frameOf(reel) - orderedFrom) > loading.refetchEvery) fetchAll(reel);
+      // Still: no speed (WEBSITE 29). Only a move eased it, so after a jump the window stayed
+      // stretched far ahead of a walk at rest, and the frames behind it never came
+      speed = 0;
       decoder.pause(false);
       if (started) {
+        markReady(reel);
         pump(reel);
         idle(loadThumbs);
       }
@@ -1005,6 +1108,23 @@ export function startWalk(
         i === undefined || shown.images.has(i) || shown.broken.has(i);
       const [lo, hi] = bracket(shown.all, to * count);
       if (ok(lo) && ok(hi)) return to;
+      // An in-between not decoded yet, the two frames round it decoded: there, blended over it
+      // (WEBSITE 29), not held back to jump when it comes
+      let below = -Infinity;
+      let above = Infinity;
+      for (const i of shown.images.keys()) {
+        if (i <= to * count && i > below) below = i;
+        if (i >= to * count && i < above) above = i;
+      }
+      if (above - below <= 1.01) {
+        // Asked for now only when still: while the page moves, the lanes take it in turn (pump), so
+        // it never holds up a frame of the set the walk needs next
+        for (const i of moving ? [] : [lo, hi]) {
+          if (i !== undefined && !ok(i) && !shown.pending.has(i) && shown === reel)
+            void load(shown, i);
+        }
+        return to;
+      }
       // The frames it waits on: asked for now, ahead of anything else
       for (const i of [lo, hi]) {
         if (i !== undefined && !ok(i) && !shown.pending.has(i) && shown === reel) {
@@ -1029,9 +1149,17 @@ export function startWalk(
     held: () => {
       const set = introSet(reel);
       return {
-        held: set.filter((i) => reel.held1.has(i)).length,
+        held: set.filter((i) => heldIn(reel, i)).length,
         total: set.length,
-        ready: canvas.dataset.ready === 'true' && reel.images.size > 0,
+        // The frames nearest the start decoded (WEBSITE 29: not the whole window, which now has
+        // tier 2 in it and decodes gently behind the intro)
+        ready:
+          reel.images.size > 0 &&
+          (canvas.dataset.ready === 'true' ||
+            want(reel)
+              .sort((a, b) => Math.abs(a - frameOf(reel)) - Math.abs(b - frameOf(reel)))
+              .slice(0, loading.introDecoded)
+              .every((i) => reel.images.has(i) || reel.broken.has(i))),
       };
     },
     fetchNow,

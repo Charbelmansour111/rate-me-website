@@ -1,7 +1,7 @@
 import { startHero } from './hero';
 import { startTactics } from './tactics';
 import { startPitchWalk } from './pitch-walk';
-import { softwareRendering, startWalk } from './walk';
+import { chooseFormat, softwareRendering, startWalk, type Walk } from './walk';
 import { gateWalk } from './walk-gate';
 
 /** What says someone is using the page: until then nothing needs GSAP or smooth scrolling. */
@@ -36,16 +36,24 @@ export function startMotion(signal: AbortSignal) {
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   const drawn = phone && (Boolean(connection?.saveData) || softwareRendering());
   if (canvas && drawn) startPitchWalk(canvas, signal);
-  const walk =
+  // The walk's file format first (AVIF where it decodes, WEBSITE 29): a few milliseconds
+  const walkReady: Promise<Walk | undefined> =
     canvas && !drawn
-      ? startWalk(canvas, signal, phone ? () => startPitchWalk(canvas, signal) : undefined)
-      : undefined;
+      ? chooseFormat().then(() =>
+          signal.aborted
+            ? undefined
+            : startWalk(canvas, signal, phone ? () => startPitchWalk(canvas, signal) : undefined),
+        )
+      : Promise.resolve(undefined);
   // A first visit's intro while the frames come (src/motion/walk-gate.ts); no walk, no intro
-  if (walk) gateWalk(walk, signal);
-  else if (document.documentElement.dataset.walkGate === 'open') {
-    document.documentElement.dataset.walkGate = 'none';
-    (window as Window & { __introRelease?: () => void }).__introRelease?.();
-  }
+  void walkReady.then((walk) => {
+    if (signal.aborted) return;
+    if (walk) gateWalk(walk, signal);
+    else if (document.documentElement.dataset.walkGate === 'open') {
+      document.documentElement.dataset.walkGate = 'none';
+      (window as Window & { __introRelease?: () => void }).__introRelease?.();
+    }
+  });
   const hero = document.querySelector<HTMLElement>('[data-hero-drill]');
   if (hero) startHero(hero, signal);
   const tactics = document.querySelector<HTMLElement>('[data-tactics]');
@@ -56,15 +64,15 @@ export function startMotion(signal: AbortSignal) {
   signal.addEventListener('abort', () => used.abort());
   const load = () => {
     used.abort();
-    import('./rich').then(
-      ({ startScroll, startRich }) => {
+    Promise.all([import('./rich'), walkReady]).then(
+      ([{ startScroll, startRich }, walk]) => {
         if (signal.aborted) return;
         startScroll(signal, walk);
         whenStill(() => startRich(signal), signal);
       },
       // Offline: the page works without it, with the still pictures behind it.
       () => {
-        if (walk) document.documentElement.dataset.journey = 'off';
+        if (canvas) document.documentElement.dataset.journey = 'off';
       },
     );
   };

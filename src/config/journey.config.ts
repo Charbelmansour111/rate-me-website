@@ -19,6 +19,8 @@ export type Sequence = {
   between?: { path: string; factor: number; skip?: readonly number[] };
   /** Every frame even on a phone (no stride): a set made for the phone (WEBSITE 28). */
   full?: boolean;
+  /** Its frames in AVIF as well, next to the WebP ones (WEBSITE 29, scripts/walk-avif.mjs). */
+  avif?: boolean;
 };
 export type Shape = 'landscape' | 'portrait';
 export const journey: Record<Shape, Sequence> = {
@@ -28,6 +30,7 @@ export const journey: Record<Shape, Sequence> = {
     ext: 'webp',
     pad: 3,
     rev: 1,
+    avif: true,
     // RIFE v4.6, t = 0.5, every pair (WEBSITE 23); a pair listed in `skip` keeps its real frames
     between: { path: '/journey/mid/f', factor: 2, skip: [] },
   },
@@ -120,6 +123,13 @@ export const loading = {
   firstDecoders: 2,
   // Frames held decoded or on their way, at most (2 MB each: about 150 MB), WEBSITE 25
   maxDecoded: 72,
+  // A first visit (WEBSITE 29): the frames near the walk fetched first, both tiers, this many frames
+  // ahead of the way it goes and behind; the list ordered again every `refetchEvery` frames it moves
+  // Two whole frames with their in-between not in yet: at least this much crossfade (a first visit)
+  softGap: 0.16,
+  nearAhead: 60,
+  nearBehind: 20,
+  refetchEvery: 12,
   // A phone (WEBSITE 28): a narrower window (about 36 frames) and at most 46 decoded, 2 MB each
   // (about 95 MB: iOS Safari's limits)
   phoneScale: 0.5,
@@ -127,10 +137,15 @@ export const loading = {
   backgroundAfter: 6000,
   cache: 'walk-frames',
   // The first visit's intro (WEBSITE 25, src/motion/walk-gate.ts): it waits for every
-  // `introEvery`-th frame of the set and the frames within `introWindow` of the walk, then opens;
-  // never longer than `introCap` ms from the page's start, whatever the connection
+  // `introEvery`-th frame of the set and the frames within `introWindow` of the walk, and (WEBSITE
+  // 29) both tiers of the scene ahead, up to `introAhead` frames on (from the top: the locker room,
+  // to the tunnel), so a fast first scroll has film, not single frames; then opens; never longer
+  // than `introCap` ms from the page's start, whatever the connection
   introEvery: 6,
   introWindow: 12,
+  introAhead: 84,
+  // ... and the frames nearest the start decoded, this many (the rest decode behind it)
+  introDecoded: 24,
   introCap: 6500,
   introFetchers: 6,
 };
@@ -196,14 +211,23 @@ export const framePath = ({ path, pad, ext }: Sequence, i: number) =>
  * A frame's address: its file and the render it is from, so it can be cached for good (the
  * /journey/ files are served immutable, next.config.ts). A fraction is an in-between frame.
  */
+/**
+ * Which file the walk fetches (WEBSITE 29): AVIF where the browser decodes it (about 45% fewer
+ * bytes, scripts/walk-avif.mjs), else WebP. Set once by the motion code before the walk starts
+ * (src/motion/walk.ts, chooseFormat); the page itself (the preload, the stills) keeps WebP.
+ */
+export const frameFormat = { avif: false };
+
 export function frameUrl(sequence: Sequence, at: number) {
-  const { between, rev, pad, ext } = sequence;
+  const { between, rev, pad } = sequence;
+  // The first frame stays WebP: the page preloads it before a script knows the format
+  const ext = sequence.avif && frameFormat.avif && at !== 0 ? 'avif' : sequence.ext;
   const whole = Math.floor(at);
   if (between && at !== whole) {
     const k = Math.round((at - whole) * between.factor);
     return `${between.path}${String(whole).padStart(pad, '0')}-${k}.${ext}?v=${rev}`;
   }
-  return `${framePath(sequence, at)}?v=${rev}`;
+  return `${sequence.path}${String(at).padStart(pad, '0')}.${ext}?v=${rev}`;
 }
 
 export const frameAt = ({ count }: Sequence, progress: number) =>
