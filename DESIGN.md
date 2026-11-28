@@ -166,16 +166,20 @@ describes them; when the two differ, the code wins and this file is updated.
 
 ## Overview
 
-The home page is a walk: on a computer and a tablet, a rendered image sequence
-(`public/journey/seq`, our own Blender renders) from the locker room through the tunnel to the
-pitch, scrubbed by the scroll behind the page. On a phone (under 48rem) it is a drawing instead
-(WEBSITE 27, `src/motion/pitch-walk.ts`): the site's tactics board, sharp at any density, driven by
-the scroll. A faint pitch pans slowly behind; over it the hero board's plays, one for each part of
-the page (the locker room, the tunnel, the tactics, the field): as the page goes down the players
-run their routes, the ball is passed and the passes and run lines draw in. White ground with black
-and orange lines; black with white and orange in the dark theme; a still drawing under reduced
-motion or without JavaScript. No photograph of the walk is fetched on a phone, and no intro waits
-for one.
+The home page is a walk: a rendered image sequence (`public/journey/seq`, our own Blender renders)
+from the locker room through the tunnel to the pitch, scrubbed by the scroll behind the page. A
+phone held upright (under 48rem) plays its own set (WEBSITE 28, `public/journey/portrait` and
+`portrait-mid`): every frame and in-between at 540 x 960, fitted and extended from the landscape
+frames, not cropped to a centre strip. Each is the landscape frame zoomed to 1.1 to 1.4 times the
+screen's width (more in the locker room, so the shirts and the board show), panned along a smoothed
+path that follows the detail (6 px a frame at most), and extended above and below by scene: the
+locker room's ceiling and floor and the tunnel's dark ceiling and glossy floor from short, blurred
+mirrors of the frame's own edges fading into their colours (bright lights masked first); the
+field's sky as a gradient from its top rows, its grass as an out-of-focus foreground (never a row
+repeated). Fill colours average neighbouring frames, so nothing flickers. A phone never asks for a
+landscape frame. The drawn tactics board (WEBSITE 27, `src/motion/pitch-walk.ts`) stands in to save
+data, on a software renderer or when the portrait set fails; a still drawing under reduced motion
+or without JavaScript. Tablets and computers keep the landscape walk.
 Everything people read sits on panels in front of it, and the panels take the colours of the part of
 the walk behind them: warm and light in the locker room, charcoal in the tunnel, deep pitch green
 on the field. Thin pitch lines (a centre circle, corner arcs, a box corner, a dashed pass) tie the
@@ -282,7 +286,8 @@ sizes are smaller because Readex Pro is wider and taller. Captions and card text
 ## Elevation & Depth
 
 Depth comes from the walk behind the panels, not from shadows. On a computer every effect stays; on
-a phone what costs smoothness goes (WEBSITE 27): its walk is the drawing, nothing over the text; no
+a phone what costs smoothness goes (WEBSITE 27): its walk full screen, a little brighter and crisper
+(brightness 1.1, contrast 1.05 on the canvas alone), nothing over the text; no
 blended stage colours, no smooth scrolling, no words or cards rising in, no brush strokes drawing,
 no mouse effects (whose code is never loaded there); the header's progress line follows the scroll
 in CSS, and the running line is the still one, every node filled. No `backdrop-filter`, and no
