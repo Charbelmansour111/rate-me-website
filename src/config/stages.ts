@@ -91,8 +91,13 @@ const GROUNDS: (keyof StageTokens)[] = ['surface', 'soft', 'softer'];
 export const cssName = (token: string) =>
   `--st-${token.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
 
-/** Steps of the walk the live colours are worked out at (src/motion/stages.ts). */
-export const STAGE_STEPS = 600;
+/**
+ * Steps of the walk the live colours are worked out at (src/motion/stages.ts). Each new colour
+ * restyles the whole page (about 30 ms on a fast computer, four times that on a slow phone), so
+ * they change in steps of a 120th of the walk: about 10 between the locker room and the tunnel, 18
+ * into the field (WEBSITE 25; there were 600).
+ */
+export const STAGE_STEPS = 120;
 
 /** The colours at walk progress `p`: one stage's own, or a blend near a boundary. */
 export function stageAt(p: number): StageTokens {

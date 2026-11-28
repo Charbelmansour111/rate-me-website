@@ -79,10 +79,20 @@ export function RunningLine() {
           {layout.nodes.map((y) => (
             <circle key={y} className="run-node" cx="8" cy={y} r="5" data-y={y} />
           ))}
-          <g className="run-ball" style={{ translate: `8px ${layout.bottom}px` }}>
-            <circle r="6.5" />
-            <path d="M0 -3.2L3 -1L1.9 2.6H-1.9L-3 -1Z" />
-          </g>
+        </svg>
+      )}
+      {/* The ball on the tip: its own small layer, moved by a transform alone, so following the
+          scroll never lays the line out again (WEBSITE 25) */}
+      {layout && (
+        <svg
+          className="run-ball"
+          width="16"
+          height="16"
+          viewBox="-8 -8 16 16"
+          style={{ transform: `translate3d(0, ${layout.bottom - 8}px, 0)` }}
+        >
+          <circle r="6.5" />
+          <path d="M0 -3.2L3 -1L1.9 2.6H-1.9L-3 -1Z" />
         </svg>
       )}
     </div>

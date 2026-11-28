@@ -295,7 +295,19 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   let reel: Reel;
   let shown: Reel;
   const gapEls = [...document.querySelectorAll<HTMLElement>('[data-walk-gap]')];
-  const end = () => Math.max(1, page.offsetTop + page.offsetHeight - innerHeight);
+  /**
+   * Where the walk ends, in px of scroll. Read every frame (the scroll's speed limit, src/motion/
+   * smooth.ts), so measured only when the page or the window changes size: a read of offsetTop
+   * after any change forces the browser to lay the page out there and then (WEBSITE 25).
+   */
+  let endAt = 1;
+  const measureEnd = () => {
+    endAt = Math.max(1, page.offsetTop + page.offsetHeight - innerHeight);
+  };
+  measureEnd();
+  const end = () => endAt;
+  const sized = new ResizeObserver(measureEnd);
+  sized.observe(page);
   /** Along the walk, 0 to 1: until the scroll drives it, where the page was opened. */
   let position = Math.min(1, Math.max(0, scrollY / end()));
   let resting = true;
@@ -679,6 +691,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
 
   let width = innerWidth;
   function onResize() {
+    measureEnd();
     // A keyboard that opens makes the screen wide, but not wider: that is no turn.
     if (innerWidth !== width) pick();
     width = innerWidth;
@@ -713,6 +726,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     }
     delete canvas.dataset.shape;
     gaps.disconnect();
+    sized.disconnect();
     delete root.dataset.journey;
     delete root.dataset.scene;
     for (const { images } of reels.values()) for (const frame of images.values()) frame.close?.();

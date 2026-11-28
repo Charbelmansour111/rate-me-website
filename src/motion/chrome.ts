@@ -91,7 +91,7 @@ function startRunningLine() {
   let bottom = 1;
   let nodes: { el: SVGCircleElement; y: number; on: boolean }[] = [];
   let fill: SVGPathElement | null = null;
-  let ball: SVGGElement | null = null;
+  let ball: SVGSVGElement | null = null;
   let origin = 0;
   const read = () => {
     svg = host.querySelector('svg');
@@ -99,7 +99,7 @@ function startRunningLine() {
     top = Number(svg.dataset.top);
     bottom = Number(svg.dataset.bottom);
     fill = svg.querySelector('.run-fill');
-    ball = svg.querySelector('.run-ball');
+    ball = host.querySelector('.run-ball');
     nodes = [...svg.querySelectorAll<SVGCircleElement>('.run-node')].map((el) => ({
       el,
       y: Number(el.dataset.y),
@@ -125,7 +125,7 @@ function startRunningLine() {
     tipShown = tip;
     const done = (tip - top) / Math.max(1, bottom - top);
     fill!.style.strokeDashoffset = String(1 - done);
-    ball!.style.translate = `8px ${tip.toFixed(1)}px`;
+    if (ball) ball.style.transform = `translate3d(0, ${(tip - 8).toFixed(1)}px, 0)`;
     for (const node of nodes) {
       const on = tip >= node.y - 1;
       if (on !== node.on) node.el.classList.toggle('run-on', (node.on = on));

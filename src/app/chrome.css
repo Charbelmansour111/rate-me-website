@@ -325,8 +325,12 @@
   stroke: var(--brand-orange);
   stroke-width: 2px;
 }
-.run-ball {
+.run-line .run-ball {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: none;
+  will-change: transform;
 }
 /* Drawn with the scroll where motion is on; otherwise a still line, every node filled */
 [data-live] .run-fill {
@@ -339,7 +343,7 @@
 [data-live] .run-node.run-on {
   fill: var(--brand-orange);
 }
-[data-live] .run-ball {
+.run-line[data-live] .run-ball {
   display: block;
 }
 .run-ball circle {
