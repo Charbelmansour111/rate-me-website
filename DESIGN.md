@@ -185,6 +185,18 @@ each other only by how far their picture moves (`src/config/walk-pairs.ts`, from
 `scripts/walk-pairs.mjs`): a long fade where little moves, a cut where edges would show twice; at
 rest one frame shows alone.
 
+Over the walk the page itself goes no faster than the picture can, one frame of 381 per screen
+frame (about 1,900 px/s at 60 Hz), wheel and touch alike, so the text and the picture are one
+motion (WEBSITE 25); links within the page still glide there in half a second. At most 72 frames
+are held decoded (about 150 MB).
+
+A first visit opens on a short intro (WEBSITE 25): the wordmark on the brand black, on the centre
+spot of a faint pitch, a 2px orange line filling as the frames come, and a quiet Skip; no sentence.
+It waits for every sixth frame (one file, `public/journey/pack`) and those round the walk, about
+5 s on 4G, never more than 6.5 s, then fades; the rest comes behind it. Decided before the first
+paint: never on a return visit, to save data or under reduced motion. The cookie bar comes after
+it: small, at the bottom, Essential only and Accept the same size.
+
 ## Colors
 
 ### Primary
@@ -243,15 +255,18 @@ sizes are smaller because Readex Pro is wider and taller. Captions and card text
 
 - Content width 76rem with `clamp(1.25rem, 4vw, 2.5rem)` gutters; panel padding
   `clamp(1.5rem, 4vw, 3.5rem)`.
-- Between sections, an open gap of 60 to 70% of the screen shows the walk with nothing on it.
+- Between sections, an open gap of 60 to 70% of the screen shows the walk with nothing written on
+  it; on a phone, a small board in the hero board's style sits at its foot, its play running with
+  the walk.
 - The running line sits outside the content: in the margin on a computer, in the gutter on a phone.
 - Everything mirrors in Arabic (logical properties: `margin-inline`, `inset-inline`).
 
 ## Elevation & Depth
 
-Depth comes from the walk behind the panels, not from shadows. On phones the walk is a 250px slice of a 960px
-frame, stretched about 4.7 times, so there it is atmosphere (WEBSITE 21): a 2px blur, as if out of
-focus behind the panels, and a dark wash (25% at the top to 45% at the bottom) between it and them. No `backdrop-filter`, and no
+Depth comes from the walk behind the panels, not from shadows. On phones the walk plays whole in a
+full-width 16:9 window under the header (WEBSITE 25), a little brighter and crisper (brightness
+1.12, contrast 1.06 on the canvas alone), on a dark ground in the colour of the frame's own edges
+(`scripts/walk-edges.mjs`); no blur, no wash. No `backdrop-filter`, and no
 blurred shadow on anything large over the walk: it would be repainted as it moves. Phones float on
 a soft orange glow and stand on a ground shadow, both radial gradients.
 
