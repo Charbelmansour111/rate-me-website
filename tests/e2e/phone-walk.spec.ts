@@ -3,10 +3,14 @@ import { expect, test, type Page } from '@playwright/test';
 import { ARABIC_ENABLED } from '../../src/config/site';
 
 /**
- * The phone's walk is a drawing (WEBSITE 27, src/motion/pitch-walk.ts): the tactics board, driven by
- * the scroll. No photograph of the walk is ever asked for on a phone.
+ * A phone's walk (WEBSITE 28): its own portrait set, 540 x 960, every frame; never a landscape
+ * frame. The drawing (WEBSITE 27, src/motion/pitch-walk.ts) stands in to save data, on a software
+ * renderer, or when the portrait set fails (tests/e2e/motion.spec.ts).
  */
 test.skip(({ isMobile }) => !isMobile, 'a phone');
+
+/** Any landscape frame asked for: the set, its in-betweens, the intro's file. */
+const landscape = (url: string) => /\/journey\/(seq|mid|pack)\//.test(url);
 
 /** A fingerprint of what the canvas shows: a few hundred pixels, summed. */
 const picture = (page: Page) =>
@@ -22,39 +26,38 @@ const picture = (page: Page) =>
     return sum;
   });
 
-test('no photograph of the walk, a drawing that moves with the scroll, and no intro', async ({
+test('the portrait walk: its own frames, never a landscape one, no intro, moving with the scroll', async ({
   page,
 }) => {
-  const photos: string[] = [];
+  test.slow();
+  const asked: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('/journey/')) photos.push(request.url());
+    if (request.url().includes('/journey/')) asked.push(request.url());
   });
   await page.goto('/', { waitUntil: 'networkidle' });
-  await page.evaluate(() => dispatchEvent(new Event('touchstart')));
   const canvas = page.locator('[data-walk]');
-  await expect(canvas).toHaveAttribute('data-vector', '');
+  await expect(canvas).toHaveAttribute('data-shape', 'portrait');
+  await expect(canvas).not.toHaveAttribute('data-vector');
   await expect(page.locator('html')).not.toHaveAttribute('data-walk-gate', 'open');
-  // Sharp: the screen's size at its density (up to twice)
-  const size = await canvas.evaluate((el: HTMLCanvasElement) => ({
-    width: el.width,
-    shown: el.getBoundingClientRect().width,
-    dpr: devicePixelRatio,
-  }));
-  expect(size.width).toBe(Math.round(size.shown * Math.min(2, size.dpr)));
+  // Every frame of its set (no stride), in the background
+  await page.evaluate(() => dispatchEvent(new Event('touchstart')));
+  await expect(canvas).toHaveAttribute('data-stride', '1');
+  await expect
+    .poll(() => canvas.evaluate((el) => Number((el as HTMLElement).dataset.stored || 0)), {
+      timeout: 40_000,
+    })
+    .toBeGreaterThanOrEqual(381);
   const top = await picture(page);
   await page.evaluate(() => scrollTo({ top: innerHeight * 3, behavior: 'instant' }));
-  await page.waitForTimeout(300);
-  const lower = await picture(page);
-  expect(lower).not.toBe(top);
-  // Still: the same drawing (nothing runs by itself)
-  await page.waitForTimeout(500);
-  expect(await picture(page)).toBe(lower);
+  await page.waitForTimeout(1200);
+  expect(await picture(page)).not.toBe(top);
   await page.evaluate(() => scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
   await page.waitForTimeout(1000);
-  expect(photos).toEqual([]);
+  expect(asked.filter(landscape)).toEqual([]);
+  expect(asked.some((url) => url.includes('/journey/portrait/'))).toBe(true);
 });
 
-test('the largest paint is the hero text, not the background', async ({ page }) => {
+test('the largest paint is the hero text, not the walk', async ({ page }) => {
   await page.addInitScript(() => {
     (window as unknown as { lcp: string }).lcp = '';
     new PerformanceObserver((list) => {
@@ -71,27 +74,10 @@ test('the largest paint is the hero text, not the background', async ({ page }) 
   expect(['H1', 'P', 'SPAN']).toContain(lcp);
 });
 
-test('light and dark: a white ground with dark lines, a black one with light lines', async ({
-  page,
-}) => {
-  await page.goto('/', { waitUntil: 'networkidle' });
-  await page.evaluate(() => dispatchEvent(new Event('touchstart')));
-  await expect(page.locator('[data-walk]')).toHaveAttribute('data-vector', '');
-  const corner = () =>
-    page.locator('[data-walk]').evaluate((canvas: HTMLCanvasElement) => {
-      const [r, g, b] = canvas.getContext('2d')!.getImageData(2, canvas.height - 3, 1, 1).data;
-      return r + g + b;
-    });
-  expect(await corner()).toBeGreaterThan(700);
-  await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
-  await page.waitForTimeout(200);
-  expect(await corner()).toBeLessThan(60);
-});
-
 test('the panels change colour once a stage on a phone', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.evaluate(() => dispatchEvent(new Event('touchstart')));
-  await expect(page.locator('html')).toHaveAttribute('data-stages', 'live');
+  await expect(page.locator('html')).toHaveAttribute('data-stages', 'live', { timeout: 15_000 });
   const surface = (share: number) =>
     page.evaluate(async (s) => {
       scrollTo({
@@ -109,19 +95,41 @@ test('the panels change colour once a stage on a phone', async ({ page }) => {
   expect(seen.size).toBe(3);
 });
 
-test('in Arabic, right to left, the same drawing', async ({ page }) => {
+test('in Arabic, right to left, the same portrait walk', async ({ page }) => {
   test.skip(!ARABIC_ENABLED, 'Arabic is off');
-  const photos: string[] = [];
-  page.on('request', (request) => {
-    if (request.url().includes('/journey/')) photos.push(request.url());
-  });
+  const asked: string[] = [];
+  page.on('request', (request) => asked.push(request.url()));
   await page.goto('/ar', { waitUntil: 'networkidle' });
-  await page.evaluate(() => dispatchEvent(new Event('touchstart')));
-  await expect(page.locator('[data-walk]')).toHaveAttribute('data-vector', '');
-  expect(photos).toEqual([]);
+  await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'portrait');
+  expect(asked.filter(landscape)).toEqual([]);
 });
 
-test('reduced motion: a still drawing, and still no photograph', async ({ browser }) => {
+test('to save data, the drawing: light and dark, and no photograph at all', async ({ page }) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
+  );
+  const asked: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/journey/')) asked.push(request.url());
+  });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.evaluate(() => dispatchEvent(new Event('touchstart')));
+  const canvas = page.locator('[data-walk]');
+  await expect(canvas).toHaveAttribute('data-vector', '', { timeout: 15_000 });
+  const corner = () =>
+    canvas.evaluate((el: HTMLCanvasElement) => {
+      const [r, g, b] = el.getContext('2d')!.getImageData(2, el.height - 3, 1, 1).data;
+      return r + g + b;
+    });
+  expect(await corner()).toBeGreaterThan(700);
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
+  await page.waitForTimeout(200);
+  expect(await corner()).toBeLessThan(60);
+  // The preloaded first frame is the only one a saving phone may have asked for
+  expect(asked.filter((url) => !/portrait\/f000/.test(url))).toEqual([]);
+});
+
+test('reduced motion: a still drawing, and no photograph of the walk', async ({ browser }) => {
   const context = await browser.newContext({
     reducedMotion: 'reduce',
     viewport: { width: 390, height: 844 },
@@ -129,26 +137,23 @@ test('reduced motion: a still drawing, and still no photograph', async ({ browse
     hasTouch: true,
   });
   const page = await context.newPage();
-  const photos: string[] = [];
+  const asked: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('/journey/')) photos.push(request.url());
+    if (request.url().includes('/journey/')) asked.push(request.url());
   });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('[data-walk]')).toBeHidden();
   await expect(page.locator('.walk-still').first()).toHaveCSS('background-image', /svg/);
-  expect(photos).toEqual([]);
+  expect(asked.filter(landscape)).toEqual([]);
   await context.close();
 });
 
 test('no script follows the scroll for the page line on a phone: CSS does', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.evaluate(() => dispatchEvent(new Event('touchstart')));
-  await expect(page.locator('[data-walk]')).toHaveAttribute('data-vector', '');
-  await page.waitForTimeout(1500);
-  // The header's line: the stylesheet's scroll-driven animation (no data-motion)
+  await expect(page.locator('html')).toHaveAttribute('data-stages', 'live', { timeout: 15_000 });
+  await page.waitForTimeout(1000);
   await expect(page.locator('html')).not.toHaveAttribute('data-motion');
-  // The running line: the still one, every node filled
   await expect(page.locator('[data-run-line]')).not.toHaveAttribute('data-live');
-  // And no smooth scrolling
   await expect(page.locator('html')).not.toHaveClass(/(^|\s)lenis(\s|$)/);
 });

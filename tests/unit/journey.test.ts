@@ -203,8 +203,10 @@ describe('the walk', () => {
     // Each pair, split in two, mostly moves about half as far
     const median = (xs: readonly number[]) => [...xs].sort((a, b) => a - b)[xs.length >> 1];
     expect(median(halfMotion)).toBeLessThanOrEqual(median(pairMotion) / 2 + 1);
-    // A set without a map fades all the way
-    expect(pairWindow(journey.portrait, 3, 4)).toBe(0.5);
+    // A set without a map fades all the way (the portrait set, WEBSITE 28, shares the landscape's:
+    // the same motion, scaled)
+    expect(pairWindow({ ...landscape, count: 48 }, 3, 4)).toBe(0.5);
+    expect(journey.portrait.count).toBe(landscape.count);
   });
   it('lets the walk move only where a decoded frame is near', () => {
     expect(covered([10, 11, 12], 12.4, 1)).toBe(true);

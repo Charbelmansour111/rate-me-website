@@ -737,11 +737,10 @@ async function withPortrait(page: Page, files: 'there' | 'failing') {
     );
     await route.fulfill({ response, body });
   });
-  await page.route(`**${journey.portrait.path}*`, (route) => {
-    if (files === 'failing') return route.fulfill({ status: 404 });
-    const name = route.request().url().split('/').pop()!.split('?')[0];
-    return route.fulfill({ path: `public/journey/seq/${name}` });
-  });
+  // The portrait set is real (WEBSITE 28); a test can make it fail
+  if (files === 'failing') {
+    await page.route(`**${journey.portrait.path}*`, (route) => route.fulfill({ status: 404 }));
+  }
   const asked: string[] = [];
   page.on('request', (request) => {
     if (request.url().includes('/journey/')) asked.push(new URL(request.url()).pathname);
@@ -751,42 +750,46 @@ async function withPortrait(page: Page, files: 'there' | 'failing') {
     asked.filter((path) => path.startsWith(journey[shape].path) && !path.includes('f000')).length;
 }
 
-test('the walk: tall screens load only the portrait set, and turning loads the other', async ({
+test('the walk: a phone held upright plays its portrait set; turned wide, the landscape one', async ({
   page,
 }) => {
-  test.skip(
-    test.info().project.name === 'mobile',
-    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
-  );
+  test.skip(test.info().project.name === 'mobile', 'set by viewport here');
   test.slow();
   const asked = await withPortrait(page, 'there');
-  // A tablet: a phone draws its walk (WEBSITE 27), a tall tablet plays the portrait set
-  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
   await expect(walk).toHaveAttribute('data-shape', 'portrait');
-  // The whole portrait set, once, in the background
+  // The whole portrait set (every frame: made for the phone, WEBSITE 28), once, in the background
   await expect
-    .poll(() => asked('portrait'), { timeout: 20_000 })
+    .poll(() => asked('portrait'), { timeout: 30_000 })
     .toBe(wholeSet(journey.portrait, 1));
   expect(asked('landscape')).toBe(0);
 
   // A keyboard: shorter, not wider
-  await page.setViewportSize({ width: 820, height: 600 });
+  await page.setViewportSize({ width: 390, height: 380 });
   await page.waitForTimeout(500);
   await expect(walk).toHaveAttribute('data-shape', 'portrait');
   expect(asked('landscape')).toBe(0);
 
-  await page.setViewportSize({ width: 1180, height: 820 });
+  // Turned wider than a phone: the landscape set, every frame
+  await page.setViewportSize({ width: 844, height: 390 });
   await expect(walk).toHaveAttribute('data-shape', 'landscape');
-  // Turned: a wide screen, so every frame of the landscape set (no stride)
   await expect
     .poll(() => asked('landscape'), { timeout: 40_000 })
     .toBe(wholeSet(journey.landscape, 1));
-  // And back, without loading anything again
+});
+
+test('the walk: a tall tablet keeps the landscape walk (WEBSITE 28: portrait is for phones)', async ({
+  page,
+}) => {
+  test.skip(test.info().project.name === 'mobile', 'set by viewport here');
+  const asked = await withPortrait(page, 'there');
   await page.setViewportSize({ width: 820, height: 1180 });
-  await expect(walk).toHaveAttribute('data-shape', 'portrait');
-  expect(asked('portrait')).toBe(wholeSet(journey.portrait, 1));
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
+  await page.waitForTimeout(2000);
+  expect(asked('portrait')).toBe(0);
 });
 
 test('the walk: wide screens load only the landscape set', async ({ page }) => {
@@ -800,34 +803,16 @@ test('the walk: wide screens load only the landscape set', async ({ page }) => {
   expect(asked('portrait')).toBe(0);
 });
 
-test('the walk: falls back to landscape when the portrait set fails', async ({ page }) => {
-  test.skip(
-    test.info().project.name === 'mobile',
-    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
-  );
+test('the walk: a phone whose portrait set fails gets the drawing, never landscape', async ({
+  page,
+}) => {
+  test.skip(test.info().project.name === 'mobile', 'set by viewport here');
   const asked = await withPortrait(page, 'failing');
-  await page.setViewportSize({ width: 820, height: 1180 });
-  await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
-  // A phone's width: every second frame of the dense landscape set, then (tier 2, WEBSITE 23) the
-  // frames it skipped, each once: the whole set in the end
-  await expect
-    .poll(() => asked('landscape'), { timeout: 40_000 })
-    .toBe(wholeSet(journey.landscape, 1));
-});
-
-test('the walk: without a portrait folder nothing asks for it', async ({ page }) => {
-  test.skip(
-    test.info().project.name === 'mobile',
-    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
-  );
-  test.skip(hasFrames(journey.portrait), 'There is a portrait set');
-  const asked: string[] = [];
-  page.on('request', (request) => asked.push(request.url()));
-  await page.setViewportSize({ width: 820, height: 1180 });
-  await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
-  expect(asked.filter((url) => url.includes('/portrait/'))).toEqual([]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'load' });
+  await page.mouse.move(100, 100);
+  await expect(page.locator('[data-walk]')).toHaveAttribute('data-vector', '', { timeout: 20_000 });
+  expect(asked('landscape')).toBe(0);
 });
 
 test('the walk: without a canvas or its frames, still pictures', async ({ page }) => {

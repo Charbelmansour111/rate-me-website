@@ -17,6 +17,8 @@ export type Sequence = {
   pad: number;
   rev: number;
   between?: { path: string; factor: number; skip?: readonly number[] };
+  /** Every frame even on a phone (no stride): a set made for the phone (WEBSITE 28). */
+  full?: boolean;
 };
 export type Shape = 'landscape' | 'portrait';
 export const journey: Record<Shape, Sequence> = {
@@ -29,7 +31,17 @@ export const journey: Record<Shape, Sequence> = {
     // RIFE v4.6, t = 0.5, every pair (WEBSITE 23); a pair listed in `skip` keeps its real frames
     between: { path: '/journey/mid/f', factor: 2, skip: [] },
   },
-  portrait: { path: '/journey/portrait/f', count: 48, ext: 'webp', pad: 3, rev: 1 },
+  // A phone held upright (WEBSITE 28): the same walk at 540 x 960, fitted and extended from the
+  // landscape frames (scripts/walk-portrait.py), every frame and every in-between
+  portrait: {
+    path: '/journey/portrait/f',
+    count: 381,
+    ext: 'webp',
+    pad: 3,
+    rev: 1,
+    full: true,
+    between: { path: '/journey/portrait-mid/f', factor: 2, skip: [] },
+  },
 };
 
 /**
@@ -108,6 +120,10 @@ export const loading = {
   firstDecoders: 2,
   // Frames held decoded or on their way, at most (2 MB each: about 150 MB), WEBSITE 25
   maxDecoded: 72,
+  // A phone (WEBSITE 28): a narrower window (about 36 frames) and at most 46 decoded, 2 MB each
+  // (about 95 MB: iOS Safari's limits)
+  phoneScale: 0.5,
+  phoneMaxDecoded: 46,
   backgroundAfter: 6000,
   cache: 'walk-frames',
   // The first visit's intro (WEBSITE 25, src/motion/walk-gate.ts): it waits for every

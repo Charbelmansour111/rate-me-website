@@ -41,7 +41,7 @@ function remember({ sequence, stride }: { sequence: Sequence; stride: number }) 
  * remote desktop, a blocked driver): the walk then starts light (WEBSITE 26). A page can force it
  * either way with localStorage `walk-quality` (`full` or `light`), as the tests do.
  */
-function softwareRendering() {
+export function softwareRendering() {
   try {
     const forced = localStorage.getItem('walk-quality');
     if (forced === 'full') return false;
@@ -203,7 +203,8 @@ function frameDecoder(onStored: (count: number, urls: string[]) => void, signal:
 
 /** Which sequence a screen gets. */
 export const shapeFor = (width: number, height: number, hasPortrait: boolean): Shape =>
-  hasPortrait && height > width ? 'portrait' : 'landscape';
+  // A phone held upright (WEBSITE 28); tablets and computers keep the landscape walk
+  hasPortrait && width < loading.phoneWidth && height > width ? 'portrait' : 'landscape';
 
 /**
  * A sequence: the frames it can show (its set at its stride, and those of tier 2 already held;
@@ -286,7 +287,12 @@ export type Walk = {
  * listener of its own, so it moves in the same frame as the page. On any failure the still
  * pictures take over.
  */
-export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk | undefined {
+export function startWalk(
+  canvas: HTMLCanvasElement,
+  signal: AbortSignal,
+  /** On a phone, when its portrait set fails: the drawing takes over (WEBSITE 28). */
+  fallback?: () => void,
+): Walk | undefined {
   const root = document.documentElement;
   const page = canvas.parentElement!;
   const context = canvas.getContext('2d', { alpha: false });
@@ -520,8 +526,12 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       frameOf(from),
       direction,
       speed,
-      Math.min(1, spacingOf(from.all) / from.stride),
+      Math.min(1, spacingOf(from.all) / from.stride) *
+        (from.sequence === journey.portrait ? loading.phoneScale : 1),
     );
+  /** At most this many decoded or on their way: fewer on a phone (WEBSITE 28: iOS Safari). */
+  const cap = (from: Reel) =>
+    from.sequence === journey.portrait ? loading.phoneMaxDecoded : loading.maxDecoded;
 
   /** Says, for the tests, whether every frame around the walk's position is in. */
   function markReady(from: Reel) {
@@ -529,7 +539,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     const at = frameOf(from);
     const list = want(from)
       .sort((a, b) => Math.abs(a - at) - Math.abs(b - at))
-      .slice(0, loading.maxDecoded);
+      .slice(0, cap(from));
     const missing = list.some((i) => !from.images.has(i) && !from.broken.has(i));
     mark(canvas, 'ready', missing ? 'false' : 'true');
     canvas.dataset.loaded = String(from.images.size);
@@ -555,7 +565,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
    * furthest from the walk makes way, if it is further than this one; the two on show never do.
    */
   function makeRoom(from: Reel, i: number) {
-    if (from.images.size + from.pending.size < loading.maxDecoded) return true;
+    if (from.images.size + from.pending.size < cap(from)) return true;
     const at = frameOf(from);
     const kept = new Set(want(from));
     // A frame no longer wanted makes way first, then the furthest of the rest
@@ -612,6 +622,11 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       root.dataset.journey = 'off';
       return;
     }
+    // A phone never falls back to the landscape set: the drawing takes over
+    if (fallback) {
+      decoder.stop();
+      return fallback();
+    }
     hasPortrait = false;
     pick();
   }
@@ -637,7 +652,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     }
     // Fewer at once while the page moves: each new frame's first draw is a 2 MB upload to the
     // graphics card, and a burst of them holds up a screen frame (WEBSITE 27)
-    const lanes = moving ? 2 : loading.decoders;
+    // (one on a phone: its uploads cost a slower processor more)
+    const lanes = moving ? (from.sequence === journey.portrait ? 1 : 2) : loading.decoders;
     for (const i of toLoad(from).slice(0, Math.max(0, lanes - from.pending.size))) {
       void load(from, i);
     }
@@ -712,7 +728,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       const tier1 = frameList(sequence, stride);
       // Tier 2 on a good connection, and on a phone only where the phone thinned the set
       const tier2 =
-        good && (phone ? stride === loading.phoneStride : stride === 1)
+        good && (stride === 1 || (phone && stride === loading.phoneStride))
           ? tierTwo(sequence, stride, phone)
           : [];
       const byUrl = new Map<string, { tier: 1 | 2; at: number }>();
@@ -737,6 +753,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     if (next === reel) return;
     reel = next;
     shown ??= next;
+    // Which set, as soon as it is chosen (the tests, and a phone's walk shows nothing until used)
+    mark(canvas, 'shape', next.sequence === journey.portrait ? 'portrait' : 'landscape');
     draw();
     centre = -Infinity;
     if (started) {
@@ -827,6 +845,12 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   }
 
   pick();
+  // A phone's own set (WEBSITE 28): no intro waits for it, so the walk shows the frames it holds as
+  // they come (every sixth first, src/config/journey.config.ts introEvery) and never waits on one
+  if (reel!.sequence === journey.portrait && !saveData && decoder.fetches) {
+    filling = true;
+    reel!.all = listOf(reel!);
+  }
   // On a phone the first frame, preloaded with the page, is drawn on the canvas at once, until the
   // walk's own frames come: a canvas is never the page's largest paint, the hero's text is
   if (narrow.matches) {
@@ -837,9 +861,15 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
         canvas.height = frame.height;
         paint(frame, 1);
       },
-      () => {},
+      () => {
+        // A phone's own set that does not load: the drawing takes over (WEBSITE 28)
+        if (signal.aborted || reel.sequence !== journey.portrait || !fallback) return;
+        decoder.stop();
+        fallback();
+      },
     );
   }
+
   // The first frame is the canvas' CSS background: the rest waits until the page has loaded,
   // painted and gone quiet, so fetching and decoding never compete with the first paint.
   const afterPaint = () => {

@@ -1,7 +1,7 @@
 import { startHero } from './hero';
 import { startTactics } from './tactics';
 import { startPitchWalk } from './pitch-walk';
-import { startWalk } from './walk';
+import { softwareRendering, startWalk } from './walk';
 import { gateWalk } from './walk-gate';
 
 /** What says someone is using the page: until then nothing needs GSAP or smooth scrolling. */
@@ -30,10 +30,16 @@ function whenStill(start: () => void, signal: AbortSignal) {
 
 export function startMotion(signal: AbortSignal) {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-walk]');
-  // A phone draws its walk (WEBSITE 27): no photograph, no worker, no intro to wait on
+  // A phone plays its own portrait walk (WEBSITE 28), with no intro; the drawing (WEBSITE 27) stands
+  // in to save data, on a software renderer, or when the portrait set fails
   const phone = matchMedia('(max-width: 47.99rem)').matches;
-  if (canvas && phone) startPitchWalk(canvas, signal);
-  const walk = canvas && !phone ? startWalk(canvas, signal) : undefined;
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  const drawn = phone && (Boolean(connection?.saveData) || softwareRendering());
+  if (canvas && drawn) startPitchWalk(canvas, signal);
+  const walk =
+    canvas && !drawn
+      ? startWalk(canvas, signal, phone ? () => startPitchWalk(canvas, signal) : undefined)
+      : undefined;
   // A first visit's intro while the frames come (src/motion/walk-gate.ts); no walk, no intro
   if (walk) gateWalk(walk, signal);
   else if (document.documentElement.dataset.walkGate === 'open') {

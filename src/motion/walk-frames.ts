@@ -9,10 +9,12 @@ import { crossfade, loading, type Sequence } from '@/config/journey.config';
  * (`loading.phoneStride`), on a slow connection (below 4G) and of any set to save data.
  */
 export function strideFor(
-  { count }: Sequence,
+  { count, full }: Sequence,
   { phone, saveData, slow = false }: { phone: boolean; saveData: boolean; slow?: boolean },
 ) {
-  const thinned = (phone || slow) && count >= crossfade.denseFrom ? loading.phoneStride : 1;
+  // A set made for the phone (WEBSITE 28) is used whole there; thinned only when slow
+  const thinned =
+    ((phone && !full) || slow) && count >= crossfade.denseFrom ? loading.phoneStride : 1;
   return Math.max(thinned, saveData ? 2 : 1);
 }
 
@@ -34,10 +36,11 @@ export function betweenList({ count, between }: Sequence) {
 
 /**
  * Tier 2, fetched after the set in use is held, on a good connection (4G, not saving data): on a
- * wide screen the in-between frames; on a phone the real frames its thinned set skips.
+ * wide screen and for a set made for the phone the in-between frames; on a phone with a thinned
+ * set, the real frames it skips.
  */
 export function tierTwo(sequence: Sequence, stride: number, phone: boolean) {
-  if (phone) {
+  if (phone && stride > 1) {
     const used = new Set(frameList(sequence, stride));
     return frameList(sequence, 1).filter((i) => !used.has(i));
   }

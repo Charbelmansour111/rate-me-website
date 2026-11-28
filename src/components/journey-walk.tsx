@@ -19,7 +19,8 @@ const portrait = hasFrames(journey.portrait) ? journey.portrait : null;
 const still = (scene: SceneId) => {
   const url = (sequence: Sequence) =>
     `url(${frameUrl(sequence, frameAt(sequence, stillAt[scene]))})`;
-  return { '--wide': url(landscape), '--tall': url(portrait ?? landscape) } as CSSProperties;
+  // The stills are for computers and tablets (a phone's are drawn, src/app/journey.css): landscape
+  return { '--wide': url(landscape), '--tall': url(landscape) } as CSSProperties;
 };
 
 /**
@@ -27,19 +28,15 @@ const still = (scene: SceneId) => {
  * as its background, so it is there at first paint; src/motion/walk.ts draws the rest.
  */
 export function WalkCanvas() {
-  // Never on a phone: its walk is a drawing (WEBSITE 27, src/motion/pitch-walk.ts)
+  // The landscape walk's first frame: never on a phone (WEBSITE 27)
   const first = { as: 'image', fetchPriority: 'high', media: '(min-width: 48rem)' } as const;
+  preload(frameUrl(landscape, 0), first);
+  // A phone held upright: its own set's first frame, drawn on the canvas at once (WEBSITE 28)
   if (portrait) {
-    preload(frameUrl(landscape, 0), {
-      ...first,
-      media: '(min-width: 48rem) and (orientation: landscape)',
-    });
     preload(frameUrl(portrait, 0), {
-      ...first,
-      media: '(min-width: 48rem) and (orientation: portrait)',
+      as: 'image',
+      media: '(max-width: 47.99rem) and (orientation: portrait)',
     });
-  } else {
-    preload(frameUrl(landscape, 0), first);
   }
   return (
     <canvas

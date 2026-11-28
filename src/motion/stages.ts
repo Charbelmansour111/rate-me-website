@@ -7,6 +7,7 @@ import {
   stageVars,
   type StageTokens,
 } from '@/config/stages';
+import type { StageId } from '@/config/journey.config';
 import { luminance } from '@/lib/color';
 
 /**
@@ -34,8 +35,14 @@ export function followStages(signal: AbortSignal, discreteNow: () => boolean = (
   // The panels, each on its own: a step restyles only the one or two on the screen
   const groups = [...document.querySelectorAll<HTMLElement>('.walk-group .panel')];
   const onScreen = new Set<HTMLElement>();
+  /** What each element was last given (by step), so nothing is written twice (WEBSITE 28). */
+  const given = new WeakMap<HTMLElement, number>();
   const write = (el: HTMLElement) => {
-    if (!vars) return;
+    if (!vars || given.get(el) === shownStep) return;
+    // Its own stage's colours, from the stylesheet, are these already: nothing to restyle
+    const own = (el.closest<HTMLElement>('[data-stage]')?.dataset.stage ?? '') as StageId;
+    if (!given.has(el) && shown === stageColors[own]) return;
+    given.set(el, shownStep);
     for (const [name, value] of Object.entries(vars)) el.style.setProperty(name, value);
   };
   // A part of the page coming on to the screen takes the colours of the moment

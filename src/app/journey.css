@@ -63,21 +63,29 @@
     display: none;
   }
 }
-/* A phone (WEBSITE 27): no photograph at all, not even the first frame (the preload asks only from
-   48rem, src/components/journey-walk.tsx). The walk is a drawing there, the site's tactics board
-   driven by the scroll (src/motion/pitch-walk.ts); without the motion code (reduced motion, no
-   JavaScript) a still one: the pitch, a pass, three players. White ground with black and orange
-   lines; black with white and orange in the dark theme. */
+/* A phone (WEBSITE 28): its own portrait walk (540 x 960, made for a tall screen), full screen and
+   sharp, a little brighter and crisper (a filter on the canvas alone), no blur, no wash; no
+   landscape frame, not even the first (the preload asks only from 48rem,
+   src/components/journey-walk.tsx). The drawing (src/motion/pitch-walk.ts, data-vector) stands in
+   to save data, on a software renderer or when the set fails; without the motion code (reduced
+   motion, no JavaScript) a still drawing: the pitch, a pass, three players. */
 @media (max-width: 47.99rem) {
   .walk {
+    background: #0b0b0c;
+    filter: brightness(1.1) contrast(1.05);
+  }
+  .walk[data-vector] {
     background: #fffcf7;
+    filter: none;
   }
   .walk-still {
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 960' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke='rgba%2811%2C11%2C12%2C0.18%29' stroke-width='2'%3E%3Cpath d='M20 20H460V940H20Z M20 480H460 M120 20V160H360V20 M180 20V70H300V20 M120 940V800H360V940 M180 940V890H300V940'/%3E%3Ccircle cx='240' cy='480' r='70'/%3E%3C/g%3E%3Cpath d='M150 600Q200 520 300 540M290 528L300 540L286 548' fill='none' stroke='%23ff5a00' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cg fill='%230b0b0c'%3E%3Ccircle cx='150' cy='600' r='14'/%3E%3Ccircle cx='300' cy='540' r='14'/%3E%3Ccircle cx='330' cy='400' r='14'/%3E%3C/g%3E%3C/svg%3E")
       center / cover no-repeat #fffcf7;
   }
-  :root[data-theme='dark'] .walk {
+  :root[data-theme='dark'] .walk[data-vector] {
     background: #0b0b0c;
+  }
+  :root[data-theme='dark'] .walk {
     opacity: 1;
   }
   :root[data-theme='dark'] .walk-still {
