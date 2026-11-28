@@ -80,6 +80,9 @@
     width: 100%;
     height: auto;
     aspect-ratio: 16 / 9;
+    /* No picture of its own here: a 16:9 picture would be the page's largest paint, and come
+       late. The walk draws its first frame on the canvas as soon as it starts (walk.ts) */
+    background: none;
     filter: brightness(1.12) contrast(1.06);
   }
   [data-js]:not([data-journey='off']) .walk-ground {

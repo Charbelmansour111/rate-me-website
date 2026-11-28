@@ -715,6 +715,19 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   }
 
   pick();
+  // On a phone the window has no CSS picture (src/app/journey.css): its first frame, preloaded
+  // with the page, is drawn on the canvas at once, until the walk's own frames come
+  if (windowed.matches) {
+    void decodeHere(frameUrl(reel!.sequence, 0)).then(
+      (frame) => {
+        if (signal.aborted || reel.images.size || drawn) return;
+        canvas.width = frame.width;
+        canvas.height = frame.height;
+        paint(frame, 1);
+      },
+      () => {},
+    );
+  }
   // The first frame is the canvas' CSS background: the rest waits until the page has loaded,
   // painted and gone quiet, so fetching and decoding never compete with the first paint.
   const afterPaint = () => {
