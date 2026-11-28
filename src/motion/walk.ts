@@ -356,7 +356,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
    */
   const thumbs = new Map<number, Frame>();
   const thumbing = new Set<number>();
-  /** The page moving: the background list waits, and tier 2 is not decoded. */
+  /**
+   * The page moving: the background list waits (the network is the walk's). Tier 2 is still
+   * decoded: without its in-between frames the walk would step (WEBSITE 27).
+   */
   let moving = false;
   let stillTimer = 0;
   /** The quality governor's level (see Walk.quality); light from the start where it must be. */
@@ -542,14 +545,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     const at = frameOf(from) + (speed > from.stride ? direction * speed * 4 : 0);
     const close = (i: number) => Math.abs(i - at) <= loading.window;
     return want(from)
-      .filter(
-        (i) =>
-          !from.images.has(i) &&
-          !from.pending.has(i) &&
-          !from.broken.has(i) &&
-          // Tier 2 (an in-between, or a frame the phone's set skips) only while the page is still
-          (!moving || from.tier1.includes(i)),
-      )
+      .filter((i) => !from.images.has(i) && !from.pending.has(i) && !from.broken.has(i))
       .sort((a, b) => Number(close(b)) - Number(close(a)) || Math.abs(a - at) - Math.abs(b - at));
   }
 
@@ -639,7 +635,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       });
       return;
     }
-    for (const i of toLoad(from).slice(0, Math.max(0, loading.decoders - from.pending.size))) {
+    // Fewer at once while the page moves: each new frame's first draw is a 2 MB upload to the
+    // graphics card, and a burst of them holds up a screen frame (WEBSITE 27)
+    const lanes = moving ? 2 : loading.decoders;
+    for (const i of toLoad(from).slice(0, Math.max(0, lanes - from.pending.size))) {
       void load(from, i);
     }
   }

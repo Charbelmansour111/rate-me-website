@@ -4,15 +4,19 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { Walk } from './walk';
 
 /**
- * How far the picture may trail the page in ordinary scrolling, in frames of the 381: past this
- * it shows the thumbnail track (a fast scroll, a jump) until the exact frames are in.
+ * How far the picture may trail the page, in frames of the 381, before the thumbnail track stands in
+ * until the exact frames are in: a jump (WEBSITE 27; it was 2, and a fast scroll showed thumbnails).
+ * Within it the picture trails on the frames it has decoded, the nearest on the way.
  */
-const GAP = 2;
-/** The quality governor (WEBSITE 26): over the last FRAMES screen frames, on average. */
-const FRAMES = 30;
-/** Slower than this (ms a frame), a step down; faster than GOOD for HOLD ms, a step back up. */
-const SLOW = 20;
-const GOOD = 17.5;
+const GAP = 40;
+/**
+ * The quality governor (WEBSITE 27): the median frame time over the last FRAMES screen frames
+ * (about a second and a half), so a few slow frames never step it down, only sustained ones.
+ */
+const FRAMES = 90;
+/** A median slower than this (ms a frame), a step down; under GOOD for HOLD ms, a step back up. */
+const SLOW = 22;
+const GOOD = 18;
 const HOLD = 2000;
 
 /**
@@ -26,7 +30,7 @@ const HOLD = 2000;
  *   decoded, at once, and the exact frame as soon as it is decoded, well within a second.
  * At rest, once the page has stopped, the nearest frame shows alone.
  *
- * The quality governor watches the time of the last screen frames: slower than SLOW ms on average,
+ * The quality governor watches the median time of the last screen frames: slower than SLOW ms,
  * the walk does less (no tier 2, then no blending, then half resolution: src/motion/walk.ts,
  * quality); after HOLD ms of good frames, a step back. Not where the page forces it (`walk-quality`
  * in localStorage, as the tests do).
@@ -68,24 +72,24 @@ export function scrubWalk(
     // Storage off: the governor decides
   }
   const times = new Float32Array(FRAMES);
+  const sorted = new Float32Array(FRAMES);
   let filled = 0;
-  let sum = 0;
   let good = 0;
   const govern = (dt: number) => {
     if (forced || document.hidden) return;
-    sum += dt - times[filled % FRAMES];
     times[filled % FRAMES] = dt;
     filled++;
     if (filled < FRAMES) return;
-    const average = sum / FRAMES;
+    // The median of the window (sorted in a buffer of its own: nothing allocated)
+    sorted.set(times);
+    sorted.sort();
+    const median = sorted[FRAMES >> 1];
     const level = picture.quality();
-    if (average > SLOW && level < 3) {
+    if (median > SLOW && level < 3) {
       picture.quality(level + 1);
       filled = 0;
-      sum = 0;
-      times.fill(0);
       good = 0;
-    } else if (average < GOOD && level > 0) {
+    } else if (median < GOOD && level > 0) {
       good += dt;
       if (good >= HOLD) {
         picture.quality(level - 1);
@@ -114,7 +118,7 @@ export function scrubWalk(
     const frame = picture.frame();
     // Its exact frames, else the nearest decoded on the way, within GAP frames
     const next = picture.reach(at, target);
-    if (next === target || Math.abs(target - next) <= GAP * frame) {
+    if (next === target || Math.abs(target - at) <= GAP * frame) {
       glanced = false;
       at = next;
       seek(at, false);
