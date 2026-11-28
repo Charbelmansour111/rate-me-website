@@ -1,7 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-import { frameAt, journey, pairWindow, type Sequence } from '../../src/config/journey.config';
+import {
+  frameAt,
+  journey,
+  loading,
+  pairWindow,
+  type Sequence,
+} from '../../src/config/journey.config';
 import { frameList, nearest, tierTwo, wanted } from '../../src/motion/walk-frames';
 import { ROLE_SHAPES } from '../../src/motion/tactics-data';
 import { ARABIC_ENABLED } from '../../src/config/site';
@@ -408,6 +414,16 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
     await page.mouse.move(600, 400);
     await page.mouse.move(610, 410);
   }
+  // Every frame held, both tiers: the walk as it plays once its frames are in (WEBSITE 29: tier 2
+  // now comes near the walk first; a first visit's scroll is measured on its own, review/website-29)
+  const walk = page.locator('[data-walk]');
+  const all = frameList(sequence).length + tierTwo(sequence, 1, false).length;
+  await expect
+    .poll(() => walk.evaluate((el) => Number((el as HTMLElement).dataset.stored || 0)), {
+      timeout: 60_000,
+    })
+    .toBeGreaterThanOrEqual(all);
+  await ready(page);
   // Each painted frame against the one before: how much of the picture changed (0 to 255)
   await page.evaluate((count) => {
     const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-walk]')!;
@@ -514,7 +530,10 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
     const [from, to, alpha] = mix.split(' ').map(Number);
     if (from === to) continue;
     const along = (at - from) / (to - from);
-    const w = pairWindow(sequence, from, to);
+    // Two whole frames apart (an in-between not in yet) never cut: at least `softGap` (WEBSITE 29)
+    const span = to - from;
+    const own = pairWindow(sequence, from, to);
+    const w = span > 0.99 && span < 2.01 ? Math.max(own, loading.softGap) : own;
     const moving =
       w <= 0 ? Number(along >= 0.5) : Math.min(1, Math.max(0, (along - (0.5 - w)) / (2 * w)));
     // At rest the nearest alone: on the midpoint itself (as read, to 3 decimals) either one
@@ -661,7 +680,7 @@ test('the walk: saving data loads every second frame', async ({ page, isMobile }
   expect(asked.length).toBeLessThanOrEqual(wanted(frameList(sequence, 2), 0).length);
 });
 
-test('the walk: frames wait for the first paint, then the whole set, then tier 2, each once', async ({
+test('the walk: frames wait for the first paint, then those near, the whole set, then tier 2, each once', async ({
   page,
   isMobile,
 }) => {
@@ -703,15 +722,16 @@ test('the walk: frames wait for the first paint, then the whole set, then tier 2
     .poll(() => new Set(tier1().map(({ frame }) => frame)).size, { timeout: 60_000 })
     .toBe(wholeSet(sequence, stride));
   expect(tier1().length).toBe(wholeSet(sequence, stride));
-  // Then tier 2 (WEBSITE 23), on this good connection, each once, only after the set: on a phone
-  // the frames its thinned set skips, on a computer the in-between frames
+  // Then tier 2 (WEBSITE 23), on this good connection, each once: on a phone the frames its thinned
+  // set skips, on a computer the in-between frames; before the set is whole only those near the
+  // walk (WEBSITE 29, loading.nearAhead), the rest after it
   const tier2 = () => (isMobile ? later().filter(({ frame }) => !all.includes(frame)) : mids);
   const expected = tierTwo(sequence, stride, isMobile).length;
   await expect.poll(() => tier2().length, { timeout: 60_000 }).toBe(expected);
   expect(new Set(tier2().map(({ frame }) => frame)).size).toBe(expected);
-  expect(Math.min(...tier2().map(({ at }) => at))).toBeGreaterThanOrEqual(
-    Math.max(...tier1().map(({ at }) => at)),
-  );
+  const setDone = Math.max(...tier1().map(({ at }) => at));
+  const early = tier2().filter(({ at }) => at < setDone);
+  expect(early.every(({ frame }) => frame <= loading.nearAhead + 1)).toBe(true);
   const walk = page.locator('[data-walk]');
   await expect(walk).toHaveAttribute('data-stored', String(all.length + expected), {
     timeout: 20_000,
