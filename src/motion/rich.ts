@@ -28,8 +28,8 @@ export function startScroll(signal: AbortSignal, walk: Walk | undefined) {
  * The GSAP half of the motion: loaded on the first scroll, touch, key or mouse move. Started once
  * the page is still, since smooth scrolling would stop a scroll under way.
  */
-export function startRich(signal: AbortSignal) {
-  startSmooth(signal);
+export function startRich(signal: AbortSignal, walk: Walk | undefined) {
+  startSmooth(signal, walk);
   const context = gsap.context(() => {
     startSpotlights(signal);
     startCardReveals(signal);

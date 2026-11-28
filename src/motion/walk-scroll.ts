@@ -6,12 +6,6 @@ import { loading } from '@/config/journey.config';
 import type { Walk } from './walk';
 
 /**
- * How quickly the picture closes on the scroll, in seconds: the time to cover about two thirds of
- * the way. Short enough to feel tied to the finger, long enough to glide like film.
- */
-const DAMP = 0.12;
-
-/**
  * A jump, not a scroll: the scroll's target moved this many frames (of the 381) in one update (End,
  * a page opened half way down). A hand, even a fast flick through smooth scrolling, moves it a few.
  */
@@ -27,11 +21,15 @@ const SETTLED = 200;
 /**
  * The walk plays like a video (WEBSITE 24): ScrollTrigger reads the page's scroll (under smooth
  * scrolling, Lenis' animated one) as the target, and on GSAP's ticker, the loop Lenis runs in, the
- * picture moves toward it through the frames in order, damped, never more than `loading.pace`
- * frames of the 381 per screen frame (one frame: two steps once the in-between frames are in; half a
- * step on a phone's thinned set, blending the two), and only onto frames that are decoded: when the next is not,
- * it waits on the one it has. So a flick never skips, cuts or shows a frame twice blended; the
- * scroll itself stays free, and the picture catches up the same way once it stops.
+ * picture moves to it through the frames in order, never more than `loading.pace` frames of the 381
+ * per screen frame (one frame: two steps once the in-between frames are in; half a step on a phone's
+ * thinned set, blending the two), and only onto frames that are decoded: when the next is not, it
+ * waits on the one it has. So a flick never skips, cuts or shows a frame twice blended.
+ *
+ * The page itself goes no faster over the walk (src/motion/smooth.ts, WEBSITE 25), and is eased
+ * there already: the picture follows it as it is, no easing of its own, so the text and the picture
+ * are one motion. Where the page is not held (its own scrolling, a scrollbar dragged), the picture
+ * catches up at its speed limit.
  *
  * A jump is the one exception: End, a page opened half way down, or a link within the page (a menu
  * item) goes there in about GLIDE ms through the frames it has on the way: a jump in one glide, a
@@ -45,6 +43,9 @@ export function scrubWalk(
 ) {
   let target = picture.progress();
   let at = target;
+  /** The target on the last screen frame, and whether the picture shows its frame alone. */
+  let before = target;
+  let rested = true;
   /** A jump under way: where it goes and how far it moves each ms (0: none). */
   let jumpTo = 0;
   let glide = 0;
@@ -118,19 +119,26 @@ export function scrubWalk(
       seek(at, true);
       return;
     }
-    if (gap === 0) return;
-    const step = picture.step();
-    // Damped toward the scroll, within the speed limit
-    let move = gap * (1 - Math.exp(-dt / 1000 / DAMP));
+    // At rest once the page has stopped there, not when the picture has caught up with it: it
+    // catches up on most frames, and still blends while the page moves
+    const still = target === before;
+    before = target;
+    if (gap === 0) {
+      if (still && !rested) {
+        rested = true;
+        seek(at, true);
+      }
+      return;
+    }
+    rested = false;
+    // To the scroll, within the speed limit
     const limit = steps * picture.frame();
-    if (Math.abs(move) > limit) move = Math.sign(move) * limit;
-    // Close enough to show the frame it is on: stop there
-    const wanted = Math.abs(gap - move) < step * 0.02 ? target : at + move;
+    const wanted = Math.abs(gap) <= limit ? target : at + Math.sign(gap) * limit;
     // Only as far as the frames are decoded: else it waits on the one it has
     const next = picture.reach(at, wanted);
     if (next === at) return;
     at = next;
-    seek(at, at === target);
+    seek(at, false);
   };
   gsap.ticker.add(tick);
   seek(at, true);

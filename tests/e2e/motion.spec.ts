@@ -523,7 +523,7 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
   page,
   isMobile,
 }) => {
-  test.skip(isMobile, 'smooth scrolling is for the mouse wheel; touch scrolls natively');
+  test.skip(isMobile, 'the mouse wheel');
   const sequence = sequenceFor(isMobile);
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
@@ -531,15 +531,29 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
   await page.mouse.move(610, 410);
   await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
   const y = () => page.evaluate(() => scrollY);
-  // One notch glides: part of the way after a moment, all of it later
+  // One notch glides: part of the way after a moment, more later
   await page.mouse.wheel(0, 800);
   await page.waitForTimeout(60);
   const early = await y();
   await expect.poll(y).toBeGreaterThan(early + 100);
-  for (let i = 0; i < 10; i++) {
+  // Spun hard: over the walk the page goes no faster than the picture can (WEBSITE 25), about
+  // 1,900 px a second here, and the picture keeps within two frames of it
+  const speeds: number[] = [];
+  const start = await page.evaluate(() => [scrollY, performance.now()]);
+  for (let i = 0; i < 30; i++) {
     await page.mouse.wheel(0, 700);
     await page.waitForTimeout(40);
+    const [now, t] = await page.evaluate(() => [scrollY, performance.now()]);
+    speeds.push((now - start[0]) / ((t - start[1]) / 1000));
   }
+  expect(Math.max(...speeds.slice(3))).toBeLessThan(2400);
+  const lag = await page.evaluate(() => {
+    const main = document.querySelector('main')!;
+    const end = main.offsetTop + main.offsetHeight - innerHeight;
+    const at = Number(document.querySelector<HTMLElement>('[data-walk]')!.dataset.at);
+    return Math.abs((scrollY / end) * 380 - at);
+  });
+  expect(lag).toBeLessThan(2.5);
   // Settled: the frame is the one for where the page is
   let last = -1;
   await expect.poll(async () => [last, (last = await y())][0] === last).toBe(true);

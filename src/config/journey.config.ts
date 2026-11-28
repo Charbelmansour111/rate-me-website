@@ -121,6 +121,15 @@ export const loading = {
   introFetchers: 6,
 };
 
+/**
+ * Smooth scrolling (src/motion/smooth.ts, WEBSITE 25). `touch`: a finger's scroll goes through Lenis
+ * as well (syncTouch), so on a phone too the page is held to the walk's speed and the text and the
+ * picture move as one. Set it to false to give phones back their own scrolling (the fallback, should
+ * it misbehave on a phone, iOS Safari above all): the walk then trails a hard flick by up to about
+ * 1.6 s, catching up at its own speed, as before.
+ */
+export const smoothing = { touch: true };
+
 /** The keys that scroll the page: held while the intro is up. */
 const INTRO_KEYS = [' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
 
