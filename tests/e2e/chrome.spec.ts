@@ -279,6 +279,10 @@ test('coming soon stays on what is not released, and every card has a photo', as
 test('the running line draws down with the scroll, and its nodes fill as you reach them', async ({
   page,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone: a still running line, no dim over a drawing (WEBSITE 27)',
+  );
   test.slow();
   await page.goto('/', { waitUntil: 'networkidle' });
   const line = page.locator('[data-run-line]');
@@ -330,6 +334,10 @@ test('the running line: a still line with every node filled under reduced motion
 test('the end of the page: the walk dims, the pitch is drawn, the footer is up and readable', async ({
   page,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone: a still running line, no dim over a drawing (WEBSITE 27)',
+  );
   test.slow();
   await page.goto('/', { waitUntil: 'networkidle' });
   await wake(page);
