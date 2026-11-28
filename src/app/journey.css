@@ -63,12 +63,27 @@
     display: none;
   }
 }
-/* On a phone (WEBSITE 26) the walk is a full-screen backdrop, sharp: no blur, no dark wash, a
-   little brighter and crisper (a filter on the canvas alone). The text sits on solid panels, with
-   open gaps between them where the picture shows. */
-@media (max-width: 47.99rem) and (prefers-reduced-motion: no-preference) {
-  [data-js]:not([data-journey='off']) .walk {
-    filter: brightness(1.12) contrast(1.06);
+/* A phone (WEBSITE 27): no photograph at all, not even the first frame (the preload asks only from
+   48rem, src/components/journey-walk.tsx). The walk is a drawing there, the site's tactics board
+   driven by the scroll (src/motion/pitch-walk.ts); without the motion code (reduced motion, no
+   JavaScript) a still one: the pitch, a pass, three players. White ground with black and orange
+   lines; black with white and orange in the dark theme. */
+@media (max-width: 47.99rem) {
+  .walk {
+    background: #fffcf7;
+  }
+  .walk-still {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 960' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke='rgba%2811%2C11%2C12%2C0.18%29' stroke-width='2'%3E%3Cpath d='M20 20H460V940H20Z M20 480H460 M120 20V160H360V20 M180 20V70H300V20 M120 940V800H360V940 M180 940V890H300V940'/%3E%3Ccircle cx='240' cy='480' r='70'/%3E%3C/g%3E%3Cpath d='M150 600Q200 520 300 540M290 528L300 540L286 548' fill='none' stroke='%23ff5a00' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cg fill='%230b0b0c'%3E%3Ccircle cx='150' cy='600' r='14'/%3E%3Ccircle cx='300' cy='540' r='14'/%3E%3Ccircle cx='330' cy='400' r='14'/%3E%3C/g%3E%3C/svg%3E")
+      center / cover no-repeat #fffcf7;
+  }
+  :root[data-theme='dark'] .walk {
+    background: #0b0b0c;
+    opacity: 1;
+  }
+  :root[data-theme='dark'] .walk-still {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 960' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke='rgba%28255%2C255%2C255%2C0.16%29' stroke-width='2'%3E%3Cpath d='M20 20H460V940H20Z M20 480H460 M120 20V160H360V20 M180 20V70H300V20 M120 940V800H360V940 M180 940V890H300V940'/%3E%3Ccircle cx='240' cy='480' r='70'/%3E%3C/g%3E%3Cpath d='M150 600Q200 520 300 540M290 528L300 540L286 548' fill='none' stroke='%23ff5a00' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='150' cy='600' r='14'/%3E%3Ccircle cx='300' cy='540' r='14'/%3E%3Ccircle cx='330' cy='400' r='14'/%3E%3C/g%3E%3C/svg%3E")
+      center / cover no-repeat #0b0b0c;
+    opacity: 1;
   }
 }
 

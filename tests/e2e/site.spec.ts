@@ -469,6 +469,7 @@ test.describe('the cookie choice (a first visit)', () => {
   });
 
   test('never over the intro: it comes once the intro has gone', async ({ page }) => {
+    test.skip(test.info().project.name === 'mobile', 'no intro on a phone (WEBSITE 27)');
     test.slow();
     await page.route('**/journey/pack/**', async (route) => {
       await new Promise((done) => setTimeout(done, 2500));

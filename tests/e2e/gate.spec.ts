@@ -22,6 +22,10 @@ test('a first visit: the intro is there from the first paint, holds the page sti
   page,
   isMobile,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'no intro on a phone: its walk is a drawing (WEBSITE 27)',
+  );
   test.slow();
   await slowPack(page, 1500);
   await page.goto('/', { waitUntil: 'commit' });
@@ -72,6 +76,10 @@ test('a first visit: the intro is there from the first paint, holds the page sti
 });
 
 test('the intro can be skipped at once, and the focus goes to the page', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'no intro on a phone: its walk is a drawing (WEBSITE 27)',
+  );
   // Frames held back, so the intro stays up long enough to skip
   await slowPack(page, 20_000);
   await page.goto('/');
@@ -92,6 +100,10 @@ test('the intro can be skipped at once, and the focus goes to the page', async (
 });
 
 test('in Arabic, the intro speaks Arabic', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'no intro on a phone: its walk is a drawing (WEBSITE 27)',
+  );
   test.skip(!ARABIC_ENABLED, 'Arabic is off');
   await slowPack(page, 20_000);
   await page.goto('/ar');
@@ -101,6 +113,10 @@ test('in Arabic, the intro speaks Arabic', async ({ page }) => {
 });
 
 test('the intro never outlasts its cap, whatever the connection', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'no intro on a phone: its walk is a drawing (WEBSITE 27)',
+  );
   test.slow();
   await slowPack(page, 60_000);
   await page.goto('/');
@@ -112,6 +128,10 @@ test('the intro never outlasts its cap, whatever the connection', async ({ page 
 });
 
 test('no intro under reduced motion, or to save data', async ({ browser }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'no intro on a phone: its walk is a drawing (WEBSITE 27)',
+  );
   const calm = await browser.newContext({ reducedMotion: 'reduce' });
   const page = await calm.newPage();
   await page.goto('/', { waitUntil: 'networkidle' });

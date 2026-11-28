@@ -128,9 +128,9 @@ export const heldKey = ({ path, rev }: Pick<Sequence, 'path' | 'rev'>, stride: n
 
 /**
  * Run as the page is parsed, before its first paint (src/components/walk-intro.tsx): whether this
- * visit gets the intro, so a return visit never sees it flash. None to save data, under reduced
- * motion, or when the set at this screen's stride was held whole before (the rule of
- * src/motion/walk-frames.ts, strideFor). With one it sets <html data-walk-gate="open"> and holds the
+ * visit gets the intro, so a return visit never sees it flash. None on a phone (its walk is a
+ * drawing, WEBSITE 27: nothing to wait for), to save data, under reduced motion, or when the set
+ * at this screen's stride was held whole before (src/motion/walk-frames.ts, strideFor). With one it sets <html data-walk-gate="open"> and holds the
  * page still from that moment (the wheel, one finger, the scroll keys; Skip keeps its keys; Tab
  * goes to Skip, so the page behind is out of reach) until
  * the motion code lets go (window.__introRelease) or, should that code never come, 9.5 s on, as
@@ -141,7 +141,7 @@ export const INTRO_SCRIPT = (() => {
   const thinned = landscape.count >= crossfade.denseFrom ? loading.phoneStride : 1;
   const key = JSON.stringify(heldKey(landscape, 0).slice(0, -1));
   const keys = JSON.stringify(Object.fromEntries(INTRO_KEYS.map((k) => [k, 1])));
-  return `(function(){try{var d=document.documentElement,c=navigator.connection||{};if(c.saveData||matchMedia('(prefers-reduced-motion: reduce)').matches)return;var s=innerWidth<${loading.phoneWidth}||/^(slow-2g|2g|3g)$/.test(c.effectiveType||'')?${thinned}:1;if(localStorage.getItem(${key}+s)==='1')return;d.dataset.walkGate='open';var K=${keys},o={capture:true,passive:false},t=['wheel','touchmove','keydown'],h=function(e){if(e.key==='Tab'){e.preventDefault();var b=document.querySelector('[data-walk-gate-skip]');if(b)b.focus();return}if(e.touches&&e.touches.length>1)return;if(e.type==='keydown'&&(!K[e.key]||(e.target.closest&&e.target.closest('[data-walk-gate-skip]'))))return;e.preventDefault();e.stopImmediatePropagation()};t.forEach(function(n){addEventListener(n,h,o)});var r=window.__introRelease=function(){t.forEach(function(n){removeEventListener(n,h,o)})};setTimeout(r,9500)}catch(e){}})()`;
+  return `(function(){try{var d=document.documentElement,c=navigator.connection||{};if(c.saveData||innerWidth<${loading.phoneWidth}||matchMedia('(prefers-reduced-motion: reduce)').matches)return;var s=innerWidth<${loading.phoneWidth}||/^(slow-2g|2g|3g)$/.test(c.effectiveType||'')?${thinned}:1;if(localStorage.getItem(${key}+s)==='1')return;d.dataset.walkGate='open';var K=${keys},o={capture:true,passive:false},t=['wheel','touchmove','keydown'],h=function(e){if(e.key==='Tab'){e.preventDefault();var b=document.querySelector('[data-walk-gate-skip]');if(b)b.focus();return}if(e.touches&&e.touches.length>1)return;if(e.type==='keydown'&&(!K[e.key]||(e.target.closest&&e.target.closest('[data-walk-gate-skip]'))))return;e.preventDefault();e.stopImmediatePropagation()};t.forEach(function(n){addEventListener(n,h,o)});var r=window.__introRelease=function(){t.forEach(function(n){removeEventListener(n,h,o)})};setTimeout(r,9500)}catch(e){}})()`;
 })();
 
 /**

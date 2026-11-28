@@ -174,7 +174,7 @@ test('the steps follow the scroll (pinned) or play by themselves (phone)', async
   await expect.poll(running).toBe(0);
 });
 
-test('reduced motion: the finished frame, no pinning, no animation', async ({ page }) => {
+test('reduced motion: the finished frame, no pinning, no animation', async ({ page, isMobile }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/', { waitUntil: 'networkidle' });
   const section = page.locator('#tactics');
@@ -188,8 +188,9 @@ test('reduced motion: the finished frame, no pinning, no animation', async ({ pa
   expect(await hidden(page)).toEqual([]);
   await expect(page.locator('[data-walk]')).toBeHidden();
   await expect(page.locator('html')).not.toHaveAttribute('data-journey');
+  // A still picture behind each part: a photograph, and on a phone a drawing (WEBSITE 27)
   for (const still of await page.locator('.walk-still').all()) {
-    await expect(still).toHaveCSS('background-image', /journey/);
+    await expect(still).toHaveCSS('background-image', isMobile ? /svg/ : /journey/);
   }
   await expect(page.locator('[data-play-pause]')).toBeHidden();
   // No smooth scrolling: the wheel scrolls as the system does
@@ -245,6 +246,10 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
   page,
   isMobile,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   const sequence = sequenceFor(isMobile);
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
@@ -290,6 +295,10 @@ test('the walk: from the first frame to the last, and every scroll moves it', as
 });
 
 test('the walk: at rest one frame alone, never two blended', async ({ page, isMobile }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   const sequence = sequenceFor(isMobile);
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
@@ -349,6 +358,10 @@ test('the walk: at rest one frame alone, never two blended', async ({ page, isMo
 });
 
 test('the walk: the very bottom of the page shows the last frame', async ({ page, isMobile }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   const sequence = sequenceFor(isMobile);
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
@@ -382,6 +395,10 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   page,
   isMobile,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   test.slow();
   const sequence = sequenceFor(isMobile);
   await page.goto('/', { waitUntil: 'networkidle' });
@@ -585,6 +602,10 @@ test('smooth scrolling: no CSS glide fights Lenis', async ({ page, isMobile }) =
 });
 
 test('smooth scrolling never stops a scroll that is under way', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone scrolls as it does: no Lenis (WEBSITE 27)',
+  );
   // Opening a link to a section glides there; the takeover must wait until it has arrived
   await page.goto('/#faq');
   const top = () => page.locator('#faq').evaluate((el) => el.getBoundingClientRect().top);
@@ -597,6 +618,10 @@ test('smooth scrolling never stops a scroll that is under way', async ({ page })
 });
 
 test('the walk: open gaps, with no titles on them', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   await page.goto('/', { waitUntil: 'networkidle' });
   const gaps = page.locator('[data-walk-gap]');
   await expect(gaps).toHaveCount(8);
@@ -612,6 +637,10 @@ test('the walk: open gaps, with no titles on them', async ({ page }) => {
 });
 
 test('the walk: saving data loads every second frame', async ({ page, isMobile }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   const sequence = sequenceFor(isMobile);
   await page.addInitScript(() =>
     Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
@@ -636,6 +665,10 @@ test('the walk: frames wait for the first paint, then the whole set, then tier 2
   page,
   isMobile,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   const sequence = sequenceFor(isMobile);
   const asked: { frame: number; at: number }[] = [];
   const mids: { frame: number; at: number }[] = [];
@@ -721,9 +754,14 @@ async function withPortrait(page: Page, files: 'there' | 'failing') {
 test('the walk: tall screens load only the portrait set, and turning loads the other', async ({
   page,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   test.slow();
   const asked = await withPortrait(page, 'there');
-  await page.setViewportSize({ width: 412, height: 839 });
+  // A tablet: a phone draws its walk (WEBSITE 27), a tall tablet plays the portrait set
+  await page.setViewportSize({ width: 820, height: 1180 });
   await page.goto('/', { waitUntil: 'networkidle' });
   const walk = page.locator('[data-walk]');
   await expect(walk).toHaveAttribute('data-shape', 'portrait');
@@ -734,19 +772,19 @@ test('the walk: tall screens load only the portrait set, and turning loads the o
   expect(asked('landscape')).toBe(0);
 
   // A keyboard: shorter, not wider
-  await page.setViewportSize({ width: 412, height: 380 });
+  await page.setViewportSize({ width: 820, height: 600 });
   await page.waitForTimeout(500);
   await expect(walk).toHaveAttribute('data-shape', 'portrait');
   expect(asked('landscape')).toBe(0);
 
-  await page.setViewportSize({ width: 839, height: 412 });
+  await page.setViewportSize({ width: 1180, height: 820 });
   await expect(walk).toHaveAttribute('data-shape', 'landscape');
   // Turned: a wide screen, so every frame of the landscape set (no stride)
   await expect
     .poll(() => asked('landscape'), { timeout: 40_000 })
     .toBe(wholeSet(journey.landscape, 1));
   // And back, without loading anything again
-  await page.setViewportSize({ width: 412, height: 839 });
+  await page.setViewportSize({ width: 820, height: 1180 });
   await expect(walk).toHaveAttribute('data-shape', 'portrait');
   expect(asked('portrait')).toBe(wholeSet(journey.portrait, 1));
 });
@@ -763,8 +801,12 @@ test('the walk: wide screens load only the landscape set', async ({ page }) => {
 });
 
 test('the walk: falls back to landscape when the portrait set fails', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   const asked = await withPortrait(page, 'failing');
-  await page.setViewportSize({ width: 412, height: 839 });
+  await page.setViewportSize({ width: 820, height: 1180 });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
   // A phone's width: every second frame of the dense landscape set, then (tier 2, WEBSITE 23) the
@@ -775,16 +817,24 @@ test('the walk: falls back to landscape when the portrait set fails', async ({ p
 });
 
 test('the walk: without a portrait folder nothing asks for it', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   test.skip(hasFrames(journey.portrait), 'There is a portrait set');
   const asked: string[] = [];
   page.on('request', (request) => asked.push(request.url()));
-  await page.setViewportSize({ width: 412, height: 839 });
+  await page.setViewportSize({ width: 820, height: 1180 });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('[data-walk]')).toHaveAttribute('data-shape', 'landscape');
   expect(asked.filter((url) => url.includes('/portrait/'))).toEqual([]);
 });
 
 test('the walk: without a canvas or its frames, still pictures', async ({ page }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone draws its walk (WEBSITE 27): tests/e2e/phone-walk.spec.ts',
+  );
   await page.addInitScript(() => {
     HTMLCanvasElement.prototype.getContext = () => null;
   });
@@ -841,6 +891,10 @@ test('cards: a light and a lean follow the mouse; touch screens only get the rev
 test('cards below the screen rise in, one after the other, when they come into view', async ({
   page,
 }) => {
+  test.skip(
+    test.info().project.name === 'mobile',
+    'a phone: content as it is, no reveals (WEBSITE 27)',
+  );
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   await page.evaluate(() => scrollTo({ top: 1, behavior: 'instant' }));
@@ -1224,7 +1278,10 @@ test.describe('without JavaScript', () => {
     await page.goto('/');
     await expect(page.locator('#tactics .tactics-pin')).toHaveCSS('position', 'static');
     await expect(page.locator('[data-walk]')).toBeHidden();
-    await expect(page.locator('.walk-still').first()).toHaveCSS('background-image', /f000/);
+    await expect(page.locator('.walk-still').first()).toHaveCSS(
+      'background-image',
+      test.info().project.name === 'mobile' ? /svg/ : /f000/,
+    );
     for (const view of await page.locator('.showcase-view').all()) await expect(view).toBeVisible();
     for (const el of await page.locator('[data-reveal]').all()) {
       await expect(el).toHaveCSS('opacity', '1');

@@ -333,8 +333,9 @@ describe("the first visit's intro (WEBSITE 25)", () => {
     };
     expect(run({}, 1440)).toBe('open');
     expect(run({ [heldKey(landscape, 1)]: '1' }, 1440)).toBeUndefined();
-    expect(run({ [heldKey(landscape, 1)]: '1' }, 390)).toBe('open');
-    expect(run({ [heldKey(landscape, 2)]: '1' }, 390)).toBeUndefined();
+    // A phone: never an intro, its walk is a drawing (WEBSITE 27)
+    expect(run({}, 390)).toBeUndefined();
+    expect(run({ [heldKey(landscape, 1)]: '1' }, 390)).toBeUndefined();
     expect(run({}, 1440, true)).toBeUndefined();
   });
 });
