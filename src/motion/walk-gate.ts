@@ -31,14 +31,8 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
   // The page is held still from the first paint (INTRO_SCRIPT), until this lets go
   const lock = new AbortController();
   const release = () => (window as Window & { __introRelease?: () => void }).__introRelease?.();
-  // The page behind it is out of reach while it is up: the first Tab lands on Skip
-  const behind: HTMLElement[] = [];
-  for (let el: HTMLElement | null = box; el && el !== document.body; el = el.parentElement) {
-    for (const sibling of el.parentElement?.children ?? []) {
-      if (sibling !== el && sibling instanceof HTMLElement && !sibling.inert) behind.push(sibling);
-    }
-  }
-  for (const el of behind) el.inert = true;
+  // The page behind it is out of reach while it is up: Tab stays on Skip (INTRO_SCRIPT, from the
+  // first paint). Not `inert` on the page, which restyles all of it twice (WEBSITE 25: Lighthouse)
 
   /** The intro is on screen from the first paint: its time counts from the page's start. */
   walk.fetchNow();
@@ -49,7 +43,6 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
     lock.abort();
     release();
     clearInterval(timer);
-    for (const el of behind) el.inert = false;
     root.dataset.walkGate = how;
     root.dataset.walkGateMs = String(Math.round(performance.now()));
     const focused = document.activeElement === skip;
@@ -66,6 +59,8 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
     }
   }
   skip.addEventListener('click', () => close('skipped'), { signal: lock.signal });
+  // Wired: Skip works from here (the tests wait for it)
+  box.dataset.live = '';
 
   let shown = -1;
   const check = () => {
@@ -87,7 +82,6 @@ export function gateWalk(walk: Walk, signal: AbortSignal) {
     lock.abort();
     release();
     clearInterval(timer);
-    for (const el of behind) el.inert = false;
     panel.hidden = true;
     delete root.dataset.walkGate;
   });

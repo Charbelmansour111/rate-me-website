@@ -76,9 +76,11 @@ test('the intro can be skipped at once, and the focus goes to the page', async (
   await slowPack(page, 20_000);
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-walk-gate', 'open');
-  // The page behind is out of reach: the first Tab lands on Skip
-  await expect(page.locator('#main')).toHaveJSProperty('inert', true);
+  // The page behind is out of reach: Tab lands on Skip, and stays there
   const skip = page.getByRole('button', { name: 'Skip' });
+  await expect(gate(page)).toHaveAttribute('data-live', '');
+  await page.keyboard.press('Tab');
+  await expect(skip).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(skip).toBeFocused();
   await page.keyboard.press('Enter');
