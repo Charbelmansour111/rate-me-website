@@ -1,144 +1,130 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-import { loading } from '@/config/journey.config';
-
 import type { Walk } from './walk';
 
 /**
- * A jump, not a scroll: the scroll's target moved this many frames (of the 381) in one update (End,
- * a page opened half way down). A hand, even a fast flick through smooth scrolling, moves it a few.
+ * How far the picture may trail the page in ordinary scrolling, in frames of the 381: past this
+ * it shows the thumbnail track (a fast scroll, a jump) until the exact frames are in.
  */
-const JUMP = 40;
-/** A jump (and a link within the page) glides to its frame in this many ms. */
-const GLIDE = 500;
-/**
- * During a link's glide, until the page has stopped (no scroll for SETTLED ms), the walk is where the
- * page is, without the speed limit: the page's own glide is eased.
- */
-const SETTLED = 200;
+const GAP = 2;
+/** The quality governor (WEBSITE 26): over the last FRAMES screen frames, on average. */
+const FRAMES = 30;
+/** Slower than this (ms a frame), a step down; faster than GOOD for HOLD ms, a step back up. */
+const SLOW = 20;
+const GOOD = 17.5;
+const HOLD = 2000;
 
 /**
- * The walk plays like a video (WEBSITE 24): ScrollTrigger reads the page's scroll (under smooth
- * scrolling, Lenis' animated one) as the target, and on GSAP's ticker, the loop Lenis runs in, the
- * picture moves to it through the frames in order, never more than `loading.pace` frames of the 381
- * per screen frame (one frame: two steps once the in-between frames are in; half a step on a phone's
- * thinned set, blending the two), and only onto frames that are decoded: when the next is not, it
- * waits on the one it has. So a flick never skips, cuts or shows a frame twice blended.
+ * The walk plays like a video, and the page and the picture are one motion (WEBSITE 26): the page
+ * scrolls freely (natively, or through Lenis' glide on a mouse wheel), ScrollTrigger reads where it
+ * is once a frame, and on GSAP's ticker (the one loop every scrolled visual runs in) the picture
+ * is put there:
+ * - its exact frames decoded: the walk shows that point, blending the two frames round it;
+ * - else, within GAP frames, the nearest decoded frame on the way (it trails a little);
+ * - else (a fast scroll, a jump, a link) the nearest frame of the thumbnail track or of those
+ *   decoded, at once, and the exact frame as soon as it is decoded, well within a second.
+ * At rest, once the page has stopped, the nearest frame shows alone.
  *
- * The page itself goes no faster over the walk (src/motion/smooth.ts, WEBSITE 25), and is eased
- * there already: the picture follows it as it is, no easing of its own, so the text and the picture
- * are one motion. Where the page is not held (its own scrolling, a scrollbar dragged), the picture
- * catches up at its speed limit.
- *
- * A jump is the one exception: End, a page opened half way down, or a link within the page (a menu
- * item) goes there in about GLIDE ms through the frames it has on the way: a jump in one glide, a
- * link by keeping close to the page, which glides there in the same time.
+ * The quality governor watches the time of the last screen frames: slower than SLOW ms on average,
+ * the walk does less (no tier 2, then no blending, then half resolution: src/motion/walk.ts,
+ * quality); after HOLD ms of good frames, a step back. Not where the page forces it (`walk-quality`
+ * in localStorage, as the tests do).
  */
 export function scrubWalk(
   picture: Walk,
   signal: AbortSignal,
-  /** What else follows the walk in the same frame: the panels' colours, the end of the page. */
+  /** What else follows the walk in the same frame: the panels' colours. */
   followers: ((progress: number) => void)[] = [],
 ) {
   let target = picture.progress();
   let at = target;
-  /** The target on the last screen frame, and whether the picture shows its frame alone. */
+  /** The target on the last screen frame, whether the frame alone shows, a thumbnail shows. */
   let before = target;
   let rested = true;
-  /** A jump under way: where it goes and how far it moves each ms (0: none). */
-  let jumpTo = 0;
-  let glide = 0;
-  /** A link's jump under way, until the page stops; when the scroll last moved. */
-  let linked = false;
-  let moved = 0;
-  const steps = innerWidth < loading.phoneWidth ? loading.phonePace : loading.pace;
-
-  const jump = (to: number) => {
-    jumpTo = Math.min(1, Math.max(0, to));
-    glide = Math.abs(jumpTo - at) / GLIDE;
-  };
-  const aim = (progress: number) => {
-    // (A link's glide moves the page fast at first: the walk follows it instead, below)
-    if (!linked && Math.abs(progress - target) > JUMP * picture.frame()) jump(progress);
-    if (progress !== target) moved = performance.now();
-    target = progress;
-  };
-  const seek = (progress: number, resting: boolean) => {
-    picture.seek(progress, resting);
-    for (const follow of followers) follow(progress);
-  };
+  let glanced = false;
 
   const trigger = ScrollTrigger.create({
     start: 0,
     end: () => picture.end(),
-    onUpdate: (self) => aim(self.progress),
-    onRefresh: (self) => aim(self.progress),
+    onUpdate: (self) => (target = self.progress),
+    onRefresh: (self) => (target = self.progress),
   });
-  // Opened half way down, or scrolled far before this code loaded: a jump there
-  aim(trigger.progress);
+  target = trigger.progress;
 
-  /**
-   * A link within the page (the menu, the hero's button): the page glides there (smooth scrolling
-   * or the browser's own), and the walk keeps up with it rather than play every frame on the way.
-   */
-  function onClick(event: MouseEvent) {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-      return;
-    const link = (event.target as Element | null)?.closest?.<HTMLAnchorElement>('a[href*="#"]');
-    if (!link || link.target) return;
-    const url = new URL(link.href);
-    if (url.origin !== location.origin || url.pathname !== location.pathname || !url.hash) return;
-    if (!document.getElementById(decodeURIComponent(url.hash.slice(1)))) return;
-    linked = true;
-    glide = 0;
-    moved = performance.now();
+  const follow = (progress: number) => {
+    for (const one of followers) one(progress);
+  };
+  const seek = (progress: number, resting: boolean) => {
+    picture.seek(progress, resting);
+    follow(progress);
+  };
+
+  // The governor
+  let forced = false;
+  try {
+    forced = localStorage.getItem('walk-quality') !== null;
+  } catch {
+    // Storage off: the governor decides
   }
-  addEventListener('click', onClick, { capture: true, signal });
+  const times = new Float32Array(FRAMES);
+  let filled = 0;
+  let sum = 0;
+  let good = 0;
+  const govern = (dt: number) => {
+    if (forced || document.hidden) return;
+    sum += dt - times[filled % FRAMES];
+    times[filled % FRAMES] = dt;
+    filled++;
+    if (filled < FRAMES) return;
+    const average = sum / FRAMES;
+    const level = picture.quality();
+    if (average > SLOW && level < 3) {
+      picture.quality(level + 1);
+      filled = 0;
+      sum = 0;
+      times.fill(0);
+      good = 0;
+    } else if (average < GOOD && level > 0) {
+      good += dt;
+      if (good >= HOLD) {
+        picture.quality(level - 1);
+        good = 0;
+      }
+    } else good = 0;
+  };
 
   const tick = (_time: number, deltaTime: number) => {
-    // A long pause (a hidden tab) counts as one screen frame
-    const dt = Math.min(deltaTime, 100);
-    if (glide) {
-      // A jump: straight there at its speed, through the frames it has
-      const gap = jumpTo - at;
-      at = Math.abs(gap) <= glide * dt ? jumpTo : at + Math.sign(gap) * glide * dt;
-      if (at === jumpTo) glide = 0;
-      seek(at, at === target);
-      return;
-    }
-    const gap = target - at;
-    if (linked) {
-      // A link's glide: the page itself glides there in GLIDE ms (src/motion/smooth.ts); the picture
-      // is where the page is, through the frames it has, until it stops
-      if (gap === 0) {
-        if (performance.now() - moved > SETTLED) linked = false;
-        return;
-      }
-      at = target;
-      seek(at, true);
-      return;
-    }
-    // At rest once the page has stopped there, not when the picture has caught up with it: it
-    // catches up on most frames, and still blends while the page moves
+    // A long pause (a hidden tab) is no slow frame
+    if (deltaTime < 250) govern(deltaTime);
     const still = target === before;
     before = target;
-    if (gap === 0) {
-      if (still && !rested) {
+    if (at === target) {
+      // A thumbnail on show: the exact frame as soon as it is in
+      if (glanced && picture.has(at)) {
+        glanced = false;
+        seek(at, still);
+      } else if (still && !rested && !glanced) {
         rested = true;
         seek(at, true);
       }
       return;
     }
     rested = false;
-    // To the scroll, within the speed limit
-    const limit = steps * picture.frame();
-    const wanted = Math.abs(gap) <= limit ? target : at + Math.sign(gap) * limit;
-    // Only as far as the frames are decoded: else it waits on the one it has
-    const next = picture.reach(at, wanted);
-    if (next === at) return;
-    at = next;
-    seek(at, false);
+    const frame = picture.frame();
+    // Its exact frames, else the nearest decoded on the way, within GAP frames
+    const next = picture.reach(at, target);
+    if (next === target || Math.abs(target - next) <= GAP * frame) {
+      glanced = false;
+      at = next;
+      seek(at, false);
+      return;
+    }
+    // Too far behind: where the page is, from the thumbnail track, until the frames are in
+    at = target;
+    glanced = true;
+    picture.glance(at);
+    follow(at);
   };
   gsap.ticker.add(tick);
   seek(at, true);

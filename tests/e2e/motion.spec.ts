@@ -512,14 +512,14 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
   expect(jumps.filter((jump) => jump > 0.05).length).toBeGreaterThan(20);
   // No step: the picture changes only as far as the walk moved. A hard cut between two frames of
   // the old 48-frame set measured 41 here; neighbours in the 191-frame set up to 23.
-  jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(30 * Math.max(1, steps[i])));
-  // Like film (WEBSITE 17): the picture eases after the scroll, never more than one frame of its
-  // set per painted frame at a hand's pace, and has caught up once the scroll stops
+  // (a tenth more since WEBSITE 26: following the page, a cut can span a little over one frame)
+  jumps.forEach((jump, i) => expect(jump).toBeLessThanOrEqual(33 * Math.max(1, steps[i])));
+  // One motion with the page (WEBSITE 26): the picture moves as the page does, never more than two
+  // frames of its set from it (and a frame's own blend) on any painted frame, and has caught up once
+  // the page stops
   const stride = await strideOf(page);
-  // (per sixtieth of a second: a painted frame that took longer may carry it that much further)
-  steps.forEach((step, i) =>
-    expect(step).toBeLessThanOrEqual(stride * 1.001 * Math.max(1, times[i] / (1000 / 60))),
-  );
+  lags.forEach((lag, i) => expect(lag, `painted frame ${i}`).toBeLessThanOrEqual(2 * stride + 0.5));
+  expect(steps.length).toBe(times.length);
   expect(lags[lags.length - 1]).toBeLessThan(0.05);
 });
 
@@ -540,30 +540,27 @@ test('the walk: under smooth scrolling the frame still follows the page', async 
   await page.waitForTimeout(60);
   const early = await y();
   await expect.poll(y).toBeGreaterThan(early + 100);
-  // Spun hard: over the walk the page goes no faster than the picture can (WEBSITE 25), about
-  // 1,900 px a second here, and the picture keeps within two frames of it
-  const speeds: number[] = [];
-  const start = await page.evaluate(() => [scrollY, performance.now()]);
+  // Spun hard: the page is never held back (WEBSITE 26), and the picture is where it is, from the
+  // thumbnail track if need be, within two frames
   for (let i = 0; i < 30; i++) {
     await page.mouse.wheel(0, 700);
     await page.waitForTimeout(40);
-    const [now, t] = await page.evaluate(() => [scrollY, performance.now()]);
-    speeds.push((now - start[0]) / ((t - start[1]) / 1000));
   }
-  expect(Math.max(...speeds.slice(3))).toBeLessThan(2400);
   const lag = await page.evaluate(() => {
     const main = document.querySelector('main')!;
     const end = main.offsetTop + main.offsetHeight - innerHeight;
     const at = Number(document.querySelector<HTMLElement>('[data-walk]')!.dataset.at);
-    return Math.abs((scrollY / end) * 380 - at);
+    // The walk ends where the page's walk ends: past it (the footer) the picture holds its last frame
+    return Math.abs(Math.min(1, scrollY / end) * 380 - at);
   });
   expect(lag).toBeLessThan(2.5);
   // Settled: the frame is the one for where the page is
   let last = -1;
   await expect.poll(async () => [last, (last = await y())][0] === last).toBe(true);
+  // Past the walk's end (the footer) the walk holds its last frame
   const progress = await page.evaluate(() => {
     const main = document.querySelector('main')!;
-    return scrollY / (main.offsetTop + main.offsetHeight - innerHeight);
+    return Math.min(1, scrollY / (main.offsetTop + main.offsetHeight - innerHeight));
   });
   expect(progress).toBeGreaterThan(0.1);
   await ready(page);
@@ -599,7 +596,7 @@ test('smooth scrolling never stops a scroll that is under way', async ({ page })
   expect(Math.abs((await top()) - 88)).toBeLessThan(30);
 });
 
-test('the walk: open gaps, with no titles on them', async ({ page, isMobile }) => {
+test('the walk: open gaps, with no titles on them', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   const gaps = page.locator('[data-walk-gap]');
   await expect(gaps).toHaveCount(8);
@@ -607,10 +604,7 @@ test('the walk: open gaps, with no titles on them', async ({ page, isMobile }) =
   for (const gap of await gaps.all()) {
     await gap.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await expect(gap).toHaveAttribute('data-in');
-    // Nothing written: on a phone a small board under the walk's window (WEBSITE 25), else empty
-    await expect(gap.locator('h1, h2, h3, h4, p')).toHaveCount(0);
-    if (isMobile) await expect(gap.locator('[data-gap-board]')).toBeVisible();
-    else await expect(gap.locator('[data-gap-board]')).toBeHidden();
+    await expect(gap).toBeEmpty();
     const share = await gap.evaluate((el) => (el as HTMLElement).offsetHeight / innerHeight);
     expect(share).toBeGreaterThanOrEqual(0.59);
     expect(share).toBeLessThanOrEqual(0.81);
@@ -1124,36 +1118,21 @@ for (const reduced of [false, true]) {
   });
 }
 
-test('inside the app: the phones beside the middle one float with the scroll', async ({
+test('inside the app: the phones hold still as the page scrolls (WEBSITE 26)', async ({
   page,
   isMobile,
 }) => {
-  test.skip(isMobile, 'one phone at a time on a phone: nothing to float against');
+  test.skip(isMobile, 'one phone at a time on a phone');
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(page.locator('html')).toHaveAttribute('data-journey', 'on');
   await page.mouse.move(5, 5);
   await expect(page.locator('html')).toHaveClass(/(^|\s)lenis(\s|$)/);
-  const figures = page.locator('#view-coach figure[data-parallax]');
-  const y = (i: number) =>
-    figures.nth(i).evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m42);
-  const section = page.locator('#inside');
-  const at = async (part: number) => {
-    await section.evaluate((el, p) => {
-      const { top, height } = el.getBoundingClientRect();
-      scrollTo({
-        top: top + scrollY - innerHeight + (height + innerHeight) * p,
-        behavior: 'instant',
-      });
-    }, part);
-    await page.waitForTimeout(900);
-    return [await y(0), await y(1), await y(2)];
-  };
-  const early = await at(0.3);
-  const late = await at(0.7);
-  expect(early[1]).toBe(0);
-  expect(late[1]).toBe(0);
-  expect(early[0]).toBeGreaterThan(late[0] + 5);
-  expect(early[2]).toBeGreaterThan(late[2] + 5);
+  await page.locator('#inside').evaluate((el) => el.scrollIntoView({ behavior: 'instant' }));
+  await page.waitForTimeout(600);
+  // No scroll timeline of their own: only the picture follows the scroll
+  const moved = await page
+    .locator('#view-coach figure')
+    .evaluateAll((els) => els.map((el) => new DOMMatrix(getComputedStyle(el).transform).m42));
+  for (const y of moved) expect(Math.abs(y)).toBeLessThan(0.5);
 });
 
 test('inside the app: undistorted phones, the one in front larger, tilting to the mouse', async ({

@@ -2,7 +2,10 @@
  * The walk's frames, away from the page (src/motion/walk.ts). It keeps each frame's compressed bytes
  * once fetched, in memory and in the Cache API, and decodes from them: a frame the walk comes back
  * to costs a few milliseconds and no network. Messages:
- * - `decode` (id, url): the frame as a bitmap, now; its bytes fetched first if they are not here.
+ * - `decode` (id, url, width?): the frame as a bitmap, now, at `width` px wide if given (the
+ *   thumbnail track, WEBSITE 26); its bytes fetched first if they are not here.
+ * - `pause` (on): while the page scrolls, the background list waits (WEBSITE 26): the network and
+ *   the decoder are the walk's alone.
  * - `fetch` (urls, parallel): the files to have, in order; replaces the list before. Fetched
  *   `parallel` at a time at low priority, after any frame asked for to decode.
  * - `cache` (name): the Cache API cache to keep the bytes in; older ones of the walk go.
@@ -14,7 +17,8 @@
  * and when the list is done.
  */
 type Message =
-  | { type: 'decode'; id: number; url: string }
+  | { type: 'decode'; id: number; url: string; width?: number }
+  | { type: 'pause'; on: boolean }
   | { type: 'fetch'; urls: string[]; parallel: number }
   | { type: 'cache'; name: string }
   | { type: 'expect'; urls: string[] }
@@ -112,8 +116,11 @@ function expect(urls: string[]) {
 }
 
 /** Keeps `parallel` background fetches going down the list. */
+/** While the page scrolls the background list waits. */
+let paused = false;
+
 function pump() {
-  while (running < parallel && queue.length) {
+  while (!paused && running < parallel && queue.length) {
     const url = queue.shift()!;
     if (bytes.has(url) || coming.has(url)) continue;
     running++;
@@ -159,9 +166,21 @@ scope.onmessage = async ({ data }) => {
     pump();
     return;
   }
-  const { id, url } = data;
+  if (data.type === 'pause') {
+    paused = data.on;
+    if (!paused) pump();
+    return;
+  }
+  const { id, url, width } = data;
   try {
-    const bitmap = await createImageBitmap(await get(url, 'high'));
+    const blob = await get(url, 'high');
+    const bitmap = await (width
+      ? createImageBitmap(blob, {
+          resizeWidth: width,
+          resizeHeight: Math.round((width * 9) / 16),
+          resizeQuality: 'medium',
+        })
+      : createImageBitmap(blob));
     scope.postMessage({ type: 'decoded', id, bitmap }, [bitmap]);
   } catch {
     scope.postMessage({ type: 'decoded', id });

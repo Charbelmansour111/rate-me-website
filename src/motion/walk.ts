@@ -9,7 +9,6 @@ import {
   type Sequence,
   type Shape,
 } from '@/config/journey.config';
-import { edgeBottom, edgeTop } from '@/config/walk-edges';
 import { introPack } from '@/config/walk-pack';
 
 import {
@@ -34,6 +33,26 @@ function remember({ sequence, stride }: { sequence: Sequence; stride: number }) 
     localStorage.setItem(heldKey(sequence, stride), '1');
   } catch {
     // Private windows, storage off: the gate shows again next time
+  }
+}
+
+/**
+ * Whether the page is drawn without a graphics card (SwiftShader, llvmpipe: a virtual machine, a
+ * remote desktop, a blocked driver): the walk then starts light (WEBSITE 26). A page can force it
+ * either way with localStorage `walk-quality` (`full` or `light`), as the tests do.
+ */
+function softwareRendering() {
+  try {
+    const forced = localStorage.getItem('walk-quality');
+    if (forced === 'full') return false;
+    if (forced === 'light') return true;
+    const gl = document.createElement('canvas').getContext('webgl');
+    const info = gl?.getExtension('WEBGL_debug_renderer_info');
+    const renderer = info ? String(gl!.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return /swiftshader|llvmpipe|software|basic render/i.test(renderer);
+  } catch {
+    return false;
   }
 }
 
@@ -103,13 +122,17 @@ function frameDecoder(onStored: (count: number, urls: string[]) => void, signal:
     waiting.clear();
   });
   return {
-    decode(url: string): Promise<Frame> {
+    decode(url: string, width?: number): Promise<Frame> {
       if (!worker) return decodeHere(url);
       const id = next++;
       return new Promise((resolve, reject) => {
         waiting.set(id, { url, resolve, reject });
-        worker!.postMessage({ type: 'decode', id, url });
+        worker!.postMessage({ type: 'decode', id, url, width });
       });
+    },
+    /** While the page scrolls the background list waits (WEBSITE 26). */
+    pause(on: boolean) {
+      worker?.postMessage({ type: 'pause', on });
     },
     /** The files to have, in order, fetched in the background. */
     fetch(urls: string[], parallel: number) {
@@ -243,6 +266,19 @@ export type Walk = {
   known(): boolean;
   /** Where the walk ends: the scroll position of its last frame. */
   end(): number;
+  /** Whether the exact frames for `progress` are decoded (it can be shown as it is). */
+  has(progress: number): boolean;
+  /**
+   * The walk at `progress` without its exact frames (a fast scroll, a jump, WEBSITE 26): the
+   * nearest of the decoded frames and the thumbnail track, while the exact ones are decoded.
+   */
+  glance(progress: number): void;
+  /**
+   * How much the walk does (src/motion/walk-scroll.ts, the quality governor): 0 all; 1 without
+   * tier 2; 2 without blending (a cut between frames); 3 at half resolution too. Where it starts
+   * (light: 3 on a software renderer or to save data).
+   */
+  quality(level?: number): number;
 };
 
 /**
@@ -313,6 +349,18 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
   let position = Math.min(1, Math.max(0, scrollY / end()));
   let resting = true;
   const decoder = frameDecoder(stored, signal);
+  /**
+   * The thumbnail track (WEBSITE 26): every `introEvery`-th frame of the landscape set at 480 px
+   * (about 0.5 MB each, 34 MB in all), decoded when the page is still. What a fast scroll or a jump
+   * shows until the exact frames are in.
+   */
+  const thumbs = new Map<number, Frame>();
+  const thumbing = new Set<number>();
+  /** The page moving: the background list waits, and tier 2 is not decoded. */
+  let moving = false;
+  let stillTimer = 0;
+  /** The quality governor's level (see Walk.quality); light from the start where it must be. */
+  let level = saveData || softwareRendering() ? 3 : 0;
 
   /**
    * Files the worker has come to hold: tier 2 frames join the walk as they arrive, and once the
@@ -342,6 +390,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       }
       if (one === reel) {
         canvas.dataset.dense = String(one.held2.size);
+        // Their bytes are here: the thumbnail track, when the page is still
+        if (thumbs.size < introPack.frames.length) idle(loadThumbs);
         // The intro's frames are in: now the rest of the set
         if (filling && !introIn && introSet(one).every((i) => one.held1.has(i))) {
           introIn = true;
@@ -364,7 +414,7 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
    * has not come yet) and never waits on the network.
    */
   function listOf(one: Reel) {
-    const two = [...one.held2].sort((a, b) => a - b);
+    const two = level >= 1 ? [] : [...one.held2].sort((a, b) => a - b);
     if (!filling || one.held1.size === one.tier1.length) return merge(one.tier1, two);
     return merge(
       [...one.held1].sort((a, b) => a - b),
@@ -383,13 +433,20 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
 
   /** What is on the canvas: the set, its two frames and the fade in 255ths (the finest shown). */
   let drawn = '';
-  /** The window's ground on a phone, and the frame whose edges it shows. */
-  const ground = document.querySelector<HTMLElement>('[data-walk-ground]');
-  const windowed = matchMedia('(max-width: 47.99rem)');
-  let grounded = -1;
-  /** The whole frame mostly on show. */
-  const mainFrame = ({ from, to, alpha }: { from: number; to: number; alpha: number }) =>
-    Math.round(alpha >= 0.5 ? to : from);
+  /** The decoded frames on the canvas now. */
+  const onShow = new Set<number>();
+  /** A phone: its first frame is drawn on the canvas at once (below). */
+  const narrow = matchMedia('(max-width: 47.99rem)');
+
+  /** Sizes the canvas for a frame (half in light mode); whether it changed. */
+  function size(frame: Frame) {
+    const scale = level >= 3 ? 0.5 : 1;
+    const [w, h] = [Math.round(frame.width * scale), Math.round(frame.height * scale)];
+    if (canvas.width === w && canvas.height === h) return false;
+    canvas.width = w;
+    canvas.height = h;
+    return true;
+  }
 
   /** A frame over the whole canvas. The canvas is the frames' own size: CSS scales it. */
   function paint(frame: Frame, alpha: number) {
@@ -412,7 +469,11 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     if (reel.images.size) shown = reel;
     const { sequence, images } = shown;
     const at = position * (sequence.count - 1);
-    let mix = blend(images.keys(), at, resting ? 0 : (from, to) => pairWindow(sequence, from, to));
+    let mix = blend(
+      images.keys(),
+      at,
+      resting || level >= 2 ? 0 : (from, to) => pairWindow(sequence, from, to),
+    );
     if (!mix) return;
     // Never across a frame of the set between the two, decoded or not: the nearest alone
     if (mix.from !== mix.to && apart(shown.all, mix.from, mix.to)) {
@@ -420,17 +481,17 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       mix = { from: only, to: only, alpha: 0 };
     }
     const below = images.get(mix.from)!;
-    // Sized to the frames, not the screen: a turn or a resize redraws nothing.
-    if (canvas.width !== below.width || canvas.height !== below.height) {
-      canvas.width = below.width;
-      canvas.height = below.height;
-      drawn = '';
-    }
+    // Sized to the frames, not the screen: a turn or a resize redraws nothing. Never more than the
+    // frame itself (960 x 540, under the shown size x 1.5 everywhere); half that in light mode
+    if (size(below)) drawn = '';
+    delete canvas.dataset.thumb;
     const fade = Math.round(mix.alpha * 255);
     // The set as well: turning the phone swaps it for one with the same frame numbers.
     const key = `${sequence.path} ${mix.from} ${mix.to} ${fade}`;
     if (key !== drawn) {
       drawn = key;
+      onShow.clear();
+      onShow.add(mix.from).add(mix.to);
       if (fade === 255) paint(images.get(mix.to)!, 1);
       else {
         paint(below, 1);
@@ -439,16 +500,6 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       context!.globalAlpha = 1;
       // The blend: the tests read it.
       canvas.dataset.blend = `${mix.from} ${mix.to} ${mix.alpha.toFixed(3)}`;
-    }
-    // On a phone the window's ground takes the colour of the frame's edges, set on it alone (a
-    // property on <html> would restyle the page)
-    if (ground && windowed.matches && sequence === journey.landscape) {
-      const i = mainFrame(mix);
-      if (i !== grounded) {
-        grounded = i;
-        ground.style.setProperty('--edge-top', edgeTop[i] ?? '');
-        ground.style.setProperty('--edge-bottom', edgeBottom[i] ?? '');
-      }
     }
     // Where the walk is, in frames; the frame mostly on show, the set, and the part of the walk.
     canvas.dataset.at = (position * (sequence.count - 1)).toFixed(3);
@@ -491,7 +542,14 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     const at = frameOf(from) + (speed > from.stride ? direction * speed * 4 : 0);
     const close = (i: number) => Math.abs(i - at) <= loading.window;
     return want(from)
-      .filter((i) => !from.images.has(i) && !from.pending.has(i) && !from.broken.has(i))
+      .filter(
+        (i) =>
+          !from.images.has(i) &&
+          !from.pending.has(i) &&
+          !from.broken.has(i) &&
+          // Tier 2 (an in-between, or a frame the phone's set skips) only while the page is still
+          (!moving || from.tier1.includes(i)),
+      )
       .sort((a, b) => Number(close(b)) - Number(close(a)) || Math.abs(a - at) - Math.abs(b - at));
   }
 
@@ -602,7 +660,10 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     const urls = (
       intro.length
         ? intro
-        : [...outward(from.tier1, at), ...(whole && good ? outward(from.tier2, at) : [])]
+        : [
+            ...outward(from.tier1, at),
+            ...(whole && good && level < 1 ? outward(from.tier2, at) : []),
+          ]
     ).map((i) => frameUrl(from.sequence, i));
     // The intro waits on these: as many at once as the browser allows one server (HTTP/1.1)
     const parallel = intro.length
@@ -629,7 +690,8 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     centre = at;
     const keep = new Set(want(from));
     for (const [i, frame] of from.images) {
-      if (!keep.has(i)) {
+      // Never the frame on show: after a jump it stands until the new ones are in (WEBSITE 26)
+      if (!keep.has(i) && !onShow.has(i)) {
         frame.close?.();
         from.images.delete(i);
       }
@@ -714,10 +776,61 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     begin();
   }
 
+  /** Decodes the thumbnail track, one at a time, while the page is still and its bytes are held. */
+  function loadThumbs() {
+    if (!started || moving || signal.aborted || thumbing.size) return;
+    const { sequence } = reel;
+    if (sequence !== journey.landscape) return;
+    const next = introPack.frames.find(
+      (i) => !thumbs.has(i) && reel.held1.has(i) && !reel.broken.has(i),
+    );
+    if (next === undefined) return;
+    thumbing.add(next);
+    decoder.decode(frameUrl(sequence, next), 480).then(
+      (frame) => {
+        thumbing.delete(next);
+        if (signal.aborted) return frame.close?.();
+        thumbs.set(next, frame);
+        canvas.dataset.thumbs = String(thumbs.size);
+        idle(loadThumbs);
+      },
+      () => {
+        thumbing.delete(next);
+        reel.broken.add(next);
+      },
+    );
+  }
+
+  /** The page moved: the background waits until it has been still a moment. */
+  function moved() {
+    if (!moving) {
+      moving = true;
+      decoder.pause(true);
+    }
+    clearTimeout(stillTimer);
+    stillTimer = window.setTimeout(() => {
+      moving = false;
+      decoder.pause(false);
+      if (started) {
+        pump(reel);
+        idle(loadThumbs);
+      }
+    }, 250);
+  }
+
+  /** Records the move to `progress` (how fast, which way) and puts the walk there. */
+  function goTo(progress: number) {
+    const frames = progress * (reel.sequence.count - 1);
+    if (!Number.isNaN(last)) speed = speed * 0.6 + Math.abs(frames - last) * 0.4;
+    if (frames !== last) moved();
+    last = frames;
+    position = progress;
+  }
+
   pick();
-  // On a phone the window has no CSS picture (src/app/journey.css): its first frame, preloaded
-  // with the page, is drawn on the canvas at once, until the walk's own frames come
-  if (windowed.matches) {
+  // On a phone the first frame, preloaded with the page, is drawn on the canvas at once, until the
+  // walk's own frames come: a canvas is never the page's largest paint, the hero's text is
+  if (narrow.matches) {
     void decodeHere(frameUrl(reel!.sequence, 0)).then(
       (frame) => {
         if (signal.aborted || reel.images.size || drawn) return;
@@ -795,18 +908,62 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
     delete root.dataset.journey;
     delete root.dataset.scene;
     for (const { images } of reels.values()) for (const frame of images.values()) frame.close?.();
+    for (const frame of thumbs.values()) frame.close?.();
+    clearTimeout(stillTimer);
   });
 
   return {
     seek(progress, rest = false) {
-      // How fast it goes, in frames of the set per screen frame, smoothed over a few
-      const frames = progress * (reel.sequence.count - 1);
-      if (!Number.isNaN(last)) speed = speed * 0.6 + Math.abs(frames - last) * 0.4;
-      last = frames;
-      position = progress;
+      goTo(progress);
       resting = rest;
       draw();
       follow();
+    },
+    has(progress) {
+      if (!shown.images.size) return true;
+      const ok = (i: number | undefined) =>
+        i === undefined || shown.images.has(i) || shown.broken.has(i);
+      const [lo, hi] = bracket(shown.all, progress * Math.max(1, shown.sequence.count - 1));
+      return ok(lo) && ok(hi);
+    },
+    glance(progress) {
+      goTo(progress);
+      resting = false;
+      follow();
+      const { sequence, images } = shown;
+      const at = progress * (sequence.count - 1);
+      const full = nearest(images.keys(), at);
+      const thumb = sequence === journey.landscape ? nearest(thumbs.keys(), at) : undefined;
+      const useThumb =
+        thumb !== undefined && (full === undefined || Math.abs(thumb - at) < Math.abs(full - at));
+      const i = useThumb ? thumb : full;
+      // Where the page is, whatever stands in for it
+      canvas.dataset.at = at.toFixed(3);
+      if (i === undefined) return;
+      const frame = useThumb ? thumbs.get(i)! : images.get(i)!;
+      const key = `${sequence.path} ${useThumb ? 'thumb' : 'full'} ${i}`;
+      if (key !== drawn) {
+        drawn = key;
+        onShow.clear();
+        if (!useThumb) onShow.add(i);
+        if (!useThumb) size(frame);
+        paint(frame, 1);
+        canvas.dataset.blend = `${i} ${i} 0.000`;
+        if (useThumb) canvas.dataset.thumb = '';
+        else delete canvas.dataset.thumb;
+      }
+      mark(canvas, 'frame', String(i));
+      mark(root, 'scene', sceneAt(progress));
+    },
+    quality(next) {
+      if (next !== undefined && next !== level) {
+        level = next;
+        canvas.dataset.quality = String(level);
+        for (const one of reels.values()) one.all = listOf(one);
+        drawn = '';
+        draw();
+      }
+      return level;
     },
     progress: () => position,
     frame: () => 1 / Math.max(1, shown.sequence.count - 1),

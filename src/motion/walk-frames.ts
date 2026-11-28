@@ -57,15 +57,14 @@ export const frameList = ({ count }: Sequence, stride = 1) =>
  * The frames worth having decoded with the walk at `at` (a frame number): those within
  * `loading.window`, or, while it moves (`direction` 1 or -1), `loading.ahead` in front and
  * `loading.behind` behind; every `loading.anchorEvery`-th one so a jump lands near one; the last.
- * Jumping (`speed`, frames per screen frame, above the walk's speed limit) the walk passes frames
- * it never shows: it reaches further ahead, the same number of screen frames, and takes only every
+ * Fast (`speed`, frames per screen frame, above two) the walk passes frames it never shows: it reaches further ahead, the same number of screen frames, and takes only every
  * frame it lands near, so decoding keeps up. `scale` narrows the reach where the list is denser than
  * its set's stride (tier 2 in), so about as many frames stay decoded (WEBSITE 23: memory).
  */
 export const wanted = (all: readonly number[], at: number, direction = 0, speed = 0, scale = 1) => {
   const stride = spacingOf(all);
-  // Faster than the walk's speed limit (loading.pace frames a screen frame): only a jump is
-  const fast = direction && speed > Math.max(loading.pace + 1, stride);
+  // Faster than two frames a screen frame (a fast scroll): it reaches further, thinned
+  const fast = direction && speed > Math.max(2, stride);
   const ahead = loading.ahead * scale;
   const reach = fast ? Math.max(ahead, Math.ceil(speed * 20)) : ahead;
   // Fast, a frame decoded just behind it still serves: it arrives a screen frame or two late

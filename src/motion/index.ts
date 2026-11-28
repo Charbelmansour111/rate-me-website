@@ -50,7 +50,7 @@ export function startMotion(signal: AbortSignal) {
       ({ startScroll, startRich }) => {
         if (signal.aborted) return;
         startScroll(signal, walk);
-        whenStill(() => startRich(signal, walk), signal);
+        whenStill(() => startRich(signal), signal);
       },
       // Offline: the page works without it, with the still pictures behind it.
       () => {

@@ -17,6 +17,9 @@ const returning = {
       localStorage: [
         ...[1, 2].map((stride) => ({ name: `walk-held /journey/seq/f 1 ${stride}`, value: '1' })),
         { name: 'analytics-consent', value: 'no' },
+        // Headless browsers draw in software: the walk would start light (WEBSITE 26). Full,
+        // and no quality governor, so the tests see the same walk every time
+        { name: 'walk-quality', value: 'full' },
       ],
     },
   ],
