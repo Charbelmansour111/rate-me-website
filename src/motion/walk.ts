@@ -364,6 +364,8 @@ export function startWalk(
   let fetchedFrom = -Infinity;
   /** Where the whole background list was last ordered from (fetchedFrom: the near list too). */
   let orderedFrom = -Infinity;
+  /** Only the near list was sent since (while moving): the whole list again once still. */
+  let nearSent = false;
   /** Both are kept, so turning the phone back loads nothing twice. */
   const reels = new Map<Shape, Reel>();
   let hasPortrait = canvas.dataset.portrait !== undefined;
@@ -764,9 +766,11 @@ export function startWalk(
       // Moving: the near frames not held yet, a short list (the page's work stays small)
       const missing = near.filter((i) => !from.held1.has(i) && !from.held2.has(i));
       decoder.near(missing.map((i) => frameUrl(from.sequence, i)));
+      nearSent = true;
       return;
     }
     orderedFrom = at;
+    nearSent = false;
     const urls = (
       intro.length ? intro : [...near, ...outward(from.tier1, at), ...outward(two, at)]
     ).map((i) => frameUrl(from.sequence, i));
@@ -925,7 +929,9 @@ export function startWalk(
     stillTimer = window.setTimeout(() => {
       moving = false;
       // Still: the whole background list again, from here
-      if (started && Math.abs(frameOf(reel) - orderedFrom) > loading.refetchEvery) fetchAll(reel);
+      if (started && nearSent && Math.abs(frameOf(reel) - orderedFrom) > loading.refetchEvery) {
+        fetchAll(reel);
+      }
       // Still: no speed (WEBSITE 29). Only a move eased it, so after a jump the window stayed
       // stretched far ahead of a walk at rest, and the frames behind it never came
       speed = 0;
