@@ -93,11 +93,11 @@ export const cssName = (token: string) =>
 
 /**
  * Steps of the walk the live colours are worked out at (src/motion/stages.ts). Each new colour
- * restyles the whole page (about 30 ms on a fast computer, four times that on a slow phone), so
- * they change in steps of a 120th of the walk: about 10 between the locker room and the tunnel, 18
- * into the field (WEBSITE 25; there were 600).
+ * restyles the parts of the page on the screen (WEBSITE 26: no longer the whole page), so they
+ * change in steps of a 60th of the walk: about 5 between the locker room and the tunnel, 9 into
+ * the field (there were 600, then 120).
  */
-export const STAGE_STEPS = 120;
+export const STAGE_STEPS = 60;
 
 /** The colours at walk progress `p`: one stage's own, or a blend near a boundary. */
 export function stageAt(p: number): StageTokens {
@@ -139,9 +139,9 @@ export const BAR_CLEAR = 0.62;
 
 /**
  * The same colours as CSS, pasted into src/app/palette.css (the unit test checks they match).
- * The tunnel is the default everywhere; each part of the home page carries `data-stage`, which
- * holds where nothing moves (reduced motion, no JavaScript). Once the walk is scrubbed, `html`
- * gets `data-stages="live"` and the blended values on its own style.
+ * The tunnel is the default everywhere; each part of the home page carries `data-stage`, with its
+ * stage's colours, always. Once the walk is scrubbed, the blended values go on the parts on the
+ * screen and the header's own style, over these (src/motion/stages.ts).
  */
 export function stageCss() {
   const block = (selector: string, tokens: StageTokens) =>
@@ -150,9 +150,7 @@ export function stageCss() {
       .join('\n')}\n}`;
   return [
     block(':root', stageColors.tunnel),
-    ...STAGES.map((id) =>
-      block(`html:not([data-stages='live']) [data-stage='${id}']`, stageColors[id]),
-    ),
+    ...STAGES.map((id) => block(`[data-stage='${id}']`, stageColors[id])),
   ].join('\n');
 }
 

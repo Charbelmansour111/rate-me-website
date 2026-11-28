@@ -70,7 +70,7 @@
   --st-glow: #ff5a0080;
   --st-danger: #ffb4ab;
 }
-html:not([data-stages='live']) [data-stage='locker'] {
+[data-stage='locker'] {
   --st-surface: #f3ece1;
   --st-soft: #eae1d2;
   --st-softer: #e0d5c3;
@@ -86,7 +86,7 @@ html:not([data-stages='live']) [data-stage='locker'] {
   --st-glow: #ff5a0066;
   --st-danger: #a3221b;
 }
-html:not([data-stages='live']) [data-stage='tunnel'] {
+[data-stage='tunnel'] {
   --st-surface: #0f0e0d;
   --st-soft: #1a1815;
   --st-softer: #23201c;
@@ -102,7 +102,7 @@ html:not([data-stages='live']) [data-stage='tunnel'] {
   --st-glow: #ff5a0080;
   --st-danger: #ffb4ab;
 }
-html:not([data-stages='live']) [data-stage='field'] {
+[data-stage='field'] {
   --st-surface: #0b2a1c;
   --st-soft: #103424;
   --st-softer: #163f2d;
@@ -119,9 +119,7 @@ html:not([data-stages='live']) [data-stage='field'] {
   --st-danger: #ffb4ab;
 }
 
-/* The panels, and the small boards in the open views on a phone (src/components/journey-walk.tsx) */
-.panel,
-.gap-board {
+.panel {
   --page: var(--st-surface);
   --soft: var(--st-soft);
   --softer: var(--st-softer);

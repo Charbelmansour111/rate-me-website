@@ -38,7 +38,21 @@ const walkState = (page: Page) =>
     const at = Number(document.querySelector<HTMLElement>('[data-walk]')!.dataset.at);
     return {
       progress: at / (count - 1),
-      surface: getComputedStyle(document.documentElement).getPropertyValue('--st-surface').trim(),
+      // The panel in the middle of the screen: the colours go on the parts on the screen
+      // (WEBSITE 26), not on <html>
+      surface: (() => {
+        // The panel nearest the middle of the screen (at the very end, the last one, above)
+        const middle = innerHeight / 2;
+        const panels = [...document.querySelectorAll<HTMLElement>('.walk-group .panel')]
+          .map((el) => ({ el, box: el.getBoundingClientRect() }))
+          .sort(
+            (a, b) =>
+              Math.abs((a.box.top + a.box.bottom) / 2 - middle) -
+              Math.abs((b.box.top + b.box.bottom) / 2 - middle),
+          );
+        const el = panels[0]?.el ?? document.documentElement;
+        return getComputedStyle(el).getPropertyValue('--st-surface').trim();
+      })(),
     };
   }, journey.landscape.count);
 
@@ -273,7 +287,8 @@ test('the running line draws down with the scroll, and its nodes fill as you rea
   await expect(line).toHaveAttribute('data-live', '');
   const state = () =>
     line.evaluate((el) => ({
-      drawn: 1 - parseFloat(getComputedStyle(el.querySelector('.run-fill')!).strokeDashoffset),
+      // With motion the drawn part is a bar scaled by a transform (WEBSITE 26)
+      drawn: new DOMMatrix(getComputedStyle(el.querySelector('.run-bar')!).transform).d,
       on: el.querySelectorAll('.run-on').length,
       nodes: el.querySelectorAll('.run-node').length,
     }));
