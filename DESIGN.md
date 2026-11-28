@@ -201,9 +201,10 @@ The page scrolls freely, natively on touch and through Lenis' glide on a mouse w
 picture keeps up with it, one motion (WEBSITE 26): in ordinary scrolling it is where the page is,
 or behind on the frames it has decoded; on a jump of more than 40 frames it shows the nearest frame
 of a thumbnail track (every sixth frame at 480 px, about 34 MB) at once, and the exact frame as
-soon as it is decoded. One loop runs everything the scroll drives (GSAP's ticker). Nothing is
-fetched in the background while the page moves, but the in-between frames are decoded, two at a
-time (WEBSITE 27: without them the picture stepped). At most 72 frames are held decoded (about
+soon as it is decoded. One loop runs everything the scroll drives (GSAP's ticker). While the page
+moves the background fetches only the frames near the walk, four at a time (WEBSITE 29), and
+decodes two at a time, the frames of the set before the in-betweens (WEBSITE 27: without decoding
+while moving the picture stepped). At most 72 frames are held decoded (about
 150 MB). A quality governor watches the median of the last 90 frames: over 22 ms, the walk drops
 tier 2, then blending (and the panels' colours change once a stage), then half its resolution; it
 steps back after 2 s under 18 ms. A few slow frames never step it down. A software renderer
@@ -216,8 +217,22 @@ the colours change once, at each boundary.
 
 A first visit opens on a short intro (WEBSITE 25): the wordmark on the brand black, on the centre
 spot of a faint pitch, a 2px orange line filling as the frames come, and a quiet Skip; no sentence.
-It waits for every sixth frame (one file, `public/journey/pack`) and those round the walk, about
-5 s on 4G, never more than 6.5 s, then fades; the rest comes behind it. Decided before the first
+It waits for every sixth frame (one file, `public/journey/pack`) and, on a computer, both tiers of
+the first scene, the locker room to the tunnel (WEBSITE 29), with the 24 frames nearest the start
+decoded: about 4.5 s on Fast 4G, 1.6 s on a fast line, never more than 6.5 s; then it fades and the
+rest comes behind it.
+
+A first visit is film from the first scroll (WEBSITE 29). The landscape walk is AVIF where the
+browser decodes it (tier 1 at quality 55, tier 2 at 45, chroma 4:2:0 like WebP:
+`scripts/walk-avif.mjs`), WebP elsewhere: 18.9 MB for both tiers, against 36.6 MB in WebP; the
+first frame stays WebP, since the page preloads it before a script knows the format. After the
+intro the background fetches by distance from the walk: both tiers of the 60 frames ahead and 20
+behind first (ahead first), then the rest of the set, then the rest of tier 2; while the page
+moves only the near ones, so a visitor who keeps scrolling is never starved. Where an in-between
+has not come, its two frames still crossfade (at least 0.16 of the way either side of the middle),
+never a hard one-frame jump. The Cache API keeps only whole files, under addresses that carry the
+render, so a second visit plays at once from it and a private window never meets stale or partial
+frames. A phone keeps its own portrait set and order (WEBSITE 28). Decided before the first
 paint: never on a return visit, to save data or under reduced motion. The cookie bar comes after
 it: small, at the bottom, Essential only and Accept the same size.
 
