@@ -63,24 +63,117 @@
     display: none;
   }
 }
-/* On a phone the walk is a 250px slice of a 960px frame, stretched about 4.7 times (WEBSITE 21):
-   shown as it is, its blocks and the giant grass blades read as low resolution. So there it is
-   atmosphere: a light blur, as if out of focus behind the panels (a little larger, so the blur
-   never shows a soft edge at the screen's sides), and a dark wash over it. The canvas is drawn
-   once per frame either way; the blur is the compositor's. */
+/* On a phone (WEBSITE 25) the walk plays whole, in a full-width 16:9 window under the header, not
+   cut down to a 250px slice of its 960px frame and stretched: no blur, no dark wash, a little
+   brighter and crisper (a filter on the small canvas alone). Round it, a dark ground in the colour
+   of the frame's own edges (src/motion/walk.ts), and in the open views a small board
+   (.gap-board) under the window. */
+.walk-ground {
+  display: none;
+}
 @media (max-width: 47.99rem) and (prefers-reduced-motion: no-preference) {
-  [data-js]:not([data-journey='off']) .walk {
-    filter: blur(2px);
-    scale: 1.03;
+  :root {
+    --walk-top: calc(4.75rem + env(safe-area-inset-top));
   }
-  [data-js]:not([data-journey='off']) main::after {
-    content: '';
+  [data-js]:not([data-journey='off']) .walk {
+    inset: var(--walk-top) 0 auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    filter: brightness(1.12) contrast(1.06);
+  }
+  [data-js]:not([data-journey='off']) .walk-ground {
     position: fixed;
     z-index: 0;
     inset: 0;
-    background: linear-gradient(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.45));
+    display: block;
+    background: linear-gradient(
+      var(--edge-top, #1a1918) calc(var(--walk-top) + 28vw),
+      var(--edge-bottom, #141312) calc(var(--walk-top) + 28vw),
+      var(--brand-black) 100%
+    );
     pointer-events: none;
   }
+}
+
+/* The small board in an open view (src/components/journey-walk.tsx): phones only, at the foot of
+   the view, under the walk's window. Players sit in % of the board; with motion they move by
+   transform alone (src/motion/gap-boards.ts). */
+.gap-board {
+  display: none;
+}
+@media (max-width: 47.99rem) {
+  .walk-gap {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: clamp(1rem, 3vh, 1.75rem);
+  }
+  .gap-board {
+    position: relative;
+    display: block;
+    width: min(calc(100% - 3rem), 17.5rem);
+    padding: 0.6rem;
+    border: 1px solid var(--panel-edge);
+    border-radius: 1rem;
+    background: var(--page);
+    container-type: inline-size;
+  }
+}
+.gap-pitch {
+  position: relative;
+}
+.gap-pitch > svg {
+  overflow: visible;
+}
+.gap-player,
+.gap-ball {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  will-change: transform;
+}
+/* Centred on their point: a margin in % is of the width, both ways */
+.gap-player {
+  width: 7%;
+  aspect-ratio: 1;
+  margin: -3.5% 0 0 -3.5%;
+  background: var(--text);
+  color: var(--page);
+  font-size: 3.6cqi;
+  font-weight: 600;
+  line-height: 1;
+}
+.gap-defender {
+  border: 2px solid var(--text);
+  background: var(--page);
+}
+.gap-defender::before,
+.gap-defender::after {
+  content: '';
+  position: absolute;
+  width: 55%;
+  height: 2px;
+  background: var(--text);
+  rotate: 45deg;
+}
+.gap-defender::after {
+  rotate: -45deg;
+}
+.gap-ball {
+  width: 3.6%;
+  aspect-ratio: 1;
+  margin: -1.8% 0 0 -1.8%;
+  border: 1.5px solid var(--text);
+  background: var(--brand-orange);
+}
+.gap-board [data-gap-trail] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.gap-board[data-live] [data-gap-trail] {
+  stroke-dashoffset: 1;
 }
 
 /* What people read always has a solid ground: a charcoal panel (src/app/palette.css) with a thin

@@ -500,8 +500,12 @@ test('the walk: a recorded scroll at 60 frames a second shows no step', async ({
     const w = pairWindow(sequence, from, to);
     const moving =
       w <= 0 ? Number(along >= 0.5) : Math.min(1, Math.max(0, (along - (0.5 - w)) / (2 * w)));
-    const resting = Number(along >= 0.5);
-    expect(Math.min(Math.abs(alpha - moving), Math.abs(alpha - resting))).toBeLessThan(0.02);
+    // At rest the nearest alone: on the midpoint itself (as read, to 3 decimals) either one
+    const resting = Math.abs(along - 0.5) < 0.002 ? [0, 1] : [Number(along >= 0.5)];
+    expect(
+      Math.min(Math.abs(alpha - moving), ...resting.map((r) => Math.abs(alpha - r))),
+      `blend ${mix} at ${at}`,
+    ).toBeLessThan(0.02);
   }
   // It passed several frames, and moved on most painted frames
   expect(new Set(frames).size).toBeGreaterThan(5);
@@ -595,7 +599,7 @@ test('smooth scrolling never stops a scroll that is under way', async ({ page })
   expect(Math.abs((await top()) - 88)).toBeLessThan(30);
 });
 
-test('the walk: open gaps, with no titles on them', async ({ page }) => {
+test('the walk: open gaps, with no titles on them', async ({ page, isMobile }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   const gaps = page.locator('[data-walk-gap]');
   await expect(gaps).toHaveCount(8);
@@ -603,7 +607,10 @@ test('the walk: open gaps, with no titles on them', async ({ page }) => {
   for (const gap of await gaps.all()) {
     await gap.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await expect(gap).toHaveAttribute('data-in');
-    await expect(gap).toBeEmpty();
+    // Nothing written: on a phone a small board under the walk's window (WEBSITE 25), else empty
+    await expect(gap.locator('h1, h2, h3, h4, p')).toHaveCount(0);
+    if (isMobile) await expect(gap.locator('[data-gap-board]')).toBeVisible();
+    else await expect(gap.locator('[data-gap-board]')).toBeHidden();
     const share = await gap.evaluate((el) => (el as HTMLElement).offsetHeight / innerHeight);
     expect(share).toBeGreaterThanOrEqual(0.59);
     expect(share).toBeLessThanOrEqual(0.81);

@@ -9,6 +9,7 @@ import {
   type Sequence,
   type Shape,
 } from '@/config/journey.config';
+import { edgeBottom, edgeTop } from '@/config/walk-edges';
 import { introPack } from '@/config/walk-pack';
 
 import {
@@ -382,6 +383,13 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
 
   /** What is on the canvas: the set, its two frames and the fade in 255ths (the finest shown). */
   let drawn = '';
+  /** The window's ground on a phone, and the frame whose edges it shows. */
+  const ground = document.querySelector<HTMLElement>('[data-walk-ground]');
+  const windowed = matchMedia('(max-width: 47.99rem)');
+  let grounded = -1;
+  /** The whole frame mostly on show. */
+  const mainFrame = ({ from, to, alpha }: { from: number; to: number; alpha: number }) =>
+    Math.round(alpha >= 0.5 ? to : from);
 
   /** A frame over the whole canvas. The canvas is the frames' own size: CSS scales it. */
   function paint(frame: Frame, alpha: number) {
@@ -431,6 +439,16 @@ export function startWalk(canvas: HTMLCanvasElement, signal: AbortSignal): Walk 
       context!.globalAlpha = 1;
       // The blend: the tests read it.
       canvas.dataset.blend = `${mix.from} ${mix.to} ${mix.alpha.toFixed(3)}`;
+    }
+    // On a phone the window's ground takes the colour of the frame's edges, set on it alone (a
+    // property on <html> would restyle the page)
+    if (ground && windowed.matches && sequence === journey.landscape) {
+      const i = mainFrame(mix);
+      if (i !== grounded) {
+        grounded = i;
+        ground.style.setProperty('--edge-top', edgeTop[i] ?? '');
+        ground.style.setProperty('--edge-bottom', edgeBottom[i] ?? '');
+      }
     }
     // Where the walk is, in frames; the frame mostly on show, the set, and the part of the walk.
     canvas.dataset.at = (position * (sequence.count - 1)).toFixed(3);

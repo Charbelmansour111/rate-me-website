@@ -119,7 +119,9 @@ html:not([data-stages='live']) [data-stage='field'] {
   --st-danger: #ffb4ab;
 }
 
-.panel {
+/* The panels, and the small boards in the open views on a phone (src/components/journey-walk.tsx) */
+.panel,
+.gap-board {
   --page: var(--st-surface);
   --soft: var(--st-soft);
   --softer: var(--st-softer);
