@@ -36,15 +36,15 @@ export function startMotion(signal: AbortSignal) {
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   const drawn = phone && (Boolean(connection?.saveData) || softwareRendering());
   if (canvas && drawn) startPitchWalk(canvas, signal);
-  // The walk's file format first (AVIF where it decodes, WEBSITE 29): a few milliseconds
+  // On a computer the walk's file format first (AVIF where it decodes, WEBSITE 29): a few
+  // milliseconds. A phone's portrait set is WebP alone: it starts at once, as before, and never
+  // wakes an AVIF decoder (on a phone's processor that cost Lighthouse about 100 ms of TBT)
   const walkReady: Promise<Walk | undefined> =
-    canvas && !drawn
-      ? chooseFormat().then(() =>
-          signal.aborted
-            ? undefined
-            : startWalk(canvas, signal, phone ? () => startPitchWalk(canvas, signal) : undefined),
-        )
-      : Promise.resolve(undefined);
+    !canvas || drawn
+      ? Promise.resolve(undefined)
+      : phone
+        ? Promise.resolve(startWalk(canvas, signal, () => startPitchWalk(canvas, signal)))
+        : chooseFormat().then(() => (signal.aborted ? undefined : startWalk(canvas, signal)));
   // A first visit's intro while the frames come (src/motion/walk-gate.ts); no walk, no intro
   void walkReady.then((walk) => {
     if (signal.aborted) return;
