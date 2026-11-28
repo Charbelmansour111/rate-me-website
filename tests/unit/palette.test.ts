@@ -83,8 +83,7 @@ it('the browser bar matches the pages', () => {
 });
 
 it('the panels read the stage colours, in both themes', () => {
-  // The panels, and the small boards on a phone (WEBSITE 25)
-  const panel = css.slice(css.indexOf('\n.panel,\n.gap-board {'));
+  const panel = css.slice(css.indexOf('\n.panel {'));
   expect(panel.length).toBeLessThan(css.length);
   expect(panel).toContain('--page: var(--st-surface)');
   expect(panel).toContain('--text: var(--st-text)');

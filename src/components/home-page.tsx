@@ -17,7 +17,7 @@ import { PanelLines } from './pitch-lines';
 import { PreRegisterForm } from './pre-register-form';
 import { RunningLine } from './running-line';
 import { spotlightStops } from './react-bits/spotlight-card';
-import { WalkCanvas, WalkDim, WalkGap, WalkGround, WalkGroup } from './journey-walk';
+import { WalkCanvas, WalkDim, WalkGap, WalkGroup } from './journey-walk';
 import { WalkIntro } from './walk-intro';
 import { WhyCards } from './why-cards';
 import { Showcase } from './showcase';
@@ -28,7 +28,6 @@ import { TacticsSection } from './tactics-section';
 /** A walk from the locker room (top) to the pitch (end), with the sections as panels in front. */
 export function HomePage({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
-  const rtl = locale === 'ar';
   /** What each feature's photo shows, where it has one. */
   const photos: Partial<Record<string, { title: string; photo?: string; detail?: string }>> =
     t.features.items;
@@ -60,7 +59,6 @@ export function HomePage({ locale }: { locale: Locale }) {
       <WalkIntro t={t.hero.gate} />
       <SiteHeader locale={locale} path="/" />
       <main id="main" className="relative overflow-x-clip">
-        <WalkGround />
         <WalkCanvas />
         <WalkDim />
         <RunningLine />
@@ -134,7 +132,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap n={0} rtl={rtl} />
+          <WalkGap />
           <section className="section" aria-labelledby="why-title">
             <div className="wrap">
               <div className="panel relative overflow-clip">
@@ -153,7 +151,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap n={1} rtl={rtl} />
+          <WalkGap />
         </WalkGroup>
         <WalkGroup scene="tunnel">
           <section id="features" className="section" aria-labelledby="features-title">
@@ -191,13 +189,13 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap n={2} rtl={rtl} />
+          <WalkGap />
           <Showcase locale={locale} />
 
-          <WalkGap n={3} rtl={rtl} />
+          <WalkGap />
           <TacticsSection locale={locale} />
 
-          <WalkGap n={4} rtl={rtl} />
+          <WalkGap />
         </WalkGroup>
         <WalkGroup scene="pitch">
           <section id="community" className="section" aria-labelledby="community-title">
@@ -265,7 +263,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               </div>
             </div>
           </section>
-          <WalkGap n={5} rtl={rtl} />
+          <WalkGap />
           <section id="faq" className="section" aria-labelledby="faq-title">
             <div className="wrap">
               <div className="panel grid gap-12 lg:grid-cols-[1fr_1.6fr]">
@@ -284,7 +282,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <WalkGap n={6} rtl={rtl} />
+          <WalkGap />
           <section id="pre-register" className="section" aria-labelledby="form-title">
             <div className="wrap">
               <div data-reveal className="form-card panel mx-auto max-w-3xl">
@@ -308,7 +306,7 @@ export function HomePage({ locale }: { locale: Locale }) {
               </div>
             </div>
           </section>
-          <WalkGap n={7} rtl={rtl} />
+          <WalkGap />
         </WalkGroup>
       </main>
       <SiteFooter locale={locale} path="/" />
