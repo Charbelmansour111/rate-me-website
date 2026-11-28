@@ -145,6 +145,8 @@
 /* How far down the page: a thin orange line along the bar's bottom edge */
 .site-bar-progress {
   position: absolute;
+  /* Its own small layer: it moves with every scrolled frame, and repaints nothing */
+  will-change: transform;
   bottom: -1px;
   inset-inline: 1rem;
   height: 2px;
@@ -333,8 +335,22 @@
   will-change: transform;
 }
 /* Drawn with the scroll where motion is on; otherwise a still line, every node filled */
+/* With motion the fill is the bar below, scaled by a transform: the SVG is never repainted */
 [data-live] .run-fill {
-  stroke-dashoffset: 1;
+  display: none;
+}
+.run-bar {
+  position: absolute;
+  left: 6.75px;
+  display: none;
+  width: 2.5px;
+  background: var(--brand-orange);
+  transform: scaleY(0);
+  transform-origin: top;
+  will-change: transform;
+}
+.run-line[data-live] .run-bar {
+  display: block;
 }
 [data-live] .run-node {
   fill: #0b0b0c;

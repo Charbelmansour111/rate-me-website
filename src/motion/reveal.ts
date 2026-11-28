@@ -69,8 +69,9 @@ export function startReveals(signal: AbortSignal) {
     // Already on screen: never hide something that is being looked at.
     .filter((el) => el.getBoundingClientRect().top >= innerHeight);
 
-  const triggers = waiting.map((el) =>
-    ScrollTrigger.create({
+  const armTriggers = new Map<HTMLElement, ScrollTrigger>();
+  const triggers = waiting.map((el) => {
+    const trigger = ScrollTrigger.create({
       trigger: el,
       start: `top bottom+=${ARM}`,
       onEnter: () => {
@@ -81,8 +82,10 @@ export function startReveals(signal: AbortSignal) {
       onLeaveBack: () => {
         if (!done.has(el)) release(el);
       },
-    }),
-  );
+    });
+    armTriggers.set(el, trigger);
+    return trigger;
+  });
 
   const batches = ScrollTrigger.batch(waiting, {
     start: 'top bottom-=24',
@@ -91,6 +94,9 @@ export function startReveals(signal: AbortSignal) {
       // The rest comes in as a quick stagger, steps one after the other.
       (entered as HTMLElement[]).forEach((el, index) => {
         done.add(el);
+        // Come in for good: its trigger has nothing left to watch (WEBSITE 26)
+        armTriggers.get(el)?.kill();
+        armTriggers.delete(el);
         const tl = armed.get(el)?.tl;
         if (!tl) return;
         // Jumped past it: nothing to watch.

@@ -90,7 +90,7 @@ function startRunningLine() {
   let top = 0;
   let bottom = 1;
   let nodes: { el: SVGCircleElement; y: number; on: boolean }[] = [];
-  let fill: SVGPathElement | null = null;
+  let fill: HTMLElement | null = null;
   let ball: SVGSVGElement | null = null;
   let origin = 0;
   const read = () => {
@@ -98,7 +98,7 @@ function startRunningLine() {
     if (!svg) return false;
     top = Number(svg.dataset.top);
     bottom = Number(svg.dataset.bottom);
-    fill = svg.querySelector('.run-fill');
+    fill = host.querySelector('.run-bar');
     ball = host.querySelector('.run-ball');
     nodes = [...svg.querySelectorAll<SVGCircleElement>('.run-node')].map((el) => ({
       el,
@@ -124,7 +124,7 @@ function startRunningLine() {
     if (Math.abs(tip - tipShown) < 0.5) return;
     tipShown = tip;
     const done = (tip - top) / Math.max(1, bottom - top);
-    fill!.style.strokeDashoffset = String(1 - done);
+    if (fill) fill.style.transform = `scaleY(${done.toFixed(4)})`;
     if (ball) ball.style.transform = `translate3d(0, ${(tip - 8).toFixed(1)}px, 0)`;
     for (const node of nodes) {
       const on = tip >= node.y - 1;

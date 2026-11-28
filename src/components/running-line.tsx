@@ -81,6 +81,14 @@ export function RunningLine() {
           ))}
         </svg>
       )}
+      {/* With motion, the drawn part is a thin bar scaled by a transform alone (WEBSITE 26): the
+          line itself is never painted again as the page scrolls */}
+      {layout && (
+        <span
+          className="run-bar"
+          style={{ top: layout.top, height: Math.max(0, layout.bottom - layout.top) }}
+        />
+      )}
       {/* The ball on the tip: its own small layer, moved by a transform alone, so following the
           scroll never lays the line out again (WEBSITE 25) */}
       {layout && (

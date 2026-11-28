@@ -93,32 +93,3 @@ export function startCardReveals(signal: AbortSignal) {
     signal,
   });
 }
-
-/** The phones beside the one in front float at their own speed while the section passes. */
-export function startParallax() {
-  const mm = gsap.matchMedia();
-  mm.add('(min-width: 64rem)', () => {
-    // The section, not the track: the hidden view's track measures nothing.
-    const section = document.getElementById('inside');
-    if (!section) return;
-    for (const view of section.querySelectorAll<HTMLElement>('.showcase-track')) {
-      const phones = [...view.querySelectorAll<HTMLElement>('[data-parallax]')];
-      const middle = (phones.length - 1) / 2;
-      phones.forEach((phone, i) => {
-        // The one in front holds still; the ones beside it drift, each at its own pace.
-        const depth = i === middle ? 0 : i < middle ? 1 : 1.5;
-        if (!depth) return;
-        gsap.fromTo(
-          phone,
-          { y: 32 * depth },
-          {
-            y: -32 * depth,
-            ease: 'none',
-            scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: 0.6 },
-          },
-        );
-      });
-    }
-  });
-  return mm;
-}
